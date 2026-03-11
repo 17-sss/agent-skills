@@ -1,36 +1,52 @@
-# handoff-memory
+# Agent Skills
 
-Install this skill from GitHub with:
+A collection of reusable skills for AI coding agents. Skills are packaged instructions and helper scripts that extend agent capabilities while keeping the workflow repository-friendly.
+
+This repository is modeled as a multi-skill catalog, similar to `vercel-labs/agent-skills`, so more skills can be added over time without changing the top-level layout.
+
+## Available Skills
+
+### handoff-memory
+
+Agent-neutral workflow for creating and maintaining shared repo-local HANDOFF documents.
+
+**Use when:**
+- Writing a project handoff before ending a session
+- Resuming work from an existing handoff
+- Standardizing shared project-state notes in Git-trackable files
+- Keeping mutable handoff state out of `.codex`, `.claude`, `.windsurf`, or `.agents`
+
+**Behavior:**
+- Reuses an existing shared handoff file such as `docs/HANDOFF.md`, `memories/HANDOFF.md`, or `HANDOFF.md`
+- Defaults to `docs/HANDOFF.md` when no shared handoff file exists
+- Supports global or project-local skill installation, while keeping the shared data inside the repository
+
+## Installation
+
+Install the collection with:
 
 ```bash
-npx skills add <owner>/handoff-memory
+npx skills add 17-sss/agent-skills
 ```
 
-This repository is intentionally structured as a single root skill so tools such as `skills.sh` can detect `SKILL.md` at the repository root.
+If your installer expects a path inside a multi-skill repository, install:
 
-The skill can be installed globally or per-project. The installation location does not change where the shared HANDOFF file lives.
+```bash
+skills/handoff-memory
+```
 
-## What It Does
+## Usage
 
-`handoff-memory` keeps one shared HANDOFF document inside the repository:
+Once installed, agents can invoke the skill when a task calls for project handoff creation, refresh, or recovery.
 
-- Prefer an existing shared handoff file such as `docs/HANDOFF.md`, `memories/HANDOFF.md`, or `HANDOFF.md`
-- Otherwise create `docs/HANDOFF.md`
-- Keep agent-specific files as references to the shared handoff, not as the primary mutable state
+## Repository Structure
 
-## Install Scope
+Each skill lives under `skills/<skill-name>/` and may contain:
 
-### Codex
-
-- Global install: `$CODEX_HOME/skills/handoff-memory` or `~/.codex/skills/handoff-memory`
-- Project-local install: `<repo>/.codex/skills/handoff-memory`
-
-### Other Agents
-
-- Claude Code: keep agent-specific instructions in `CLAUDE.md` or `.claude/`, but point them at the shared repo-local HANDOFF
-- Windsurf: keep rules in `.windsurf/rules/`, but point them at the shared repo-local HANDOFF
-- Generic fallback: if no standard install path exists, `.agents/skills/handoff-memory` is an acceptable neutral install location
-
-## Shared Data Rule
-
-The primary handoff file should stay inside the repository so it can be reviewed and synchronized with Git when appropriate. Installing this skill on another machine copies the workflow, while the shared project state remains in the repo.
+- `SKILL.md` - Primary skill definition
+- `README.md` - Human-facing documentation
+- `AGENTS.md` - Agent-facing repo guidance for the skill package
+- `metadata.json` - Catalog metadata
+- `scripts/` - Helper scripts
+- `references/` - Supporting docs and templates
+- `agents/` - Optional agent-specific metadata such as `openai.yaml`

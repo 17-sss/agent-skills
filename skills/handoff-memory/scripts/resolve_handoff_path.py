@@ -108,7 +108,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--ensure",
         action="store_true",
-        help="Create the directory and initialize the file when missing.",
+        help="Create the file when missing.",
     )
     parser.add_argument(
         "--format",

@@ -1,0 +1,11 @@
+{
+  "name": "handoff-memory",
+  "version": "0.1.0",
+  "organization": "17-sss",
+  "date": "March 2026",
+  "abstract": "Agent-neutral workflow for creating and maintaining shared repo-local HANDOFF documents. Designed to preserve project state across sessions, contributors, and machines while keeping the primary mutable handoff file inside the repository.",
+  "references": [
+    "https://agentskills.io/",
+    "https://github.com/vercel-labs/agent-skills"
+  ]
+}

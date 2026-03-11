@@ -1,0 +1,4 @@
+interface:
+  display_name: "Handoff Memory"
+  short_description: "Keep reusable project handoff memory"
+  default_prompt: "Use $handoff-memory to resolve or refresh the shared repo-local HANDOFF for this project."

@@ -1,27 +1,46 @@
 # handoff-memory
 
-Agent-neutral workflow for maintaining a shared repo-local HANDOFF document.
+Agent-neutral workflow for maintaining shared handoff and memory documents for either a single repository or a multi-repository workspace.
 
 ## Use When
 
 - Ending a work session and leaving a reliable checkpoint
 - Resuming a project from prior notes
 - Standardizing a Git-trackable handoff file across contributors or machines
+- Working from a parent folder that coordinates multiple repositories
 - Keeping mutable state out of `.codex`, `.claude`, `.windsurf`, or `.agents`
 
 ## What It Does
 
-- Resolves a shared handoff file inside the repository
-- Reuses an existing handoff at `docs/HANDOFF.md`, `memories/HANDOFF.md`, or `HANDOFF.md`
-- Defaults to `docs/HANDOFF.md` when no handoff file exists
+- Resolves shared memory files in either repo scope or workspace scope
+- Reuses an existing repo handoff at `docs/HANDOFF.md`, `memories/HANDOFF.md`, or `HANDOFF.md`
+- Defaults to `docs/HANDOFF.md` for a repo and `_memory/HANDOFF.md` for a workspace
 - Keeps agent-specific files as references to the shared handoff, not as the primary mutable state
 
 ## Workflow Summary
 
-1. Resolve the canonical handoff path with `scripts/resolve_handoff_path.py`
+1. Resolve the canonical memory path with `scripts/resolve_handoff_path.py`
 2. Read the existing handoff if present
-3. Refresh it using `references/handoff-template.md`
-4. Commit the shared handoff with the repository when appropriate
+3. Refresh it using the matching template in `references/`
+4. Commit the shared handoff or workspace memory with the repository when appropriate
+
+## Scope Model
+
+### Repo Scope
+
+Use repo scope when the task belongs to one repository.
+
+- Preferred file: `docs/HANDOFF.md`
+- Fallbacks: `memories/HANDOFF.md`, `HANDOFF.md`
+
+### Workspace Scope
+
+Use workspace scope when the prompt starts from a parent folder that coordinates multiple repositories.
+
+- `_memory/HANDOFF.md` - current cross-repo status
+- `_memory/WORKSPACE.md` - durable workspace overview
+- `_memory/DECISIONS.md` - shared technical decisions
+- `_memory/PATTERNS.md` - repeated conventions across repos
 
 ## Install Scope
 
@@ -40,7 +59,7 @@ The skill itself can be installed globally or per-project. The shared HANDOFF da
 
 ## Shared Data Rule
 
-The primary handoff file should stay inside the repository so it can be reviewed and synchronized with Git when appropriate. Installation location and data location are separate concerns.
+The primary memory files should stay inside the repository or workspace root they describe so they can be reviewed and synchronized with Git when appropriate. Installation location and data location are separate concerns.
 
 ## Package Layout
 
@@ -49,4 +68,5 @@ The primary handoff file should stay inside the repository so it can be reviewed
 - `metadata.json` - Catalog metadata
 - `scripts/resolve_handoff_path.py` - Path resolver and initializer
 - `references/handoff-template.md` - HANDOFF template
+- `references/workspace-memory-guide.md` - Workspace memory structure guidance
 - `references/agent-integrations.md` - Agent-specific install notes

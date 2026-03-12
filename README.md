@@ -6,22 +6,31 @@ A collection of reusable skills for AI coding agents. Skills are packaged instru
 
 ### handoff-memory
 
-Agent-neutral workflow for creating and maintaining shared repo-local HANDOFF documents.
+Agent-neutral workflow for creating and maintaining shared repo-local or workspace-local HANDOFF and memory documents.
 
 **Use when:**
 - Writing a project handoff before ending a session
+- Writing a workspace handoff from a parent folder that coordinates multiple repos
 - Resuming work from an existing handoff
 - Standardizing shared project-state notes in Git-trackable files
 - Keeping mutable handoff state out of `.codex`, `.claude`, `.windsurf`, or `.agents`
 
 **Behavior:**
 - Reuses an existing shared handoff file such as `docs/HANDOFF.md`, `memories/HANDOFF.md`, or `HANDOFF.md`
-- Defaults to `docs/HANDOFF.md` when no shared handoff file exists
-- Supports global or project-local skill installation, while keeping the shared data inside the repository
+- Defaults to `docs/HANDOFF.md` for a repo and `_memory/HANDOFF.md` for a workspace
+- Supports global or project-local skill installation, while keeping the shared data inside the repository or workspace root
 
 ## Installation
 
-Install a specific skill from this repository:
+Install from this collection interactively:
+
+```bash
+npx skills add https://github.com/17-sss/agent-skills
+```
+
+The CLI will inspect the repository, show the available skills, and guide you through the install flow.
+
+Install a specific skill directly:
 
 ```bash
 npx skills add https://github.com/17-sss/agent-skills --skill <skill-name>
@@ -31,12 +40,6 @@ Example:
 
 ```bash
 npx skills add https://github.com/17-sss/agent-skills --skill handoff-memory
-```
-
-Install all skills only when you explicitly want the full collection:
-
-```bash
-npx skills add https://github.com/17-sss/agent-skills --all
 ```
 
 ## Usage

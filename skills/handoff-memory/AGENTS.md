@@ -4,21 +4,27 @@ This package defines the `handoff-memory` skill.
 
 ## Package Intent
 
-- Keep the shared mutable handoff file inside the target repository
+- Keep the shared mutable memory files inside the target repository or workspace root
 - Support multiple agent environments without making any one agent folder the default data store
-- Preserve one canonical HANDOFF file per repository
+- Preserve one canonical handoff path per scope and document type
 
 ## Resolver Rules
 
 - Honor `--handoff-path` when the caller gives one
-- Otherwise prefer an existing shared handoff file in this order:
+- Support `repo`, `workspace`, and `auto` scope detection
+- In repo scope prefer existing files in this order:
   - `docs/HANDOFF.md`
   - `memories/HANDOFF.md`
   - `HANDOFF.md`
-- If none exists, create `docs/HANDOFF.md`
+- In workspace scope default to:
+  - `_memory/HANDOFF.md`
+  - `_memory/WORKSPACE.md`
+  - `_memory/DECISIONS.md`
+  - `_memory/PATTERNS.md`
+- If the path does not exist, create the default file for the chosen scope and document
 
 ## Editing Guidance
 
 - Keep `SKILL.md`, `README.md`, and `metadata.json` aligned
-- Update the template if the expected HANDOFF sections change
+- Update templates if the expected memory sections change
 - Do not reintroduce global machine-local storage as the default behavior

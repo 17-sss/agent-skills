@@ -1,0 +1,18 @@
+[
+  {
+    "query": "Resume this older workspace safely: check whether the shared handoff is stale first, then refresh the notes if the repo state drifted.",
+    "should_trigger": true
+  },
+  {
+    "query": "Before handing this off to another agent, create a proper checkpoint with the latest repo state and a clear resume checklist.",
+    "should_trigger": true
+  },
+  {
+    "query": "Please add a new button to the dashboard header and match the existing spacing.",
+    "should_trigger": false
+  },
+  {
+    "query": "What's the git command to rename my current branch?",
+    "should_trigger": false
+  }
+]

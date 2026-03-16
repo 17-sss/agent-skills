@@ -2,6 +2,14 @@
 
 Agent-neutral workflow for maintaining shared handoff and memory documents for a single repository, a multi-repository workspace, or a workstream inside that workspace.
 
+## Requirements
+
+- `python3` in `PATH` for the bundled scripts
+- `git` in `PATH` for branch metadata and staleness checks
+- A writable repository or workspace folder where the shared documents live
+
+Path resolution and validation still work outside Git, but freshness checks are most useful when the target lives in a Git repo or multi-repo workspace.
+
 ## Use When
 
 - Ending a work session and leaving a reliable checkpoint
@@ -140,6 +148,8 @@ python3 scripts/check_staleness.py --project-root <path> --scope workspace --wor
 - `SKILL.md` - Main skill definition
 - `AGENTS.md` - Maintainer guidance for this skill package
 - `metadata.json` - Catalog metadata
+- `evals/train_queries.json` - Starter should-trigger and should-not-trigger queries
+- `evals/validation_queries.json` - Small holdout set for trigger sanity checks
 - `scripts/create_handoff.py` - Initializes or refreshes the canonical file
 - `scripts/validate_handoff.py` - Validates structure and obvious placeholders
 - `scripts/check_staleness.py` - Checks whether the notes lag behind repo activity
@@ -149,3 +159,12 @@ python3 scripts/check_staleness.py --project-root <path> --scope workspace --wor
 - `references/snapshot-strategy.md` - When to snapshot and how to label it
 - `references/workspace-memory-guide.md` - Workspace memory structure guidance
 - `references/agent-integrations.md` - Agent-specific install notes
+
+## Trigger Evals
+
+The `evals/` folder contains a small starter set of realistic trigger queries inspired by the Agent Skills authoring guidance. Use them to sanity-check whether the `description` is specific enough to activate on handoff and resume tasks without firing on unrelated coding requests.
+
+- `train_queries.json` is the working set for iterating on the description
+- `validation_queries.json` is the holdout set for a quick regression check
+
+These files are intentionally small. Expand them as you learn where the skill over-triggers or fails to activate.

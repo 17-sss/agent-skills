@@ -17,6 +17,13 @@ This skill keeps one canonical handoff per scope and adds lightweight operationa
 - check whether the document is stale before trusting it
 - optionally write timestamped session snapshots without making them the primary state
 
+## Compatibility and Prerequisites
+
+- `python3` must be available in `PATH` to run the bundled scripts.
+- `git` must be available in `PATH` for branch metadata and freshness checks.
+- The skill still resolves paths and validates documents outside Git, but stale checks are less informative there.
+- All bundled scripts are non-interactive and expose `--help`. Prefer running them directly instead of recreating their logic by hand.
+
 ## Default Workflow
 
 Use this as the default flow unless the user already has a stronger convention:

@@ -1,0 +1,26 @@
+[
+  {
+    "query": "I'm wrapping up work in this repository and need a concise HANDOFF.md with current status, risks, and next actions before I stop for the day.",
+    "should_trigger": true
+  },
+  {
+    "query": "I started from a parent folder that contains frontend, backend, and cdn repos. Please checkpoint the shared cross-repo context so the next session can resume quickly.",
+    "should_trigger": true
+  },
+  {
+    "query": "This workspace has multiple parallel initiatives. I only touched the checkout-flow workstream today, so update the right shared handoff without mixing in other work.",
+    "should_trigger": true
+  },
+  {
+    "query": "Can you fix the TypeScript error in src/app.tsx and update the failing test?",
+    "should_trigger": false
+  },
+  {
+    "query": "Find me a skill for Vercel deployment and show me how to install it.",
+    "should_trigger": false
+  },
+  {
+    "query": "Summarize this markdown file into five bullets.",
+    "should_trigger": false
+  }
+]

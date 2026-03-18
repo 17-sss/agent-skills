@@ -113,7 +113,7 @@ Continue this project from the shared HANDOFF document. First verify the repo st
 
 ## Resume Prompt
 
-Continue this workspace from the shared HANDOFF document. First identify the active workstream, then verify the related workstream notes before editing.
+Continue this workspace from the shared HANDOFF document. First identify the active workstream or active repo set, then verify only those related repositories before editing. Use a workspace-wide scan only when the task truly spans the whole workspace.
 ```
 
 ## Workstream Handoff

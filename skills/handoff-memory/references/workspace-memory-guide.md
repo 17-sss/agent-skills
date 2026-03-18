@@ -2,6 +2,8 @@
 
 Use workspace scope when the agent session starts from a parent folder that coordinates multiple repositories and the task spans more than one repo.
 
+In mixed workspaces, `workspace root` does not automatically mean `all repositories under this folder`. The active workstream or the repositories named in `_memory/HANDOFF.md` should usually define the validation scope.
+
 ## Default Rule
 
 Most sessions should update exactly one canonical handoff for the active context.
@@ -71,6 +73,14 @@ Only update the other workspace or workstream documents when durable shared cont
 - Update `_memory/workstreams/<name>/HANDOFF.md` when a task belongs to one specific initiative inside the workspace
 - Update `_memory/workstreams/<name>/WORKSTREAM.md` when the workstream's repo set or mission changes
 - Do not force a session snapshot for every handoff. Use snapshots when the extra history is worth the noise.
+
+## Resume-Time Validation Rule
+
+When resuming from a workspace root:
+
+- Prefer the matching workstream handoff when one initiative dominates the task
+- If `_memory/HANDOFF.md` clearly names the active repositories, use that narrower repo set for staleness checks
+- Fall back to a workspace-wide scan only when the user explicitly asks for parent-folder-wide status or the active repo set cannot be inferred reliably
 
 ## Relationship to Repo-Level Handoffs
 

@@ -44,6 +44,8 @@ Use this as the default flow unless the user already has a stronger convention:
 5. When resuming, check staleness before trusting old notes.
    Run `scripts/check_staleness.py --project-root <path> --scope auto --document handoff`.
 
+In mixed multi-repo workspaces, do not treat the parent folder as automatically workspace-wide. When the active handoff or a dominant workstream already names the relevant repositories, let that narrower repo set drive resume-time validation. Use `--workspace-wide` only when the user explicitly wants status for every child repository.
+
 Use `--snapshot` with `create_handoff.py` only when the user wants a timestamped checkpoint that is worth preserving. Always pair it with `--snapshot-kind` and a short `--snapshot-reason`. Do not make snapshots the default shared state.
 
 For day-to-day agent behavior, follow `references/agent-usage-best-practices.md`.
@@ -134,9 +136,10 @@ When asked to continue work from a prior session:
 3. Run the staleness check if the document might be old.
 4. If working in workspace scope, read companion memory files only when they are directly relevant.
 5. If the task is only one initiative inside a larger workspace, resolve the workstream document instead of the workspace-wide handoff.
-6. Compare the document against the current repo, workstream, or workspace state and call out drift.
-7. Continue the work.
-8. Refresh and validate the canonical handoff again before ending the session if anything material changed.
+6. In a parent folder with unrelated repositories, narrow validation to the active workstream or the repositories named in the handoff before falling back to a workspace-wide scan.
+7. Compare the document against the current repo, workstream, or workspace state and call out drift.
+8. Continue the work.
+9. Refresh and validate the canonical handoff again before ending the session if anything material changed.
 
 ## Scripts
 
@@ -154,7 +157,7 @@ Check that the document has the required sections, does not leave obvious placeh
 
 ### `scripts/check_staleness.py`
 
-Compare the handoff timestamp against recent repo activity. This helps catch cases where commits or dirty working tree changes made the handoff untrustworthy.
+Compare the handoff timestamp against recent repo activity. In workspace scope, the script first tries to infer the active workstream or active repo set from `_memory/HANDOFF.md` before scanning every child repo. Use `--workspace-wide` only when the user explicitly wants full parent-folder status.
 
 ## References
 

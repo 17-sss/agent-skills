@@ -33,6 +33,8 @@ python3 scripts/resolve_handoff_path.py --project-root <path> --scope auto --doc
 python3 scripts/check_staleness.py --project-root <path> --scope auto --document handoff --format json
 ```
 
+In mixed multi-repo workspaces, do not assume `workspace root` means `scan every child repo`. If `_memory/HANDOFF.md` or the dominant workstream already names the active repositories, treat that narrower repo set as authoritative for resume-time validation.
+
 4. Read the canonical handoff before planning, searching, or editing.
 
 5. Read companion workspace documents only when they are directly relevant.
@@ -42,6 +44,15 @@ python3 scripts/check_staleness.py --project-root <path> --scope auto --document
    - `workstreams/<name>/WORKSTREAM.md` for one initiative's repo set, purpose, or boundaries
 
 6. If the codebase drifted from the handoff, call it out and correct the handoff before relying on it.
+
+### Workspace Resume Narrowing
+
+When resuming from a parent folder that contains multiple unrelated repositories, prefer the active workstream or the repositories named in the active handoff over a parent-folder-wide stale check.
+
+- If one initiative dominates the current task, prefer the matching workstream handoff.
+- If `_memory/HANDOFF.md` clearly names the active repositories, treat them as authoritative for the current session.
+- Ignore unrelated dirty repos unless the task actually touches them or the user asks for workspace-wide status.
+- Use `--workspace-wide` only when you intentionally want status for every child repository.
 
 ## During-Session Rules
 
@@ -132,13 +143,14 @@ python3 scripts/validate_handoff.py --project-root <path> --scope auto --documen
 - Creating snapshots for every routine update
 - Updating all workspace documents every session
 - Mixing unrelated repo combinations into one workspace handoff
+- Running workspace-wide stale checks from a parent folder when the handoff already narrows the active repositories
 - Copying repo-level detail into `_memory/HANDOFF.md` when it does not affect coordination
 - Leaving template placeholders behind in a final handoff
 - Treating agent-specific folders as the primary mutable store
 
 ## Suggested Agent Prompts
 
-- "Resume from the canonical handoff, check for staleness, and call out any drift before editing."
+- "Resume from the canonical handoff, narrow validation to the active workstream or repo set, then call out any drift before editing."
 - "Write or refresh the repo handoff using the current code state, then validate it strictly."
 - "Update the workspace handoff only for cross-repo coordination and keep repo-specific detail in the repo handoffs."
 

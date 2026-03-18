@@ -27,6 +27,7 @@ Path resolution and validation still work outside Git, but freshness checks are 
 - Adds lightweight operational tooling for `create`, `validate`, and `check_staleness`
 - Supports optional timestamped snapshots in `docs/handoffs/` or `_memory/handoffs/`
 - Keeps agent-specific files as references to the shared handoff, not as the primary mutable state
+- Narrows workspace stale checks to the active workstream or repo set named in `_memory/HANDOFF.md` before falling back to every child repository
 
 ## Workflow Summary
 
@@ -35,6 +36,8 @@ Path resolution and validation still work outside Git, but freshness checks are 
 3. Refresh it using the matching structure in `references/`
 4. Validate it with `scripts/validate_handoff.py`
 5. Check staleness with `scripts/check_staleness.py` when resuming older notes
+
+In mixed workspaces, `check_staleness.py` does not blindly scan every child repo by default. It first tries to infer the active workstream or active repo set from the workspace handoff. Use `--workspace-wide` only when you truly want the whole parent folder.
 
 ## Scope Model
 
@@ -141,6 +144,12 @@ Check staleness for one workstream only:
 
 ```bash
 python3 scripts/check_staleness.py --project-root <path> --scope workspace --workstream <name> --document handoff
+```
+
+Force a true workspace-wide scan across every child repo:
+
+```bash
+python3 scripts/check_staleness.py --project-root <path> --scope workspace --document handoff --workspace-wide
 ```
 
 ## Package Layout

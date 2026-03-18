@@ -114,7 +114,7 @@ WORKSPACE_HANDOFF_TEMPLATE = """# HANDOFF
 
 ## Resume Prompt
 
-Continue this workspace from the shared HANDOFF document. First identify the active workstream, then verify the related workstream notes before editing.
+Continue this workspace from the shared HANDOFF document. First identify the active workstream or active repo set, then verify only those related repositories before editing. Use a workspace-wide scan only when the task truly spans the whole workspace.
 """
 
 WORKSTREAM_HANDOFF_TEMPLATE = """# HANDOFF
@@ -377,6 +377,16 @@ _SECTION_RE = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 _WORKSTREAM_LINE_RE = re.compile(r"^- Workstream:\s*(.+?)\s*$", re.MULTILINE)
 _REPO_LINE_RE = re.compile(r"^- Repo:\s*(.+?)\s*$", re.MULTILINE)
 _INVOLVED_REPOS_RE = re.compile(r"^- Repositories involved:\s*(.+?)\s*$", re.MULTILINE)
+_KEY_REPOSITORIES_RE = re.compile(r"^- Key repositories:\s*(.+?)\s*$", re.MULTILINE)
+_PLACEHOLDER_VALUES = {
+    "",
+    "repo",
+    "repositories",
+    "repositories involved",
+    "key repositories",
+    "workstream",
+    "status",
+}
 
 
 @dataclass(frozen=True)
@@ -956,11 +966,86 @@ def repositories_from_handoff_text(text: str) -> list[str]:
     match = _INVOLVED_REPOS_RE.search(text)
     if not match:
         return []
-    raw = match.group(1).strip()
-    if not raw or raw.lower() == "repositories involved":
+    return split_repository_names(match.group(1))
+
+
+def split_repository_names(raw: str) -> list[str]:
+    value = raw.strip()
+    if not value or value.lower() in _PLACEHOLDER_VALUES:
         return []
-    parts = [part.strip() for part in raw.split(",")]
-    return [part for part in parts if part]
+    parts = [part.strip(" `") for part in value.split(",")]
+    return [part for part in parts if part and part.lower() not in _PLACEHOLDER_VALUES]
+
+
+def workspace_workstreams_from_handoff_text(text: str) -> list[dict[str, object]]:
+    sections = section_bodies(text)
+    body = sections.get("Active Workstreams", "")
+    if not body:
+        return []
+
+    entries: list[dict[str, object]] = []
+    current: dict[str, object] | None = None
+    for raw_line in body.splitlines():
+        line = raw_line.strip()
+        if line.startswith("- Workstream:"):
+            if current and current.get("name"):
+                entries.append(current)
+            current = {
+                "name": line.split(":", 1)[1].strip(),
+                "status": "",
+                "repositories": [],
+            }
+        elif current and line.startswith("- Status:"):
+            current["status"] = line.split(":", 1)[1].strip()
+        elif current and line.startswith("- Repositories:"):
+            current["repositories"] = split_repository_names(line.split(":", 1)[1])
+    if current and current.get("name"):
+        entries.append(current)
+
+    cleaned: list[dict[str, object]] = []
+    for entry in entries:
+        name = str(entry.get("name", "")).strip()
+        if not name or name.lower() in _PLACEHOLDER_VALUES:
+            continue
+        cleaned.append(
+            {
+                "name": name,
+                "status": str(entry.get("status", "")).strip(),
+                "repositories": list(entry.get("repositories", [])),
+            }
+        )
+    return cleaned
+
+
+def infer_active_workspace_workstream(text: str) -> str | None:
+    entries = workspace_workstreams_from_handoff_text(text)
+    if not entries:
+        return None
+
+    active_keywords = ("active", "in progress", "ongoing", "current", "working", "open")
+    active = [
+        str(entry["name"])
+        for entry in entries
+        if any(keyword in str(entry["status"]).lower() for keyword in active_keywords)
+    ]
+    if len(active) == 1:
+        return active[0]
+
+    if len(entries) == 1:
+        return str(entries[0]["name"])
+
+    return None
+
+
+def key_repositories_from_workspace_handoff_text(text: str) -> list[str]:
+    sections = section_bodies(text)
+    body = sections.get("Quick Reference", "")
+    if not body:
+        return []
+    match = _KEY_REPOSITORIES_RE.search(body)
+    if not match:
+        return []
+    return split_repository_names(match.group(1))
 
 
 def workspace_repository_map(project_root: Path) -> dict[str, Path]:
@@ -1018,3 +1103,46 @@ def infer_workstream_repositories(
             return matched, "workstream-handoff"
 
     return [], None
+
+
+def infer_workspace_repositories(
+    project_root: Path,
+) -> tuple[list[Path], str | None, str | None]:
+    handoff_path = project_root / WORKSPACE_ROOT / "HANDOFF.md"
+    if not handoff_path.exists():
+        return [], None, None
+
+    text = handoff_path.read_text(encoding="utf-8")
+    active_workstream = infer_active_workspace_workstream(text)
+    if active_workstream:
+        matched, source = infer_workstream_repositories(project_root, active_workstream)
+        if matched:
+            return matched, source or "workspace-active-workstream", active_workstream
+
+        entries = workspace_workstreams_from_handoff_text(text)
+        for entry in entries:
+            if entry["name"] != active_workstream:
+                continue
+            matched = match_workspace_repositories(
+                project_root,
+                list(entry.get("repositories", [])),
+            )
+            if matched:
+                return matched, "workspace-active-workstream", active_workstream
+
+    key_repositories = key_repositories_from_workspace_handoff_text(text)
+    if key_repositories:
+        matched = match_workspace_repositories(project_root, key_repositories)
+        if matched:
+            return matched, "workspace-key-repositories", active_workstream
+
+    entries = workspace_workstreams_from_handoff_text(text)
+    if len(entries) == 1:
+        matched = match_workspace_repositories(
+            project_root,
+            list(entries[0].get("repositories", [])),
+        )
+        if matched:
+            return matched, "workspace-single-workstream", str(entries[0]["name"])
+
+    return [], None, active_workstream

@@ -11,6 +11,7 @@ from pathlib import Path
 
 from handoff_lib import (
     DOCUMENT_CHOICES,
+    infer_workspace_repositories,
     infer_workstream_repositories,
     match_workspace_repositories,
     repo_status,
@@ -50,6 +51,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="append",
         default=[],
         help="Workspace repository name to evaluate for staleness. Repeat for multiple repositories.",
+    )
+    parser.add_argument(
+        "--workspace-wide",
+        action="store_true",
+        help="In workspace scope, skip handoff-based narrowing and scan every child repository.",
     )
     parser.add_argument(
         "--max-age-hours",
@@ -132,6 +138,30 @@ def main() -> int:
 
     selected_repositories: list[Path] = []
     repo_selection_source: str | None = None
+    inferred_workstream: str | None = None
+    if args.workspace_wide and resolution.target_scope != "workspace":
+        parser.error("--workspace-wide only applies to workspace-scope checks.")
+
+    if resolution.target_scope == "workspace":
+        if args.repository:
+            selected_repositories = match_workspace_repositories(
+                resolution.project_root,
+                args.repository,
+            )
+            repo_selection_source = "cli"
+        elif args.workspace_wide:
+            repo_selection_source = "workspace-wide"
+        else:
+            (
+                selected_repositories,
+                repo_selection_source,
+                inferred_workstream,
+            ) = infer_workspace_repositories(resolution.project_root)
+            if not selected_repositories:
+                warnings.append(
+                    "Could not infer an active workspace repo set from the handoff; falling back to every child repository."
+                )
+
     if resolution.target_scope == "workstream":
         if args.repository:
             selected_repositories = match_workspace_repositories(
@@ -170,6 +200,7 @@ def main() -> int:
         "dirty_repositories": dirty_repos,
         "selected_repositories": [str(path) for path in selected_repositories],
         "repo_selection_source": repo_selection_source,
+        "inferred_workstream": inferred_workstream,
         "scope_status": scope_status,
         "reasons": reasons,
         "warnings": warnings,

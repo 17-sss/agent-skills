@@ -35,6 +35,10 @@ Recommended global semantic categories:
 
 Do not default ambiguous changes to `bugfix`. Ambiguous changes should land in a conservative fallback category such as `modify`, `cleanup`, or the repo-local generic gitmoji fallback.
 
+Explicit user summary wording is semantic evidence. If it indicates warning/error removal, direct-access blocking, redirect guards, missing guards, unauthorized visibility fixes, or invalid-request prevention, prefer `bugfix` over routine path or barrel hints.
+
+Path-only structure hints are weak. Routine app page paths such as `apps/*/src/+routes/pages/**/index.tsx`, `index.hooks.ts`, or a single utility export should not select `structure` unless the summary or diff also shows actual folder, routing, public-export, architecture, or responsibility-redistribution work.
+
 ## Phrasing Profile
 
 Format and phrasing should be handled separately.

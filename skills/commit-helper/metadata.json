@@ -1,8 +1,8 @@
 {
   "name": "commit-helper",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "organization": "17-sss",
   "date": "May 2026",
-  "abstract": "Generic commit-message helper that inspects explicit repo-local rules, recent history, and staged semantics to support conventional, gitmoji, plain imperative, and repo-custom commit styles with conservative fallback behavior. Repo-local editor settings count as gitmoji config only when they contain actual gitmoji.* keys. When invoked, it preserves a strict commit-helper-only boundary and refuses to add external orchestration, Lore, or automation co-author metadata unless repo-local rules or the user explicitly require it.",
+  "abstract": "Generic commit-message helper that inspects explicit repo-local rules, recent history, user summary wording, and staged semantics to support conventional, gitmoji, plain imperative, and repo-custom commit styles with conservative fallback behavior. Repo-local editor settings count as gitmoji config only when they contain actual gitmoji.* keys, and routine path hints stay weaker than summary or diff intent. When invoked, it preserves a strict commit-helper-only boundary and refuses to add external orchestration, Lore, or automation co-author metadata unless repo-local rules or the user explicitly require it.",
   "references": []
 }

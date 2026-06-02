@@ -178,6 +178,11 @@ BUGFIX_KEYWORDS = (
     'unauthorized',
     'forbidden',
     'permission denied',
+    'warning',
+    'guard',
+    'redirect',
+    'direct access',
+    'unknown prop',
     '오류',
     '버그',
     '예외',
@@ -185,6 +190,13 @@ BUGFIX_KEYWORDS = (
     '잘못',
     '깨진',
     '정합성',
+    '차단',
+    '복귀',
+    '리다이렉트',
+    '직접 접근',
+    '가드',
+    '누락',
+    '방어',
 )
 CRITICAL_BUG_KEYWORDS = (
     'critical hotfix',
@@ -218,18 +230,17 @@ DIFF_KEYWORD_GROUPS = {
     ),
     'structure': (
         'barrel',
-        'module',
-        'modules',
+        'module structure',
         'route group',
         'route layout',
         're-export',
         'export *',
-        'directory',
-        'folder',
+        'directory structure',
+        'folder structure',
         'architecture',
-        '구조',
-        '모듈',
-        '폴더',
+        'architectural',
+        '구조 변경',
+        '폴더 구조',
     ),
     'move': (
         'rename',
@@ -1374,9 +1385,6 @@ def detect_semantic_signals(
         if any(keyword in lowered_path for keyword in keywords):
           add_signal(signals, signal, f'file path matches {signal} patterns: {path}')
 
-      if lowered_path.endswith(('index.ts', 'index.tsx', 'mod.ts')) or '/routes/' in lowered_path:
-        add_signal(signals, 'structure', f'file path suggests routing or barrel structure changes: {path}')
-
       if lowered_path.endswith(PACKAGE_MANIFEST_FILES):
         add_signal(signals, 'tooling', f'package manifest or lockfile changed: {path}', weight=7)
 
@@ -1392,7 +1400,7 @@ def detect_semantic_signals(
   if any(
       line.lower().startswith(('export *', 'export {')) or ' from "./' in line.lower() or " from './" in line.lower()
       for line in added_content + removed_content):
-    add_signal(signals, 'structure', 'staged diff changes exports or internal module paths', weight=9)
+    add_signal(signals, 'structure', 'staged diff touches exports or internal module paths', weight=4)
 
   added_dependencies: set[str] = set()
   removed_dependencies: set[str] = set()

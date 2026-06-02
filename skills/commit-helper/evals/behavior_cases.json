@@ -24,6 +24,14 @@
     "goal": "Classify actual broken behavior or validation failures as bugfix."
   },
   {
+    "name": "summary_warning_removal_prefers_bug_gitmoji",
+    "goal": "Prefer the bug gitmoji when the user summary says a DOM prop warning is removed, even if staged files sit under route/page/index paths."
+  },
+  {
+    "name": "summary_direct_access_guard_prefers_bug_gitmoji",
+    "goal": "Prefer the bug gitmoji when the user summary and diff describe direct-access guard or redirect restoration, even with module and route path hints."
+  },
+  {
     "name": "file_move_or_legacy_move",
     "goal": "Classify file moves as move or structure, not generic bugfix."
   },

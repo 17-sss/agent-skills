@@ -10,7 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from inspect_commit_style import inspect_repo
+from inspect_commit_style import inspect_repo, text_contains_keyword
 
 EXTERNAL_HARNESS_POLICY = (
     'commit-helper-only: do not add orchestration metadata, Lore trailers, '
@@ -71,10 +71,188 @@ KOREAN_REPORT_LIKE_REWRITES = (
     (r'\s+하도록\s+', ' ', 'shortened "…하도록" phrasing'),
 )
 KOREAN_ACTION_PATTERN = '|'.join(KOREAN_ACTION_TERMS)
+SUMMARY_BUGFIX_STRONG_KEYWORDS = (
+    'warning',
+    'error',
+    'bug',
+    'broken',
+    'invalid',
+    'unauthorized',
+    'forbidden',
+    'guard',
+    'redirect',
+    'direct access',
+    'unknown prop',
+    'dom prop',
+    '오류',
+    '에러',
+    '버그',
+    '차단',
+    '복귀',
+    '리다이렉트',
+    '직접 접근',
+    '가드',
+    '누락',
+    '방어',
+)
+SUMMARY_BUGFIX_CONTEXTUAL_KEYWORDS = (
+    '제거',
+    '수정',
+    '처리',
+    '방지',
+    '보정',
+    'remove',
+    'fix',
+    'prevent',
+)
+SUMMARY_BUGFIX_CONTEXT_HINTS = (
+    'warning',
+    'error',
+    'prop',
+    'dom',
+    '접근',
+    '요청',
+    '노출',
+    'redirect',
+    'guard',
+    'api',
+    '호출',
+)
 
 
 def normalize_summary(summary: str) -> str:
   return ' '.join(summary.replace('\\n', ' ').split())
+
+
+def summary_indicates_bugfix(summary: str) -> tuple[bool, list[str]]:
+  lowered = normalize_summary(summary).lower()
+  reasons: list[str] = []
+  for keyword in SUMMARY_BUGFIX_STRONG_KEYWORDS:
+    if text_contains_keyword(lowered, keyword):
+      reasons.append(f'summary includes bugfix-oriented keyword: {keyword}')
+  has_contextual_action = any(
+      text_contains_keyword(lowered, keyword)
+      for keyword in SUMMARY_BUGFIX_CONTEXTUAL_KEYWORDS
+  )
+  has_bug_context = any(
+      text_contains_keyword(lowered, keyword)
+      for keyword in SUMMARY_BUGFIX_CONTEXT_HINTS
+  )
+  if has_contextual_action and has_bug_context:
+    reasons.append('summary combines a fix/removal action with warning, access, guard, request, or exposure context')
+  return bool(reasons), reasons[:4]
+
+
+def semantic_values(candidate: dict[str, object]) -> set[str]:
+  values: set[str] = set()
+  for key in ('semantic_primary', 'semantic_secondary', 'semantic_categories'):
+    raw = candidate.get(key)
+    if isinstance(raw, list):
+      values.update(str(item) for item in raw if isinstance(item, str))
+  code = candidate.get('code')
+  if code == ':bug:':
+    values.add('bugfix')
+  return values
+
+
+def clone_gitmoji_candidate(candidate: dict[str, object], reasons: list[str]) -> dict[str, object]:
+  payload = dict(candidate)
+  payload['score'] = max(int(payload.get('score') or 0), 10_000)
+  payload['matched_primary'] = ['bugfix']
+  payload['matched_secondary'] = [
+      value for value in semantic_values(candidate) if value != 'bugfix'
+  ][:3]
+  payload['reasons'] = reasons
+  payload['is_fallback'] = False
+  return payload
+
+
+def find_bugfix_gitmoji_candidate(
+    inspection: dict[str, object | None],
+    reasons: list[str],
+) -> dict[str, object] | None:
+  search_spaces: list[object] = [
+      inspection.get('gitmoji_recommendations'),
+      inspection.get('allowed_gitmoji_details'),
+  ]
+  recommended = inspection.get('recommended_gitmoji')
+  if isinstance(recommended, dict):
+    search_spaces.insert(0, [recommended])
+
+  for space in search_spaces:
+    if not isinstance(space, list):
+      continue
+    for item in space:
+      if not isinstance(item, dict):
+        continue
+      values = semantic_values(item)
+      if 'bugfix' in values or item.get('emoji') == '🐛':
+        return clone_gitmoji_candidate(item, reasons)
+
+  allowed = inspection.get('allowed_gitmoji')
+  if isinstance(allowed, list) and allowed:
+    return None
+  if inspection.get('should_use_gitmoji'):
+    return {
+        'emoji': '🐛',
+        'code': ':bug:',
+        'description': 'Fix a bug.',
+        'semantic_primary': ['bugfix'],
+        'semantic_secondary': [],
+        'semantic_categories': ['bugfix'],
+        'semantic_source': 'summary',
+        'score': 10_000,
+        'matched_primary': ['bugfix'],
+        'matched_secondary': [],
+        'reasons': reasons,
+        'is_fallback': False,
+    }
+  return None
+
+
+def apply_summary_semantics(
+    inspection: dict[str, object | None],
+    summary: str,
+) -> dict[str, object | None]:
+  is_bugfix, reasons = summary_indicates_bugfix(summary)
+  if not is_bugfix:
+    return inspection
+
+  updated = dict(inspection)
+  summary_candidate = {
+      'signal': 'bugfix',
+      'score': 14,
+      'reasons': reasons,
+  }
+  existing_candidates = updated.get('semantic_candidates')
+  candidates = [summary_candidate]
+  if isinstance(existing_candidates, list):
+    candidates.extend(
+        item
+        for item in existing_candidates
+        if not (isinstance(item, dict) and item.get('signal') == 'bugfix')
+    )
+  updated['semantic_category'] = 'bugfix'
+  updated['semantic_confidence'] = 'high'
+  updated['is_bugfix_confident'] = True
+  updated['semantic_candidates'] = candidates[:6]
+  updated['summary_semantic_category'] = 'bugfix'
+  updated['summary_semantic_reasons'] = reasons
+
+  bugfix_gitmoji = find_bugfix_gitmoji_candidate(updated, reasons)
+  if bugfix_gitmoji is not None:
+    existing_recommendations = updated.get('gitmoji_recommendations')
+    recommendations = [bugfix_gitmoji]
+    if isinstance(existing_recommendations, list):
+      recommendations.extend(
+          item
+          for item in existing_recommendations
+          if not (isinstance(item, dict) and item.get('emoji') == bugfix_gitmoji.get('emoji'))
+      )
+    updated['recommended_gitmoji'] = bugfix_gitmoji
+    updated['gitmoji_recommendations'] = recommendations[:5]
+    updated['requires_human_gitmoji_review'] = False
+  return updated
 
 
 def detect_text_language(text: str) -> str:
@@ -392,6 +570,7 @@ def main() -> int:
   if not summary:
     raise SystemExit('Summary cannot be empty.')
   polished_summary, summary_polish_reason, summary_language = polish_summary(summary, inspection)
+  inspection = apply_summary_semantics(inspection, polished_summary)
 
   warnings: list[str] = []
   effective_style_family = determine_effective_style_family(

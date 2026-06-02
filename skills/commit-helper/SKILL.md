@@ -21,7 +21,7 @@ The helper does not try to support every commit format in the wild. It separates
 - `format`: conventional, gitmoji, plain, or repo-custom template
 - `phrasing`: language, tone, title length, and common wording habits
 
-It first infers semantic meaning from the staged diff, then converts that meaning into the repository's preferred style family and phrasing profile.
+It first infers semantic meaning from explicit user summary wording plus the staged diff, then converts that meaning into the repository's preferred style family and phrasing profile.
 
 
 ## Invocation Boundary
@@ -70,7 +70,11 @@ When this skill is invoked, commit-message construction is governed by **commit-
 - If explicit rules and history are weak or mixed, use the conservative fallback.
 - The semantic layer is global. The presentation layer is repo-specific.
   - Infer staged diff meaning as one of: `feature`, `bugfix`, `critical-bug`, `refactor`, `structure`, `move`, `ui-style`, `responsive`, `accessibility`, `docs`, `config`, `tooling`, `cleanup`, or `modify`.
+  - Let explicit user summary wording refine that staged semantic inference before selecting the conventional type or gitmoji.
   - Then express that meaning in the repository's style family.
+- Treat path hints as weaker than user summary and diff intent.
+  - Do not treat routine app page paths such as `apps/*/src/+routes/pages/**/index.tsx` or `index.hooks.ts` as strong `structure` evidence by themselves.
+  - Use `structure` strongly only for actual architecture, routing-structure, folder-structure, file-move, public-export-shape, or component responsibility changes.
 - Conventional fallback is the default safe fallback when the repo does not clearly signal another style.
 - Phrasing fallback should stay conservative.
   - Korean: prefer short natural noun/verb-style wording over report-like description.
@@ -82,6 +86,7 @@ When this skill is invoked, commit-message construction is governed by **commit-
   - If gitmoji confidence is low, prefer the repo-local fallback gitmoji when one exists. Do not force a bugfix emoji on ambiguous changes.
 - Bugfix classification must be conservative.
   - Use `bugfix` or `critical-bug` only when the staged diff clearly fixes broken behavior, validation blocks, regressions, crashes, or incorrect state.
+  - Raise bugfix confidence when the user summary or diff indicates warning/error removal, direct-access guards, redirect guards, unauthorized visibility fixes, missing guards, or prevention of invalid requests.
   - UI spacing, modal sizing, wrapper cleanup, and layout changes should usually land in `ui-style`, `structure`, or `modify` instead.
 - Keep `title-only-preferred`, `body-optional`, and `body-required` policies distinct.
 - The helper should match repo-local wording habits when possible.

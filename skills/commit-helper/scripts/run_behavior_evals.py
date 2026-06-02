@@ -94,6 +94,21 @@ def configure_gitmoji_repo(repo: Path) -> None:
   git(repo, 'commit', '-m', '🌊 configure local gitmoji')
 
 
+def configure_user_gitmoji_repo(repo: Path) -> None:
+  settings = {
+      'gitmoji.onlyUseCustomEmoji': True,
+      'gitmoji.addCustomEmoji': [
+          {'emoji': '✨', 'code': ':sparkles:', 'description': '기능 추가'},
+          {'emoji': '🐛', 'code': ':bug:', 'description': '버그 수정'},
+          {'emoji': '🌊', 'code': ':ocean:', 'description': '코드 수정'},
+          {'emoji': '🏗', 'code': ':building_construction:', 'description': '프로젝트 구조 변경'},
+      ],
+  }
+  write(repo / '.vscode/settings.json', json.dumps(settings, ensure_ascii=False, indent=2) + '\n')
+  git(repo, 'add', '.vscode/settings.json')
+  git(repo, 'commit', '-m', '🌊 configure user app gitmoji')
+
+
 def case_explicit_conventional_repo() -> None:
   repo = init_repo('commit-helper-explicit-conventional')
   write(
@@ -257,6 +272,80 @@ def case_actual_validation_bugfix() -> None:
   assert_true(inspected['is_bugfix_confident'], 'validation failure changes should be bugfix-confident')
   drafted = json.loads(draft(repo, '--summary', 'prevent validation failure on empty input', '--no-body').stdout)
   assert_true(drafted['title'].startswith('fix'), 'actual broken behavior should map to fix:')
+
+
+def case_summary_warning_removal_prefers_bug_gitmoji() -> None:
+  repo = init_repo('commit-helper-summary-warning-bugfix')
+  configure_user_gitmoji_repo(repo)
+  make_history_commit(repo, '🏗 (a:user) 강의실 템플릿 구조 정리')
+  make_history_commit(repo, '🌊 (a:user) 강의실 상세 코드 수정')
+  write(
+      repo / 'apps/user/src/+routes/pages/MyCoursesClassroomPage/index.tsx',
+      '<MyCoursesDetailTemplate children={contents} courseId={courseId} />\n',
+  )
+  write(
+      repo / 'apps/user/src/my-course/components/MyCoursesDetailTemplate/index.tsx',
+      'type Props = { courseId?: string; children?: React.ReactNode };\n',
+  )
+  git(repo, 'add', 'apps/user/src/+routes/pages/MyCoursesClassroomPage/index.tsx', 'apps/user/src/my-course/components/MyCoursesDetailTemplate/index.tsx')
+  git(repo, 'commit', '-m', '🏗 (a:user) 강의실 템플릿 구조 준비')
+  write(
+      repo / 'apps/user/src/+routes/pages/MyCoursesClassroomPage/index.tsx',
+      '<MyCoursesDetailTemplate>{contents}</MyCoursesDetailTemplate>;\n',
+  )
+  write(
+      repo / 'apps/user/src/my-course/components/MyCoursesDetailTemplate/index.tsx',
+      'type Props = { children?: React.ReactNode };\n',
+  )
+  git(repo, 'add', 'apps/user/src/+routes/pages/MyCoursesClassroomPage/index.tsx', 'apps/user/src/my-course/components/MyCoursesDetailTemplate/index.tsx')
+  drafted = json.loads(draft(repo, '--summary', '강의실 courseId DOM prop warning 제거', '--no-body').stdout)
+  assert_equal(
+      drafted['title'],
+      '🐛 (a:user) 강의실 courseId DOM prop warning 제거',
+      'warning removal should prefer the bug gitmoji over structure',
+  )
+  assert_equal(drafted['semantic_category'], 'bugfix', 'summary warning removal should classify as bugfix')
+
+
+def case_summary_direct_access_guard_prefers_bug_gitmoji() -> None:
+  repo = init_repo('commit-helper-summary-direct-access-bugfix')
+  configure_user_gitmoji_repo(repo)
+  make_history_commit(repo, '🏗 (a:user) 시험 설문 라우트 구조 정리')
+  make_history_commit(repo, '🌊 (a:user) 강의실 모듈 코드 수정')
+  initial_files = {
+      'apps/user/src/+routes/pages/MyCoursesExamPage/index.hooks.ts': 'export const enabled = true;\n',
+      'apps/user/src/+routes/pages/MyCoursesSurveyPage/index.hooks.ts': 'export const enabled = true;\n',
+      'apps/user/src/+shared/hooks/useEnrollmentGuard.ts': 'export function useEnrollmentGuard() { return true; }\n',
+      'apps/user/src/+shared/functions/course.ts': 'export const isCourseVisible = true;\n',
+  }
+  for path, content in initial_files.items():
+    write(repo / path, content)
+  git(repo, 'add', *initial_files.keys())
+  git(repo, 'commit', '-m', '🏗 (a:user) 시험 설문 모듈 구조 준비')
+  write(
+      repo / 'apps/user/src/+routes/pages/MyCoursesExamPage/index.hooks.ts',
+      'export const enabled = !!moduleInfoMap;\nredirectIfModuleUnavailable();\n',
+  )
+  write(
+      repo / 'apps/user/src/+routes/pages/MyCoursesSurveyPage/index.hooks.ts',
+      'export const enabled = !!moduleInfoMap;\nredirectIfModuleUnavailable();\n',
+  )
+  write(
+      repo / 'apps/user/src/+shared/hooks/useEnrollmentGuard.ts',
+      'export function useEnrollmentGuard() { navigate(LINKS.myCoursesOngoingClassroom); return true; }\n',
+  )
+  write(
+      repo / 'apps/user/src/+shared/functions/course.ts',
+      'export const isCourseModuleVisibleInCurriculum = true;\n',
+  )
+  git(repo, 'add', *initial_files.keys())
+  drafted = json.loads(draft(repo, '--summary', '시험 설문 비활성 모듈 직접 접근 복귀 처리', '--no-body').stdout)
+  assert_equal(
+      drafted['title'],
+      '🐛 (a:user) 시험 설문 비활성 모듈 직접 접근 복귀 처리',
+      'direct access guard restoration should prefer the bug gitmoji over structure',
+  )
+  assert_equal(drafted['semantic_category'], 'bugfix', 'direct access guard summary should classify as bugfix')
 
 
 def case_file_move_or_legacy_move() -> None:
@@ -440,6 +529,8 @@ CASES = [
     ('mixed_history_without_rules', case_mixed_history_without_rules),
     ('presentational_modal_cleanup', case_presentational_modal_cleanup),
     ('actual_validation_bugfix', case_actual_validation_bugfix),
+    ('summary_warning_removal_prefers_bug_gitmoji', case_summary_warning_removal_prefers_bug_gitmoji),
+    ('summary_direct_access_guard_prefers_bug_gitmoji', case_summary_direct_access_guard_prefers_bug_gitmoji),
     ('file_move_or_legacy_move', case_file_move_or_legacy_move),
     ('title_only_preferred_repo', case_title_only_preferred_repo),
     ('global_commit_template_ignored', case_global_commit_template_ignored),

@@ -28,6 +28,8 @@ When this skill is invoked, commit messages come only from repo-local rules, rec
 - Follows `explicit local rules > recent history > conservative fallback`
 - Uses Conventional Commits as the safe fallback when no strong signal exists
 - Activates gitmoji strongly only when repo-local config, repo documentation, or emoji-dominant history justifies it; `.vscode/settings.json` counts as repo-local gitmoji config only when it contains `gitmoji.*` keys
+- Lets explicit user summary wording refine staged semantic inference before selecting a conventional type or gitmoji
+- Keeps routine route/page paths and `index.tsx` files as weak hints unless the diff or summary shows actual structure work
 - Keeps semantic inference global and style expression repo-specific
 - Separates commit `format` from commit `phrasing`
 - Infers wording profile signals such as dominant language, tone, title length, and common Korean action nouns

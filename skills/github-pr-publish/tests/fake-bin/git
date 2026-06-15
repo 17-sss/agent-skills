@@ -8,6 +8,8 @@ printf '\n' >>"$log"
 branch=${FAKE_BRANCH:-feature-branch}
 remote_url=${FAKE_REMOTE_URL:-git@github.com:OWNER/REPO.git}
 remote_has_head=${FAKE_REMOTE_HAS_HEAD:-1}
+head_sha=${FAKE_HEAD_SHA:-abc123}
+remote_head_sha=${FAKE_REMOTE_HEAD_SHA:-$head_sha}
 
 git_die() { printf 'fake git error: %s\n' "$*" >&2; exit 1; }
 
@@ -29,7 +31,7 @@ case "${1:-}" in
     ;;
   ls-remote)
     if [[ "$remote_has_head" == "1" ]]; then
-      printf 'abc123\t%s\n' "${3:-refs/heads/$branch}"; exit 0
+      printf '%s\t%s\n' "$remote_head_sha" "${3:-refs/heads/$branch}"; exit 0
     fi
     exit 2
     ;;
@@ -43,6 +45,7 @@ case "${1:-}" in
     if [[ "${2:-}" == "--is-inside-work-tree" ]]; then printf 'true\n'; exit 0; fi
     if [[ "${2:-}" == "--show-toplevel" ]]; then printf '/tmp/fake-repo\n'; exit 0; fi
     if [[ "${2:-}" == "--abbrev-ref" ]]; then printf 'origin/%s\n' "$branch"; exit 0; fi
+    if [[ "${2:-}" == "HEAD" ]]; then printf '%s\n' "$head_sha"; exit 0; fi
     ;;
   status)
     exit 0

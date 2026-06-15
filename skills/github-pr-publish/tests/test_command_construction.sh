@@ -12,6 +12,7 @@ trap 'rm -rf "$TEST_TMP"' EXIT
 export PATH="$FAKE_BIN:$PATH"
 export FAKE_GH_LOG="$TEST_TMP/gh.log"
 export FAKE_GIT_LOG="$TEST_TMP/git.log"
+export FAKE_SSH_LOG="$TEST_TMP/ssh.log"
 export FAKE_HARNESS_DIR="$TEST_TMP"
 export TMPDIR="$TEST_TMP"
 export FAKE_REPO="OWNER/REPO"
@@ -24,7 +25,7 @@ export FAKE_PR_URL="https://github.com/OWNER/REPO/pull/123"
 pass_count=0
 fail() { printf 'not ok - %s\n' "$*" >&2; exit 1; }
 pass() { pass_count=$((pass_count + 1)); printf 'ok %d - %s\n' "$pass_count" "$*"; }
-reset_logs() { : >"$FAKE_GH_LOG"; : >"$FAKE_GIT_LOG"; unset FAKE_DETACHED FAKE_REMOTE_HAS_HEAD FAKE_AUTH_FAIL FAKE_ALLOW_PUSH FAKE_REMOTE_URL FAKE_API_FAIL FAKE_CREATE_404 FAKE_API_INPUT_COPY; export FAKE_REMOTE_URL="git@github.com:OWNER/REPO.git"; export FAKE_REMOTE_HAS_HEAD=1; }
+reset_logs() { : >"$FAKE_GH_LOG"; : >"$FAKE_GIT_LOG"; : >"$FAKE_SSH_LOG"; unset FAKE_DETACHED FAKE_REMOTE_HAS_HEAD FAKE_AUTH_FAIL FAKE_ALLOW_PUSH FAKE_REMOTE_URL FAKE_API_FAIL FAKE_CREATE_404 FAKE_API_INPUT_COPY FAKE_SSH_ALIAS FAKE_SSH_HOSTNAME FAKE_HEAD_SHA FAKE_REMOTE_HEAD_SHA FAKE_GITHUB_HEAD_SHA FAKE_GITHUB_HEAD_MISSING; export FAKE_REMOTE_URL="git@github.com:OWNER/REPO.git"; export FAKE_REMOTE_HAS_HEAD=1; }
 run_ok() { local out=$1; shift; "$SCRIPT" "$@" >"$out" 2>"$out.err"; }
 run_fail() { local out=$1; shift; if "$SCRIPT" "$@" >"$out" 2>"$out.err"; then cat "$out" "$out.err" >&2; fail "expected failure: $*"; fi; }
 assert_contains() { grep -F -- "$2" "$1" >/dev/null || { cat "$1" >&2; fail "expected '$2' in $1"; }; }
@@ -65,6 +66,34 @@ assert_contains "$out" '--head OWNER:feature-branch'
 assert_not_contains "$FAKE_GH_LOG" 'pr create'
 assert_not_contains "$FAKE_GIT_LOG" 'push'
 pass 'preview performs no mutation and renders explicit head'
+
+reset_logs
+export FAKE_REMOTE_URL='https://github.com/OWNER/REPO.git'
+out="$TEST_TMP/https-preview.out"
+run_ok "$out" --repo OWNER/REPO --base main --head OWNER:feature-branch --title 'Add feature' --body-file "$body"
+assert_contains "$out" 'preview: no remote mutation performed'
+assert_not_contains "$FAKE_SSH_LOG" 'ssh -G'
+pass 'https github remote is accepted without ssh alias lookup'
+
+reset_logs
+export FAKE_REMOTE_URL='git@github.com-17-sss:OWNER/REPO'
+out="$TEST_TMP/ssh-alias-create.out"
+run_ok "$out" --repo OWNER/REPO --base main --head OWNER:feature-branch --title 'Add feature' --body-file "$body" --yes
+assert_contains "$FAKE_SSH_LOG" 'ssh -G github.com-17-sss'
+assert_contains "$FAKE_GH_LOG" 'pr create'
+assert_contains "$FAKE_GH_LOG" '--head OWNER:feature-branch'
+pass 'scp-style ssh alias resolving to github.com is accepted for create'
+
+reset_logs
+export FAKE_REMOTE_URL='git@unknown-alias:OWNER/REPO.git'
+out="$TEST_TMP/explicit-head-fallback.out"
+run_ok "$out" --repo OWNER/REPO --base main --head OWNER:feature-branch --title 'Add feature' --body-file "$body" --yes
+assert_contains "$out.err" 'using explicit --repo/--head fallback'
+assert_contains "$FAKE_GIT_LOG" 'ls-remote --exit-code origin refs/heads/feature-branch'
+assert_contains "$FAKE_GIT_LOG" 'rev-parse HEAD'
+assert_contains "$FAKE_GH_LOG" 'api repos/OWNER/REPO/git/ref/heads/feature-branch --jq .object.sha'
+assert_contains "$FAKE_GH_LOG" 'pr create'
+pass 'explicit head fallback verifies remote/local/GitHub head before create'
 
 reset_logs
 out="$TEST_TMP/missing-head.out"
@@ -123,6 +152,16 @@ assert_contains "$out.err" 'fork remotes are not supported'
 pass 'fork/wrong remote is rejected'
 
 reset_logs
+export FAKE_REMOTE_URL='git@unknown-alias:OWNER/REPO.git'
+export FAKE_REMOTE_HAS_HEAD=0
+export FAKE_ALLOW_PUSH=1
+out="$TEST_TMP/unknown-alias-push.out"
+run_fail "$out" --repo OWNER/REPO --base main --title 'Add feature' --body-file "$body" --push --remote origin --yes
+assert_contains "$out.err" 'refusing to treat it as a GitHub remote'
+assert_not_contains "$FAKE_GIT_LOG" 'push origin'
+pass 'unknown ssh alias is rejected for guarded push'
+
+reset_logs
 out="$TEST_TMP/force.out"
 run_fail "$out" --repo OWNER/REPO --base main --head OWNER:feature-branch --title 'Add feature' --body-file "$body" -f --yes
 assert_contains "$out.err" 'force-like push options are not supported'
@@ -144,6 +183,17 @@ assert_contains "$FAKE_GIT_LOG" 'push origin HEAD:feature-branch'
 assert_contains "$FAKE_GH_LOG" 'pr create'
 assert_contains "$FAKE_GH_LOG" '--head OWNER:feature-branch'
 pass 'guarded push creates with explicit derived head'
+
+reset_logs
+export FAKE_REMOTE_URL='ssh://git@github.com-17-sss/OWNER/REPO.git'
+export FAKE_REMOTE_HAS_HEAD=0
+export FAKE_ALLOW_PUSH=1
+out="$TEST_TMP/ssh-url-alias-push-create.out"
+run_ok "$out" --repo OWNER/REPO --base main --title 'Add feature' --body-file "$body" --push --remote origin --yes
+assert_contains "$FAKE_SSH_LOG" 'ssh -G github.com-17-sss'
+assert_contains "$FAKE_GIT_LOG" 'push origin HEAD:feature-branch'
+assert_contains "$FAKE_GH_LOG" '--head OWNER:feature-branch'
+pass 'ssh-url alias resolving to github.com is accepted for guarded push'
 
 reset_logs
 out="$TEST_TMP/rest-fill-only.out"

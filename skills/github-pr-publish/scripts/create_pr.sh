@@ -86,13 +86,98 @@ owner_from_head() {
 }
 
 parse_github_remote() {
-  local url=$1
+  local url=$1 host path
   case "$url" in
-    git@github.com:*.git) printf '%s\n' "${url#git@github.com:}" | sed 's/\.git$//' ;;
+    git@*:*)
+      host=${url#git@}
+      host=${host%%:*}
+      path=${url#git@$host:}
+      if ssh_remote_host_is_github "$host"; then
+        printf '%s\n' "${path%.git}"
+      else
+        printf '\n'
+      fi
+      ;;
+    ssh://git@*/*)
+      host=${url#ssh://git@}
+      host=${host%%/*}
+      path=${url#ssh://git@$host/}
+      if ssh_remote_host_is_github "$host"; then
+        printf '%s\n' "${path%.git}"
+      else
+        printf '\n'
+      fi
+      ;;
     https://github.com/*.git) printf '%s\n' "${url#https://github.com/}" | sed 's/\.git$//' ;;
     https://github.com/*) printf '%s\n' "${url#https://github.com/}" | sed 's/\.git$//' ;;
     *) printf '\n' ;;
   esac
+}
+
+remote_url_is_ssh() {
+  case "$1" in
+    git@*:*) return 0 ;;
+    ssh://git@*/*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+remote_url_host() {
+  local url=$1 host
+  case "$url" in
+    git@*:*)
+      host=${url#git@}
+      printf '%s\n' "${host%%:*}"
+      ;;
+    ssh://git@*/*)
+      host=${url#ssh://git@}
+      printf '%s\n' "${host%%/*}"
+      ;;
+    https://github.com/*)
+      printf '%s\n' "github.com"
+      ;;
+    *)
+      printf '\n'
+      ;;
+  esac
+}
+
+ssh_config_hostname() {
+  local host=$1
+  command -v ssh >/dev/null 2>&1 || return 1
+  ssh -G "$host" 2>/dev/null | awk 'tolower($1)=="hostname"{print $2; exit}'
+}
+
+ssh_remote_host_is_github() {
+  local host=$1 normalized
+  if [[ "$host" == "github.com" ]]; then
+    return 0
+  fi
+  normalized=$(ssh_config_hostname "$host" || true)
+  [[ "$normalized" == "github.com" ]]
+}
+
+describe_remote_parse_failure() {
+  local remote=$1 url=$2 host normalized
+  if remote_url_is_ssh "$url"; then
+    host=$(remote_url_host "$url")
+    if [[ -z "$host" ]]; then
+      printf "remote '%s' is not a github.com remote understood by this skill" "$remote"
+      return
+    fi
+    if ! command -v ssh >/dev/null 2>&1; then
+      printf "remote '%s' uses SSH host '%s', but ssh is required to verify host aliases before treating them as github.com" "$remote" "$host"
+      return
+    fi
+    normalized=$(ssh_config_hostname "$host" || true)
+    if [[ -z "$normalized" ]]; then
+      printf "remote '%s' uses SSH host alias '%s', but ssh -G could not resolve a HostName; refusing to treat it as github.com" "$remote" "$host"
+      return
+    fi
+    printf "remote '%s' uses SSH host alias '%s' which resolves to '%s', not github.com; refusing to treat it as a GitHub remote" "$remote" "$host" "$normalized"
+    return
+  fi
+  printf "remote '%s' is not a github.com remote understood by this skill" "$remote"
 }
 
 current_branch() {
@@ -139,18 +224,46 @@ verify_remote_matches_repo() {
   local remote=$1 repo=$2 url remote_repo
   url=$(git remote get-url "$remote" 2>/dev/null) || die "remote not found: $remote"
   remote_repo=$(parse_github_remote "$url")
-  [[ -n "$remote_repo" ]] || die "remote '$remote' is not a github.com remote understood by this skill"
+  [[ -n "$remote_repo" ]] || die "$(describe_remote_parse_failure "$remote" "$url")"
   [[ "$remote_repo" == "$repo" ]] || die "remote '$remote' points to '$remote_repo', not '$repo'; fork remotes are not supported"
+}
+
+remote_head_sha() {
+  local remote=$1 branch=$2
+  git ls-remote --exit-code "$remote" "refs/heads/$branch" 2>/dev/null | awk 'NR==1{print $1}'
 }
 
 remote_head_exists() {
   local remote=$1 branch=$2
-  git ls-remote --exit-code "$remote" "refs/heads/$branch" >/dev/null 2>&1
+  remote_head_sha "$remote" "$branch" >/dev/null 2>&1
+}
+
+local_head_sha() {
+  git rev-parse HEAD 2>/dev/null
+}
+
+github_head_sha() {
+  local repo=$1 branch=$2
+  gh api "repos/$repo/git/ref/heads/$branch" --jq .object.sha 2>/dev/null
+}
+
+verify_explicit_head_fallback() {
+  local remote=$1 repo=$2 branch=$3 remote_sha local_sha github_sha
+  if ! remote_sha=$(remote_head_sha "$remote" "$branch"); then
+    die "remote head '$branch' was not found on '$remote'; push it yourself first or use a verifiable github.com remote"
+  fi
+  [[ -n "$remote_sha" ]] || die "remote head '$branch' on '$remote' did not return a SHA"
+  local_sha=$(local_head_sha) || die "could not determine local HEAD SHA"
+  [[ "$remote_sha" == "$local_sha" ]] || die "remote head '$branch' on '$remote' is '$remote_sha', but local HEAD is '$local_sha'"
+  github_sha=$(github_head_sha "$repo" "$branch") || die "could not verify GitHub head '$repo:$branch'"
+  [[ -n "$github_sha" ]] || die "GitHub head '$repo:$branch' did not return a SHA"
+  [[ "$github_sha" == "$local_sha" ]] || die "GitHub head '$repo:$branch' is '$github_sha', but local HEAD is '$local_sha'"
 }
 
 REPO=""
 BASE=""
 HEAD=""
+HEAD_WAS_EXPLICIT=0
 TITLE=""
 BODY=""
 BODY_FILE=""
@@ -174,7 +287,7 @@ while [[ $# -gt 0 ]]; do
     -h|--help) usage; exit 0 ;;
     -R|--repo) [[ $# -ge 2 ]] || die "--repo requires OWNER/REPO"; REPO=$2; shift 2 ;;
     --base) [[ $# -ge 2 ]] || die "--base requires a branch"; BASE=$2; shift 2 ;;
-    --head) [[ $# -ge 2 ]] || die "--head requires OWNER:BRANCH"; HEAD=$2; shift 2 ;;
+    --head) [[ $# -ge 2 ]] || die "--head requires OWNER:BRANCH"; HEAD=$2; HEAD_WAS_EXPLICIT=1; shift 2 ;;
     --title) [[ $# -ge 2 ]] || die "--title requires text"; TITLE=$2; shift 2 ;;
     --body) [[ $# -ge 2 ]] || die "--body requires text"; BODY=$2; shift 2 ;;
     --body-file) [[ $# -ge 2 ]] || die "--body-file requires a file"; BODY_FILE=$2; shift 2 ;;
@@ -229,7 +342,17 @@ if [[ $PUSH -eq 0 && -n "$REMOTE" ]]; then
   warn "--remote was provided without --push; it will be used for remote-head verification only"
 fi
 REMOTE=${REMOTE:-origin}
-verify_remote_matches_repo "$REMOTE" "$REPO"
+REMOTE_URL=$(git remote get-url "$REMOTE" 2>/dev/null) || die "remote not found: $REMOTE"
+REMOTE_REPO=$(parse_github_remote "$REMOTE_URL")
+EXPLICIT_HEAD_FALLBACK=0
+if [[ -n "$REMOTE_REPO" ]]; then
+  [[ "$REMOTE_REPO" == "$REPO" ]] || die "remote '$REMOTE' points to '$REMOTE_REPO', not '$REPO'; fork remotes are not supported"
+elif [[ $PUSH -eq 0 && $HEAD_WAS_EXPLICIT -eq 1 && "$HEAD_OWNER" == "$(repo_owner "$REPO")" ]] && remote_url_is_ssh "$REMOTE_URL"; then
+  warn "$(describe_remote_parse_failure "$REMOTE" "$REMOTE_URL"); using explicit --repo/--head fallback after proving local HEAD matches both the remote branch and GitHub head"
+  EXPLICIT_HEAD_FALLBACK=1
+else
+  verify_remote_matches_repo "$REMOTE" "$REPO"
+fi
 ensure_safe_branch "$LOCAL_BRANCH" "$BASE" "$DEFAULT_BRANCH"
 
 printf 'State machine: preview -> validate -> optional guarded push -> create -> verify\n'
@@ -273,6 +396,8 @@ printf 'Authenticated GitHub account: @%s\n' "$ACCOUNT"
 if [[ $PUSH -eq 1 ]]; then
   print_command git push "$REMOTE" "HEAD:$LOCAL_BRANCH"
   git push "$REMOTE" "HEAD:$LOCAL_BRANCH"
+elif [[ $EXPLICIT_HEAD_FALLBACK -eq 1 ]]; then
+  verify_explicit_head_fallback "$REMOTE" "$REPO" "$HEAD_BRANCH"
 elif ! remote_head_exists "$REMOTE" "$HEAD_BRANCH"; then
   die "remote head '$HEAD_BRANCH' was not found on '$REMOTE'; use --push --remote $REMOTE --yes or push it yourself first"
 fi

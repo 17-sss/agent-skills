@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+log=${FAKE_SSH_LOG:-}
+if [[ -n "$log" ]]; then
+  printf 'ssh' >>"$log"
+  printf ' %q' "$@" >>"$log"
+  printf '\n' >>"$log"
+fi
+
+if [[ "${1:-}" == "-G" && $# -ge 2 ]]; then
+  host=$2
+  alias_host=${FAKE_SSH_ALIAS:-github.com-17-sss}
+  alias_hostname=${FAKE_SSH_HOSTNAME:-github.com}
+  if [[ "$host" == "$alias_host" ]]; then
+    printf 'user git\nhostname %s\n' "$alias_hostname"
+  else
+    printf 'user git\nhostname %s\n' "$host"
+  fi
+  exit 0
+fi
+
+printf 'fake ssh: unsupported command:' >&2
+printf ' %q' "$@" >&2
+printf '\n' >&2
+exit 1

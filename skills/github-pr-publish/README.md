@@ -15,7 +15,9 @@ Agent-neutral workflow for safely publishing GitHub pull requests with `gh`, loc
 - Always constructs `gh pr create` with explicit `--head`
 - Avoids the GitHub CLI PR-create preview flag because it can still push git changes
 - Guards pushes behind `--push --remote <name> --yes`
+- Accepts GitHub SSH host aliases only when `ssh -G <alias>` resolves them to `hostname github.com`
 - Rejects unsafe push situations such as forks, detached HEAD, wrong remotes, base/default/protected branches, and force-like paths
+- Allows a no-push explicit-head fallback after verifying local `HEAD`, the remote branch SHA, and the GitHub branch SHA match
 - Supports private repos through authenticated `gh` and clear SSO, auth, permission, private not-found, and validation diagnostics
 - Includes fake `gh`/`git` tests that prove no mutation by default and no token leakage
 
@@ -59,6 +61,26 @@ skills/github-pr-publish/scripts/create_pr.sh \
   --title "Add feature" \
   --body-file /tmp/pr-body.md \
   --push --remote origin \
+  --yes
+```
+
+SSH alias remotes are supported for the same commands when the alias resolves to GitHub:
+
+```bash
+ssh -G github.com-17-sss | awk 'tolower($1)=="hostname"{print $2; exit}'
+```
+
+The result must be `github.com`, and the remote path must match `--repo OWNER/REPO`.
+
+If alias verification is blocked but the branch is already on GitHub, use an explicit no-push head and let the helper verify matching branch SHAs before `gh pr create`:
+
+```bash
+skills/github-pr-publish/scripts/create_pr.sh \
+  --repo OWNER/REPO \
+  --base main \
+  --head OWNER:feature-branch \
+  --title "Add feature" \
+  --body-file /tmp/pr-body.md \
   --yes
 ```
 

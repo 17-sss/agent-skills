@@ -28,6 +28,7 @@ repo=${FAKE_REPO:-OWNER/REPO}
 base=${FAKE_BASE:-main}
 account=${FAKE_ACCOUNT:-octocat}
 url=${FAKE_PR_URL:-https://github.com/OWNER/REPO/pull/123}
+head_sha=${FAKE_GITHUB_HEAD_SHA:-${FAKE_HEAD_SHA:-abc123}}
 
 case "${1:-}" in
   auth)
@@ -39,6 +40,15 @@ case "${1:-}" in
   api)
     if [[ "${2:-}" == "user" ]]; then
       printf '%s\n' "$account"; exit 0
+    fi
+    if [[ "${2:-}" == repos/*/git/ref/heads/* ]]; then
+      [[ "${FAKE_GITHUB_HEAD_MISSING:-0}" == "1" ]] && gh_die 'HTTP 404 Not Found'
+      if [[ "$*" == *"--jq .object.sha"* ]]; then
+        printf '%s\n' "$head_sha"
+      else
+        printf '{"object":{"sha":"%s"}}\n' "$head_sha"
+      fi
+      exit 0
     fi
     if [[ "${2:-}" == "-i" ]]; then
       if [[ "${FAKE_API_FAIL:-0}" == "1" ]]; then gh_die 'HTTP 403 Resource not accessible'; fi

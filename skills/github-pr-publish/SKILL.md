@@ -24,6 +24,8 @@ This workflow supports public and private repositories. Private repositories req
 - Do not create forks. Do not force-push. Do not push from detached HEAD.
 - Push only when explicitly requested with `--push --remote <name> --yes`.
 - Push only `HEAD:<branch>` to the exact named remote after branch and remote checks pass.
+- Treat GitHub HTTPS remotes, direct `git@github.com:` SSH remotes, and SSH host aliases as GitHub remotes only when `ssh -G <host>` resolves the alias `hostname` to `github.com`.
+- For every verified remote, require the remote path `OWNER/REPO` to match `--repo OWNER/REPO`; do not treat unverified aliases as safe push targets.
 - Refuse pushing base, default, or protected branches when detectable.
 - Use REST fallback only after proving the remote head exists.
 
@@ -51,6 +53,17 @@ skills/github-pr-publish/scripts/collect_publish_context.sh --repo OWNER/REPO
 ```
 
 It captures sanitized account status, repo metadata, remotes, branch state, default/base candidates, upstream/ahead-behind details, and existing PR hints under `/tmp/github-pr-publish-*`.
+
+Supported GitHub remote forms include:
+
+- `https://github.com/OWNER/REPO.git`
+- `git@github.com:OWNER/REPO.git`
+- `git@github.com-alias:OWNER/REPO.git` when `ssh -G github.com-alias` reports `hostname github.com`
+- `ssh://git@github.com-alias/OWNER/REPO.git` with the same alias check
+
+The trailing `.git` suffix is optional for these forms.
+
+If an SSH alias cannot be verified as `github.com`, do not push through it. If `--head OWNER:branch` is explicit and no push is requested, the helper may still use the prompt-free `gh pr create --repo OWNER/REPO --head OWNER:branch` path after proving the local `HEAD` matches both the remote branch SHA and the GitHub branch SHA.
 
 ### 3. Draft PR content before creation
 
@@ -105,6 +118,22 @@ skills/github-pr-publish/scripts/create_pr.sh \
 
 The helper verifies the remote head, creates the PR with explicit `--head`, then verifies the created PR with `gh pr view`.
 
+When the configured remote uses an SSH alias that the helper cannot safely treat as a GitHub remote, use this no-push fallback only for explicit heads:
+
+```bash
+remote_sha=$(git ls-remote origin "refs/heads/feature-branch" | awk 'NR==1{print $1}')
+local_sha=$(git rev-parse HEAD)
+test "$remote_sha" = "$local_sha"
+gh pr create \
+  --repo OWNER/REPO \
+  --base main \
+  --head OWNER:feature-branch \
+  --title "Add feature" \
+  --body-file /tmp/pr-body.md
+```
+
+The bundled helper automates this fallback in execute mode by also checking the GitHub branch SHA before invoking `gh pr create`. If any SHA differs, stop and push or re-check the branch manually instead of creating the PR.
+
 ### 6. Push then create
 
 For a first push, be explicit:
@@ -120,6 +149,8 @@ skills/github-pr-publish/scripts/create_pr.sh \
 ```
 
 The helper derives an explicit head from `OWNER` and the current branch, checks the branch is safe, checks the remote maps to the target repository, pushes exactly `HEAD:<branch>`, and then creates the PR.
+
+SSH alias remotes are valid for this path only after alias normalization proves `hostname github.com` and the remote path matches `--repo`.
 
 ### 7. REST fallback
 

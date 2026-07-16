@@ -6,6 +6,24 @@ A collection of reusable skills for AI coding agents. Skills are packaged instru
 
 ## Available Skills
 
+### design-loop
+
+Agent-neutral workflow for building and refining interfaces through rendered screenshots, interaction testing, responsive checks, and bounded visual iteration.
+
+**Use when:**
+- Building or polishing UI, frontend, product, dashboard, admin, landing-page, or game screens
+- Inspecting the same implementation at desktop and mobile viewports
+- Testing visible user flows and interaction states before declaring the design complete
+- Comparing a small number of visual alternatives with a consistent rubric
+- Integrating a generated raster asset and validating it inside the real interface
+
+**Behavior:**
+- Inspects existing design docs, components, tokens, routes, and repository commands first
+- Captures a baseline and requires fresh rendered evidence for visual-quality claims
+- Reviews hierarchy, spacing, typography, contrast, responsiveness, interaction states, and runtime quality
+- Adapts to available app, CLI, or IDE capabilities without requiring one browser or MCP integration
+- Uses image generation selectively and keeps variant exploration bounded
+
 ### handoff-memory
 
 Agent-neutral workflow for creating and maintaining shared repo-local, workspace-wide, or workstream-specific HANDOFF and memory documents.

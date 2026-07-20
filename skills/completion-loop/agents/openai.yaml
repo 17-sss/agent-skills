@@ -1,0 +1,6 @@
+interface:
+  display_name: "Codex · Completion Loop"
+  short_description: "Execute a goal through verified completion loops"
+  default_prompt: "Use $completion-loop to complete this scoped goal, run the relevant checks, obtain an isolated read-only review of the final candidate, and stop only with fresh evidence."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,11 @@
+{
+  "name": "completion-loop",
+  "version": "0.2.0",
+  "organization": "17-sss",
+  "date": "July 2026",
+  "abstract": "Codex-native verified-completion loop that binds work to an explicit goal, learns from failed checks, reviews the final implementation through an isolated read-only Codex run, and completes only after a requirement-to-evidence audit.",
+  "references": [
+    "https://learn.chatgpt.com/docs/agent-configuration/subagents",
+    "https://learn.chatgpt.com/docs/developer-commands"
+  ]
+}

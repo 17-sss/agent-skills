@@ -1,0 +1,11 @@
+{
+  "name": "reviewed-plan",
+  "version": "0.2.0",
+  "organization": "17-sss",
+  "date": "July 2026",
+  "abstract": "Read-only consensus planning workflow that grounds a plan in repository evidence and enforces sequential, sandbox-isolated Planner, Architect, and Critic review before producing an implementation handoff.",
+  "references": [
+    "https://learn.chatgpt.com/docs/agent-configuration/subagents",
+    "https://learn.chatgpt.com/docs/developer-commands"
+  ]
+}

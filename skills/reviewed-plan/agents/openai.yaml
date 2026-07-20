@@ -1,0 +1,6 @@
+interface:
+  display_name: "Codex · Reviewed Plan"
+  short_description: "Build a reviewed implementation plan without editing code"
+  default_prompt: "Use $reviewed-plan to inspect this repository and produce a Planner, Architect, and Critic reviewed implementation plan through enforced read-only review gates."
+policy:
+  allow_implicit_invocation: false

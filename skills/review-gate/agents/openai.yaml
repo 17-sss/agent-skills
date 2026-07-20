@@ -1,0 +1,6 @@
+interface:
+  display_name: "Codex · Review Gate"
+  short_description: "Independent evidence-grounded code review"
+  default_prompt: "Use $review-gate to capture this exact change or file target, run sandbox-isolated correctness and architecture lanes, then return a deterministic readiness verdict."
+policy:
+  allow_implicit_invocation: false

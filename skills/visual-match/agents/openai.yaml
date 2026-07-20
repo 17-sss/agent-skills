@@ -1,0 +1,6 @@
+interface:
+  display_name: "Codex · Visual Match"
+  short_description: "Match an approved visual reference through evidence loops"
+  default_prompt: "Use $visual-match to implement this approved visual reference without mutating live reference state, compare fresh screenshots at fixed states, and verify code and visual results."
+policy:
+  allow_implicit_invocation: false

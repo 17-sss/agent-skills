@@ -1,0 +1,13 @@
+{
+  "name": "visual-match",
+  "version": "0.2.0",
+  "organization": "17-sss",
+  "date": "July 2026",
+  "abstract": "Strict visual-reference implementation workflow that routes across Codex-native Product Design, browser, image, and repository tooling, keeps live references non-mutating, and iterates on equivalent screenshots until visual and code evidence satisfy the accepted goal.",
+  "references": [
+    "https://learn.chatgpt.com/docs/browser",
+    "https://learn.chatgpt.com/docs/image-inputs",
+    "https://learn.chatgpt.com/docs/image-generation",
+    "https://learn.chatgpt.com/docs/agent-configuration/subagents"
+  ]
+}

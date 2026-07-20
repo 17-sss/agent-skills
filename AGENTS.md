@@ -27,6 +27,7 @@ skills/
 Rules:
 
 - Use kebab-case for skill directory names
+- `README.md` and package-local `AGENTS.md` are optional when they would only duplicate `SKILL.md` or repository-wide guidance
 - Keep root-level files generic to the collection
 - Put install or agent-specific details in the skill package, not the repo root
 - Prefer adding helper scripts and references over bloating `SKILL.md`
@@ -35,6 +36,6 @@ Rules:
 ## Updating an Existing Skill
 
 - Preserve the skill directory name once published
-- Update `README.md`, `SKILL.md`, and `metadata.json` together when the skill contract changes
+- Update `SKILL.md`, `metadata.json`, and any existing package `README.md` together when the skill contract changes
 - Keep examples and references aligned with the actual script behavior
 - Validate the skill after structural changes

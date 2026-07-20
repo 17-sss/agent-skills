@@ -24,6 +24,90 @@ Agent-neutral workflow for building and refining interfaces through rendered scr
 - Adapts to available app, CLI, or IDE capabilities without requiring one browser or MCP integration
 - Uses image generation selectively and keeps variant exploration bounded
 
+### spec-interview
+
+Codex-native requirements interview for turning an ambiguous idea into an execution-ready specification before planning or implementation.
+
+**Use when:**
+- Invoking `/plan $spec-interview` for a broad idea or underspecified change
+- Asking Codex to interview you, challenge assumptions, or avoid guessing
+- Clarifying scope, non-goals, constraints, decision boundaries, or acceptance criteria
+
+**Behavior:**
+- Investigates repository facts before asking the user
+- Asks one highest-leverage question at a time
+- Pressure-tests only material assumptions and boundary cases
+- Stops when another answer would no longer change implementation or verification
+- Produces a testable requirements specification without modifying project files
+- Delegates repository mapping only through a tool-enforced read-only Codex sandbox
+
+### reviewed-plan
+
+Read-only consensus planning through sequential Planner, Architect, and Critic review.
+
+**Use when:**
+- Invoking `/plan $reviewed-plan` for architecture-heavy or high-risk work
+- Requiring a reviewed plan before implementation
+- Needing concrete files, symbols, alternatives, risks, and verification commands in a handoff
+
+**Behavior:**
+- Grounds the plan in repository and authoritative external evidence
+- Requires an effective read-only sandbox for independent reviewers and records a content baseline as defense in depth
+- Runs Architect only after the Planner draft, then Critic only after Architect acceptance
+- Repeats the complete review sequence for non-approval
+- Stops after an approved or explicitly not-approved implementation handoff
+
+### completion-loop
+
+Verified-completion workflow that pairs Codex Goal mode with an evidence-driven implementation and repair loop.
+
+**Use when:**
+- Invoking `/goal ... Use $completion-loop`
+- Asking Codex to finish, keep going, or not stop before verified completion
+- Requiring tests, final diff review, and requirement-by-requirement evidence
+
+**Behavior:**
+- Binds work to an explicit outcome, constraints, acceptance criteria, and proof methods
+- Learns from test failures instead of repeating blind retries
+- Uses a fresh, separately sandboxed read-only Codex reviewer for every final implementation candidate
+- Audits every requirement against implementation artifacts and fresh evidence
+- Reports genuine blockers without treating ordinary difficulty as blocked work
+
+### visual-match
+
+Strict visual-reference implementation loop for approved images, generated mockups, and live-URL baselines.
+
+**Use when:**
+- Invoking `/goal ... Use $visual-match`
+- Matching a screenshot or live URL at defined viewports and states
+- Making visual fidelity and reusable design-system decisions part of completion
+
+**Behavior:**
+- Routes across Product Design, Browser, Chrome, image, or repository-native automation based on availability
+- Requires user approval before implementing a generated reference
+- Captures and compares equivalent routes, data, viewports, and UI states
+- Uses pixel diff only as secondary evidence and avoids arbitrary visual scores
+- Stops before editing when equivalent capture is unavailable and never passes unresolved major drift
+- Keeps live-reference interactions non-mutating unless the user separately authorizes an exact external action
+- Verifies interactions, responsive behavior, code checks, and remaining visual differences
+
+### review-gate
+
+Read-only comprehensive code review built on Codex-native review targeting and sandbox-isolated review lanes.
+
+**Use when:**
+- Invoking `$review-gate` for current changes, files, a commit, branch, checked-out PR-style target, or a PR already readable through configured GitHub tooling
+- Requiring correctness and architecture perspectives before merge
+- Needing prioritized file-and-line findings and a deterministic readiness verdict
+
+**Behavior:**
+- Reuses a target selected through native `/review` or captures the exact current-change, commit, branch-range, or explicit-file target
+- Separates Git change attribution from full-content explicit-file audits
+- Runs independent correctness and architecture lanes in parallel under tool-enforced read-only isolation
+- Separates finding priority from merge-blocking impact
+- Returns `APPROVE`, `COMMENT`, `REQUEST_CHANGES`, or `INCONCLUSIVE` through fixed precedence rules
+- Does not edit, stage, commit, push, or post external review comments
+
 ### handoff-memory
 
 Agent-neutral workflow for creating and maintaining shared repo-local, workspace-wide, or workstream-specific HANDOFF and memory documents.
@@ -122,7 +206,32 @@ npx skills add https://github.com/17-sss/agent-skills --skill handoff-memory
 
 ## Usage
 
-Once installed, agents can invoke the relevant skill when a task matches it. Detailed usage, install scope, and workflow notes live inside each skill package under `skills/<skill-name>/README.md`.
+Once installed, agents can invoke the relevant skill when a task matches it. The executable contract lives in `skills/<skill-name>/SKILL.md`; established packages may also include a human-facing README.
+
+The native workflow skills are designed for these Codex entry points:
+
+```text
+/plan $spec-interview <idea or task>
+/plan $reviewed-plan <task to plan>
+/goal <outcome and verification criteria>. Use $completion-loop.
+/goal <visual target and verification criteria>. Use $visual-match.
+Use $review-gate to review <files, commit, branch, checked-out PR-style target, or current changes>.
+```
+
+The five native workflow packages intentionally omit per-skill README and AGENTS files because those files would only duplicate `SKILL.md` or root guidance. Their executable contract lives in `SKILL.md`, with detailed review and verification contracts under `references/`. They set `allow_implicit_invocation: false` so use is selected explicitly through the exact short skill names.
+
+## Maintenance
+
+See [Codex-native workflow skill maintenance](docs/native-workflow-skills-maintenance.md) for the upstream source snapshot, Codex capability mapping, periodic update checklist, validation command, forward-test prompts, and post-migration installation steps.
+
+Run the combined local and upstream check with:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
+python3 scripts/check-native-workflow-skills.py --check-upstream --check-codex-docs --require-validator
+```
+
+The checker tries the current Python, then `python3` and `python` from `PATH`, then `/usr/bin/python3`, accepting the first interpreter that can import PyYAML. Override that choice with `--validator-python <path>` or `SKILL_VALIDATOR_PYTHON`. Automated checks cover package contracts and current official documentation evidence; release confidence also requires the isolated forward-test matrix in the maintenance guide.
 
 ## Repository Structure
 

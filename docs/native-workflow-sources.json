@@ -1,0 +1,76 @@
+{
+  "reviewed_at": "2026-07-20",
+  "upstream": {
+    "repository": "https://github.com/Yeachan-Heo/oh-my-codex.git",
+    "ref": "refs/heads/main",
+    "reviewed_commit": "435d4a9cc982ffaf83fabbfbb8711ae6c178ffca",
+    "skills": {
+      "spec-interview": {
+        "sha256": "9979d0d4aef4e917af9559ce952f51530c525263d545c01f4780372078523bb0"
+      },
+      "reviewed-plan": {
+        "sha256": "94112c682fa83b700c8cd649bb9921320e79e644a27f661b64f4f3bbd0a6ab83"
+      },
+      "completion-loop": {
+        "sha256": "d0deea711929dc2797803f6940f666ee95d3d59308750667331c3f242da2e1db"
+      },
+      "visual-match": {
+        "sha256": "ed55aee5968859d4655679f6e7a7dfee1a2a2e9313fdb2c71a2e90824f79f6d7"
+      },
+      "review-gate": {
+        "sha256": "52cd2a7bed15900e23e9850542dc83e7f26a499745d97401445712f354e94ccc"
+      }
+    }
+  },
+  "codex": {
+    "manual": "https://developers.openai.com/codex/codex-manual.md",
+    "reviewed_capabilities": [
+      "Plan mode and /plan",
+      "Goal mode and /goal",
+      "native /review target selection and read-only review behavior",
+      "non-interactive codex review targeting",
+      "native subagents",
+      "skills and plugins",
+      "built-in Browser and Chrome extension routing",
+      "image input and image generation"
+    ],
+    "capability_evidence": {
+      "Plan mode and /plan": [
+        "Switch to plan mode with `/plan`",
+        "Codex enters plan mode"
+      ],
+      "Goal mode and /goal": [
+        "Set or view a task goal with `/goal`",
+        "keeps the goal attached to the active chat",
+        "Starting a goal doesn't grant ChatGPT broader access."
+      ],
+      "native /review target selection and read-only review behavior": [
+        "**Review uncommitted changes** includes staged, unstaged, and untracked files.",
+        "without changing your working tree"
+      ],
+      "non-interactive codex review targeting": [
+        "`codex review`",
+        "Run a non-interactive review"
+      ],
+      "native subagents": [
+        "Triggering subagent workflows",
+        "skill instructions request it",
+        "Subagents inherit your current sandbox policy.",
+        "such as explicitly marking one to work in read-only mode."
+      ],
+      "skills and plugins": [
+        "Skills use **progressive disclosure**",
+        "explicit `$skill` invocation still works"
+      ],
+      "built-in Browser and Chrome extension routing": [
+        "Browser isn't available in Codex CLI or the Codex IDE extension.",
+        "Use `@Browser` for the built-in browser.",
+        "invoke `@Chrome`"
+      ],
+      "image input and image generation": [
+        "Include `$imagegen` in your prompt",
+        "Attach an existing image with `-i`"
+      ]
+    }
+  }
+}

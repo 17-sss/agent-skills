@@ -2,6 +2,10 @@
 
 This file records behavioral evidence that cannot be established by schema validation alone. Tests run only in disposable Git repositories under `/tmp`; no dependency installation, external write, user-configuration change, or production access is allowed.
 
+## 2026-07-21 renderer-bootstrap contract update
+
+Status: pending forward test. `visual-match` now offers an explicit, repository-isolated Chromium bootstrap before returning `BLOCKED` when no renderer exists. The 2026-07-20 safety-blocker trace predates that approval step and does not prove the revised contract. Re-run the missing-renderer path with installation prohibited and verify that it proposes the bounded bootstrap without downloading anything or changing the fixture. The browser-enabled success path also remains pending.
+
 ## 2026-07-20 review
 
 Status: partial. Five workflow success paths and the Visual Match safety-blocker path are complete; the browser-enabled Visual Match success path remains pending. Update this table only from fresh traces and before/after fingerprints.
@@ -18,4 +22,4 @@ Status: partial. Five workflow success paths and the Visual Match safety-blocker
 
 ## Release rule
 
-Treat any `PENDING`, `FAIL`, unexpected workspace write, missing independent gate, evidence-free success, or undocumented capability gap as not release-ready. The five non-visual skills are eligible for release from this matrix; `visual-match` remains conditionally ready only for its safe blocker behavior until the browser-enabled row passes. Delete disposable fixtures and task-scoped captures after the evidence has been summarized here.
+Treat any `PENDING`, stale contract evidence, `FAIL`, unexpected workspace write, missing independent gate, evidence-free success, or undocumented capability gap as not release-ready. The five non-visual skills are eligible for release from this matrix; the current `visual-match` contract is not release-ready until both the revised missing-renderer approval path and the browser-enabled row pass. Delete disposable fixtures and task-scoped captures after the evidence has been summarized here.

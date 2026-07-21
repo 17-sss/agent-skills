@@ -11,7 +11,7 @@ This workflow is reusable instruction, so a skill is the smallest appropriate ag
 - A hook is appropriate for lifecycle enforcement, not an opt-in design workflow.
 - A plugin becomes useful later if this workflow must ship with browser tooling, an MCP server, hooks, or multiple related skills.
 
-The skill works with capabilities already present in the current app, CLI, or IDE surface. It does not require a plugin or MCP server.
+The skill prefers capabilities already present in the current app, CLI, IDE, or repository. It does not require a plugin, MCP server, or bundled browser dependency. When no renderer exists, it may offer an explicit, isolated Chromium bootstrap before reporting the visual-verification gap.
 
 ## Use When
 
@@ -60,7 +60,7 @@ See [prompt-recipes.md](references/prompt-recipes.md) for the full visual loop p
 
 - **App/Desktop surfaces:** use the built-in browser, computer-use tools, screenshot inspection, and image generation when available.
 - **CLI/IDE surfaces:** use repository browser automation, Playwright or browser MCP when installed, and local image inputs.
-- **No image-capable path:** complete the code and functional checks that are possible, then report visual verification as a concrete gap.
+- **No render-capable path:** offer a user-approved Chromium-only bootstrap that does not modify the target repository or install system packages. If it is declined or cannot launch, complete only separately valid non-visual work and report visual verification as a concrete gap.
 
 Tool names vary by installation. The skill selects capabilities rather than depending on one fixed browser or screenshot integration.
 

@@ -34,6 +34,7 @@ ALLOWED_REFERENCE_HOSTS = {
     "developers.openai.com",
     "github.com",
     "learn.chatgpt.com",
+    "playwright.dev",
 }
 REQUIRED_CODEX_CAPABILITIES = {
     "Plan mode and /plan",

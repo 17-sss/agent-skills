@@ -1,9 +1,9 @@
 {
   "name": "design-loop",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "organization": "17-sss",
   "date": "July 2026",
-  "abstract": "Reusable agent workflow for building, rendering, inspecting, interacting with, and iteratively refining product interfaces across app, CLI, and IDE surfaces. It requires fresh screenshot evidence for visual claims, checks desktop and mobile behavior, uses bounded improvement passes, supports evidence-based variant comparison, and invokes image generation only for justified raster assets.",
+  "abstract": "Reusable agent workflow for building, rendering, inspecting, interacting with, and iteratively refining product interfaces across app, CLI, and IDE surfaces. It requires fresh screenshot evidence for visual claims, checks desktop and mobile behavior, uses bounded improvement passes, offers an explicit repository-isolated Chromium fallback when no renderer exists, and invokes image generation only for justified raster assets.",
   "references": [
     "https://learn.chatgpt.com/docs/customization/overview",
     "https://learn.chatgpt.com/docs/build-skills",
@@ -11,6 +11,7 @@
     "https://learn.chatgpt.com/docs/hooks",
     "https://learn.chatgpt.com/docs/browser",
     "https://learn.chatgpt.com/docs/image-inputs",
-    "https://learn.chatgpt.com/docs/image-generation"
+    "https://learn.chatgpt.com/docs/image-generation",
+    "https://playwright.dev/docs/browsers"
   ]
 }

@@ -20,6 +20,7 @@ This package defines the `design-loop` skill.
 - Keep reusable invocation examples in `references/prompt-recipes.md`.
 - Avoid adding scripts until a deterministic operation is repeated often enough to justify one.
 - Do not add a mandatory MCP, plugin, browser, or image-generation dependency; capability fallback is part of the skill contract.
+- Preserve the explicit-approval, repository-isolated Chromium fallback. Never turn it into an automatic install or system-package mutation.
 
 ## Validation
 

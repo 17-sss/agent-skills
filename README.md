@@ -22,6 +22,7 @@ Agent-neutral workflow for building and refining interfaces through rendered scr
 - Captures a baseline and requires fresh rendered evidence for visual-quality claims
 - Reviews hierarchy, spacing, typography, contrast, responsiveness, interaction states, and runtime quality
 - Adapts to available app, CLI, or IDE capabilities without requiring one browser or MCP integration
+- Offers a user-approved, repository-isolated Chromium fallback only when no existing renderer can provide evidence
 - Uses image generation selectively and keeps variant exploration bounded
 
 ### spec-interview
@@ -105,7 +106,8 @@ Strict visual-reference implementation loop for approved images, generated mocku
 - Requires user approval before implementing a generated reference
 - Captures and compares equivalent routes, data, viewports, and UI states
 - Uses pixel diff only as secondary evidence and avoids arbitrary visual scores
-- Stops before editing when equivalent capture is unavailable and never passes unresolved major drift
+- Offers a user-approved, repository-isolated Chromium fallback before stopping when equivalent capture is unavailable
+- Never modifies project dependencies or installs system packages as part of that fallback
 - Keeps live-reference interactions non-mutating unless the user separately authorizes an exact external action
 - Verifies interactions, responsive behavior, code checks, and remaining visual differences
 

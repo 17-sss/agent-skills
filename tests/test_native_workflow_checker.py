@@ -55,6 +55,7 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
                 "milestone-runner",
             },
         )
+        self.assertIn("playwright.dev", checker.ALLOWED_REFERENCE_HOSTS)
         errors = []
         self.assertIsNotNone(checker.load_manifest(errors))
         self.assertEqual(errors, [])

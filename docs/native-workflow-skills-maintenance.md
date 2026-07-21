@@ -22,7 +22,7 @@ The skills preserve user-facing workflow and quality gates without requiring an 
 | Durable multi-goal execution | One native aggregate goal plus ordered `.agent-workflows/goals/<slug>/` plan and ledger artifacts |
 | Automatic retry hooks | Explicit investigate, implement, verify, diagnose, and repair loop |
 | External architecture cross-check | Fresh native Codex reviewer running in an enforced read-only sandbox over captured requirements, diff, and logs |
-| Live URL or image implementation | Product Design skills when installed, otherwise Browser or repository-native automation |
+| Live URL or image implementation | Product Design skills when installed, otherwise Browser, repository-native automation, or an approved isolated Chromium fallback |
 | Visual verdict score | Structured semantic comparison; pixel diff only as secondary evidence |
 | Diff or commit review target selection | Native `/review` target picker or equivalent read-only Git inspection |
 | Code and architecture review roles | Two parallel native review lanes with enforced read-only isolation and independent evidence contracts |
@@ -75,6 +75,7 @@ Run this after a meaningful Codex release, an upstream workflow change, or a Pro
    - native subagent creation, permission inheritance, custom-agent sandbox overrides, context isolation, steering, and completion semantics have not changed
    - Browser availability across App, CLI, and IDE remains accurate
    - Chrome remains the correct route for the user's existing browser profile
+   - a missing renderer triggers an approval-gated, repository-isolated Chromium offer before `BLOCKED`
    - Product Design skill names and invocation syntax remain available
    - image generation still requires approval before a generated reference becomes implementation truth
    - `SKILL.md` and `agents/openai.yaml` schema requirements remain current
@@ -167,6 +168,8 @@ Do not call the packages release-ready from the automated command alone. Run the
 ### visual-match
 
 - Re-check Product Design, Browser, Chrome, Playwright, image-input, and image-generation routing.
+- Preserve the missing-renderer sequence: inspect existing capabilities, offer isolated Chromium with explicit approval, smoke-test it, then return `BLOCKED` if declined or unusable.
+- Keep the bootstrap outside the target repository. Never mutate manifests, lockfiles, `node_modules`, branded browsers, system packages, or another skill as part of the fallback.
 - Preserve approval before implementing a generated reference.
 - Compare equivalent route, data, viewport, and UI states.
 - Do not replace semantic review with an arbitrary visual score.
@@ -224,7 +227,7 @@ For every forward test, verify the trace as well as the final prose: question co
 | `reviewed-plan` | Produces a repository-grounded plan, runs Architect before Critic, and reports both verdicts | Fixture fingerprint remains unchanged across both gates |
 | `completion-loop` | Reproduces the failure, implements the smallest fix, runs fresh checks, and independently reviews the final fingerprint | Only the disposable fixture changes and its tests pass |
 | `milestone-runner` | Creates `.agent-workflows/`, runs goals sequentially, rejects stale or out-of-order transitions, checkpoints evidence, and reconciles a completed native goal | Only the disposable fixture and its explicit durable state change; no other skill is invoked |
-| `visual-match` | Proves both the safe missing-browser blocker and a browser-enabled baseline/edit/recapture/comparison success path; never passes unresolved major drift | Only the disposable fixture and task-scoped captures change |
+| `visual-match` | With installation prohibited, offers the isolated Chromium fallback but performs no download and returns the safe missing-browser blocker; with a browser already available, completes baseline/edit/recapture/comparison and never passes unresolved major drift | Only the disposable fixture and task-scoped captures change |
 | `review-gate` | Includes staged, unstaged, and untracked content, runs both lanes, and catches seeded actionable defects | The complete fixture fingerprint remains unchanged |
 
 Keep forward-test fixtures outside the repository. Do not install dependencies, touch user configuration, contact production systems, post external reviews, or leave browser sessions and temporary artifacts running. Record current results in [native-workflow-forward-test-report.md](native-workflow-forward-test-report.md).
@@ -250,6 +253,6 @@ Start a new Codex task after installation so skill discovery does not retain sta
 - Without Goal mode, Codex Milestone Runner can preserve repository-local plan and ledger artifacts but cannot promise automatic continuation. It also cannot clear or replace a conflicting active native goal. After a native goal is completed, `get_goal` may report no active goal, so preserve the successful `update_goal` completion result before querying again.
 - Plan mode is a semantic boundary, not a separate filesystem sandbox. Codex Reviewed Plan requires an effective read-only permission mode for independent gates and uses content fingerprints only as defense in depth.
 - Native subagents inherit the parent permission mode. A writable implementation turn therefore cannot claim an isolated review merely by prompting the child to stay read-only; Codex Completion Loop uses a separately sandboxed native Codex run or remains incomplete.
-- Browser and Product Design capabilities vary by Codex surface and installed plugins. Codex Visual Match degrades to repository-native automation and reports missing visual evidence.
+- Browser and Product Design capabilities vary by Codex surface and installed plugins. Codex Visual Match falls back to repository-native automation, then offers a user-approved isolated Chromium renderer before reporting missing visual evidence.
 - Native `/review` is sufficient for an ordinary isolated review. Codex Review Gate deliberately spends more tokens on two independent lanes and returns `INCONCLUSIVE` if that evidence cannot be collected.
 - Generated-image approval naturally spans turns because image generation can end the generation turn.

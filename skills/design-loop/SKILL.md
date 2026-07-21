@@ -51,6 +51,8 @@ When the user explicitly asks for current design principles, references, or best
 
 Read [surface-capability-guide.md](references/surface-capability-guide.md) before choosing the render, screenshot, interaction, or image-generation path.
 
+If no existing capability can render and capture the applicable target, offer a minimal isolated Chromium bootstrap before treating visual verification as unavailable. State the network download, disk use, and cache location, and require explicit user approval unless the user already authorized installing a renderer. The skill invocation alone is not installation approval. Do not modify the target repository's manifests, lockfiles, or `node_modules`; do not install a branded browser or system packages; and do not use elevated privileges. After an approved bootstrap, prove it with a disposable screenshot smoke check. If approval is declined or the isolated browser cannot run, continue only with separately valid non-visual work and report the exact visual verification gap.
+
 ### 3. Capture the baseline
 
 For an existing interface:

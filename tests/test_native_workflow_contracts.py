@@ -13,6 +13,17 @@ def read(relative_path: str) -> str:
 
 
 class NativeWorkflowContractTest(unittest.TestCase):
+    def test_design_loop_offers_only_an_approved_isolated_renderer_bootstrap(self):
+        skill = read("skills/design-loop/SKILL.md")
+        routing = read("skills/design-loop/references/surface-capability-guide.md")
+        self.assertIn("offer a minimal isolated Chromium bootstrap", skill)
+        self.assertIn("explicit user approval", skill)
+        self.assertIn("The skill invocation alone is not installation approval", skill)
+        self.assertIn("Do not modify the target repository's manifests", skill)
+        self.assertIn("PLAYWRIGHT_BROWSERS_PATH", routing)
+        self.assertIn("Do not run `install-deps`, `--with-deps`, `sudo`", routing)
+        self.assertIn("Remove task-scoped downloads after use", routing)
+
     def test_spec_interview_is_one_question_read_only_and_drift_aware(self):
         text = read("skills/spec-interview/SKILL.md")
         self.assertIn("single highest-leverage unresolved question", text)
@@ -50,9 +61,15 @@ class NativeWorkflowContractTest(unittest.TestCase):
 
     def test_visual_match_preflights_capture_and_cannot_pass_major_drift(self):
         skill = read("skills/visual-match/SKILL.md")
+        routing = read("skills/visual-match/references/capability-routing.md")
         rubric = read("skills/visual-match/references/comparison-rubric.md")
         self.assertIn("Before editing, prove that an available capability can render", skill)
         self.assertIn("stop before editing", skill)
+        self.assertIn("offer the minimal isolated Chromium bootstrap", skill)
+        self.assertIn("invoking this skill is not installation approval", skill)
+        self.assertIn("PLAYWRIGHT_BROWSERS_PATH", routing)
+        self.assertIn("Do not use `install-deps`, `--with-deps`, `sudo`", routing)
+        self.assertIn("Do not modify project manifests, lockfiles, or `node_modules`", routing)
         self.assertIn("An unresolved blocking or major difference", skill)
         self.assertNotIn("blocked with evidence, or explicitly out of scope", rubric)
         self.assertIn("return `BLOCKED` or `INCOMPLETE`", rubric)
@@ -62,6 +79,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
         report = read("docs/native-workflow-forward-test-report.md")
         self.assertIn("Status: partial", report)
         self.assertIn("BLOCKED (environment, expected)", report)
+        self.assertIn("Status: pending forward test", report)
         self.assertIn("| PENDING |", report)
 
     def test_review_gate_supports_change_and_file_snapshots_with_two_lanes(self):

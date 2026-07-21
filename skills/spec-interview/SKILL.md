@@ -76,3 +76,19 @@ Return an execution-ready specification with:
 10. Remaining decisions and residual risks
 
 Do not begin implementation. Hand the specification to the planning or execution workflow selected by the user. Save it to the repository only when the user explicitly requests a durable artifact and the repository provides an appropriate path.
+
+## Offer an optional next workflow
+
+Keep this package complete on its own. Do not invoke or activate another skill. Treat a downstream skill as available only when the current Codex task's available-skill inventory explicitly advertises its exact name. Do not inspect the filesystem, installation directories, catalog files, or downstream skill contents to infer availability. Do not install a missing skill. If the inventory is unavailable, treat every downstream skill as unavailable. Do not mention unavailable skills. Availability is not authorization: the user explicitly chooses and invokes any suggested workflow in a later turn.
+
+Offer at most one recommendation and one genuinely applicable alternative only after the readiness gate has passed and no remaining decision could materially change implementation direction or acceptance. Omit this section when the user ends early, material ambiguity remains, required authority is missing, or the user asks to stop without follow-up suggestions.
+
+Choose the best-fit route first, then check whether that exact skill is available:
+
+- Suggest `$reviewed-plan` for architecture-heavy, security-sensitive, migration, destructive, public-contract, compliance, or otherwise high-risk work that benefits from reviewed planning before implementation.
+- Suggest `$milestone-runner` for an accepted outcome that genuinely requires multiple ordered, independently verifiable, restartable stages.
+- Suggest `$completion-loop` for one clearly scoped implementation goal with concrete acceptance and verification criteria.
+
+Do not substitute a weaker route merely because the best-fit skill is unavailable. If reviewed planning is necessary and `$reviewed-plan` is unavailable, make no workflow suggestion. If durable milestones are necessary and `$milestone-runner` is unavailable, suggest `$completion-loop` only when the accepted scope can still be executed safely as one goal.
+
+Render the recommendation as a copyable invocation under `Optional next workflow`. Stop after the suggestion; do not begin planning or implementation.

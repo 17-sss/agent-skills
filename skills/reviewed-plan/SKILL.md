@@ -62,3 +62,18 @@ The final plan must include:
 - a clear implementation handoff with its stop condition
 
 Report consensus only when Architect returned `ACCEPT` and the subsequent Critic returned `APPROVE` for the same plan revision. Stop after the handoff; implementation belongs to a new execution workflow.
+
+## Offer an optional next workflow
+
+Keep this package complete on its own. Do not invoke or activate another skill. Treat a downstream skill as available only when the current Codex task's available-skill inventory explicitly advertises its exact name. Do not inspect the filesystem, installation directories, catalog files, or downstream skill contents to infer availability. Do not install a missing skill. If the inventory is unavailable, treat every downstream skill as unavailable. Do not mention unavailable skills. Availability is not authorization: the user explicitly chooses and invokes any suggested workflow in a later turn.
+
+Offer at most one recommendation and one genuinely applicable alternative only when Architect returned `ACCEPT` and the subsequent Critic returned `APPROVE` for the same plan revision, the handoff is executable, and no material user decision remains. Omit this section when the handoff is `NOT APPROVED`, either review gate is missing, a material decision remains unresolved, or the user asks to stop without follow-up suggestions.
+
+Choose the best-fit route first, then check whether that exact skill is available:
+
+- Suggest `$milestone-runner` when the approved plan has multiple ordered, independently verifiable, restartable stages.
+- Suggest `$completion-loop` when the approved plan targets one coherent implementation outcome with concrete acceptance and verification criteria.
+
+Do not substitute a weaker route merely because the best-fit skill is unavailable. If durable milestones are necessary and `$milestone-runner` is unavailable, suggest `$completion-loop` only when the approved plan can still be executed safely as one goal.
+
+Render the recommendation as a copyable invocation under `Optional next workflow`. Stop after the suggestion; do not begin implementation.

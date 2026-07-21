@@ -138,6 +138,7 @@ Inspect repository facts before implementation, ask one highest-leverage user de
 - Keep the interview read-only in Plan mode.
 - Do not ask the user for facts that tools can establish.
 - Finish when scope, non-goals, constraints, and testable completion criteria are clear.
+- After readiness passes, optionally recommend only a best-fit workflow advertised in the current task; never require, install, or invoke it.
 
 Usage example:
 
@@ -152,6 +153,7 @@ Create an evidence-grounded implementation plan and pass it through independent 
 - Do not edit files or install packages during planning.
 - Run Critic review only after Architect approval.
 - Include target files, symbols, risks, alternatives, and verification commands in the final handoff.
+- After same-revision approval, optionally recommend only an available execution workflow; never require, install, or invoke it.
 
 Usage example:
 
@@ -220,6 +222,7 @@ Use $review-gate to review all current staged, unstaged, and untracked changes. 
 ## Usage Principles
 
 - Installing one skill must be sufficient for its core workflow to run.
+- Optional workflow handoffs are recommendations only. A skill may name only a downstream workflow advertised in the current task's available-skill inventory; when that inventory or the best-fit skill is unavailable, it makes no suggestion.
 - Shared skills may be selected automatically; specify `$skill-name` for reproducible explicit invocation.
 - All six Codex-native skills set `allow_implicit_invocation: false` and must be invoked explicitly.
 - When an optional plugin or tool is unavailable, prefer repository-native tools and safe fallbacks.

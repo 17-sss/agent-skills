@@ -27,6 +27,55 @@ SKILL_NAMES = (
     "review-gate",
     "milestone-runner",
 )
+OPTIONAL_HANDOFF_HEADING = "## Offer an optional next workflow"
+OPTIONAL_HANDOFFS = {
+    "spec-interview": (
+        "reviewed-plan",
+        "completion-loop",
+        "milestone-runner",
+    ),
+    "reviewed-plan": (
+        "completion-loop",
+        "milestone-runner",
+    ),
+}
+OPTIONAL_HANDOFF_MARKERS = (
+    "Keep this package complete on its own.",
+    "Do not invoke or activate another skill.",
+    "current Codex task's available-skill inventory",
+    "Do not inspect the filesystem",
+    "Do not install a missing skill.",
+    "If the inventory is unavailable, treat every downstream skill as unavailable.",
+    "Do not mention unavailable skills.",
+    "the user explicitly chooses and invokes",
+    "Offer at most one recommendation",
+    "Omit this section",
+    "Do not substitute a weaker route merely because the best-fit skill is unavailable.",
+    "Render the recommendation as a copyable invocation",
+)
+OPTIONAL_HANDOFF_READINESS_MARKERS = {
+    "spec-interview": (
+        "only after the readiness gate has passed",
+        "no remaining decision could materially change implementation direction or acceptance",
+    ),
+    "reviewed-plan": (
+        "Architect returned `ACCEPT`",
+        "Critic returned `APPROVE` for the same plan revision",
+        "the handoff is `NOT APPROVED`",
+    ),
+}
+HARD_HANDOFF_PATTERNS = {
+    "mandatory sequencing": re.compile(r"(?i)\bbefore continuing\b"),
+    "mandatory invocation": re.compile(
+        r"(?i)\b(?:must|required to) (?:run|invoke|install|use|have)\b"
+    ),
+    "automatic activation": re.compile(
+        r"(?i)\bautomatically (?:invoke|run|activate)\b"
+    ),
+    "required dependency": re.compile(
+        r"(?i)\b(?:cannot|can't) continue without\b"
+    ),
+}
 OTHER_SKILL_NAMES = (
     "design-loop",
     "handoff-memory",
@@ -144,9 +193,73 @@ def validate_runtime_independence(skill_dir: Path, errors: list[str]) -> None:
 
 
 def validate_standalone_package(skill_dir: Path, errors: list[str]) -> None:
-    """Reject hard references to another locally cataloged workflow skill."""
+    """Reject sibling dependencies while allowing guarded, optional handoffs."""
     if not skill_dir.is_dir():
         return
+    skill_file = skill_dir / "SKILL.md"
+    skill_text = ""
+    if skill_file.is_file() and not skill_file.is_symlink():
+        try:
+            skill_text = skill_file.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            pass
+
+    handoff_span: tuple[int, int] | None = None
+    expected_handoffs = OPTIONAL_HANDOFFS.get(skill_dir.name)
+    heading_matches = list(
+        re.finditer(
+            rf"(?m)^{re.escape(OPTIONAL_HANDOFF_HEADING)}\s*$",
+            skill_text,
+        )
+    )
+    if expected_handoffs is None:
+        if heading_matches:
+            fail(
+                f"{skill_file.relative_to(REPO_ROOT)} declares an optional handoff section "
+                "outside the strict allowlist",
+                errors,
+            )
+    elif len(heading_matches) != 1:
+        fail(
+            f"{skill_file.relative_to(REPO_ROOT)} must contain exactly one "
+            f"{OPTIONAL_HANDOFF_HEADING!r} section",
+            errors,
+        )
+    else:
+        start = heading_matches[0].start()
+        next_heading = re.search(r"(?m)^##\s+", skill_text[heading_matches[0].end() :])
+        end = (
+            heading_matches[0].end() + next_heading.start()
+            if next_heading
+            else len(skill_text)
+        )
+        handoff_span = (start, end)
+        handoff_text = skill_text[start:end]
+        required_markers = (
+            *OPTIONAL_HANDOFF_MARKERS,
+            *OPTIONAL_HANDOFF_READINESS_MARKERS[skill_dir.name],
+        )
+        for marker in required_markers:
+            if marker not in handoff_text:
+                fail(
+                    f"{skill_file.relative_to(REPO_ROOT)} optional handoff lacks guardrail "
+                    f"{marker!r}",
+                    errors,
+                )
+        for downstream in expected_handoffs:
+            if f"`${downstream}`" not in handoff_text:
+                fail(
+                    f"{skill_file.relative_to(REPO_ROOT)} optional handoff does not document "
+                    f"allowed route {downstream}",
+                    errors,
+                )
+        for label, pattern in HARD_HANDOFF_PATTERNS.items():
+            if pattern.search(handoff_text):
+                fail(
+                    f"{skill_file.relative_to(REPO_ROOT)} optional handoff contains {label}",
+                    errors,
+                )
+
     other_names = [name for name in SKILL_NAMES if name != skill_dir.name]
     for path in sorted(skill_dir.rglob("*")):
         if not path.is_file() or path.is_symlink():
@@ -160,12 +273,20 @@ def validate_standalone_package(skill_dir: Path, errors: list[str]) -> None:
                 rf"(?<![a-z0-9-])\$?{re.escape(other_name)}(?![a-z0-9-])",
                 re.IGNORECASE,
             )
-            if pattern.search(text):
-                fail(
-                    f"{path.relative_to(REPO_ROOT)} references sibling skill {other_name}; "
-                    "every package must install and run independently",
-                    errors,
+            for match in pattern.finditer(text):
+                allowed_optional_reference = (
+                    path == skill_file
+                    and handoff_span is not None
+                    and expected_handoffs is not None
+                    and other_name in expected_handoffs
+                    and handoff_span[0] <= match.start() < handoff_span[1]
                 )
+                if not allowed_optional_reference:
+                    fail(
+                        f"{path.relative_to(REPO_ROOT)} references sibling skill {other_name}; "
+                        "every package must install and run independently",
+                        errors,
+                    )
 
 
 def validate_bundled_scripts(skill_dir: Path, errors: list[str]) -> None:

@@ -330,6 +330,69 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
                 checker.validate_standalone_package(skill_dir, errors)
         self.assertTrue(any("references sibling skill completion-loop" in error for error in errors))
 
+    def test_standalone_packages_allow_only_guarded_optional_handoffs(self):
+        for name in checker.OPTIONAL_HANDOFFS:
+            with self.subTest(name=name):
+                errors = []
+                with redirect_stdout(io.StringIO()):
+                    checker.validate_standalone_package(
+                        REPO_ROOT / "skills" / name,
+                        errors,
+                    )
+                self.assertEqual(errors, [])
+
+    def test_optional_handoff_rejects_missing_availability_guard(self):
+        original = (REPO_ROOT / "skills" / "spec-interview" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        fixture = original.replace(
+            "If the inventory is unavailable, treat every downstream skill as unavailable.",
+            "",
+        )
+        with tempfile.TemporaryDirectory(dir=REPO_ROOT / "skills") as temp_dir:
+            skill_dir = Path(temp_dir) / "spec-interview"
+            skill_dir.mkdir()
+            (skill_dir / "SKILL.md").write_text(fixture, encoding="utf-8")
+            errors = []
+            with redirect_stdout(io.StringIO()):
+                checker.validate_standalone_package(skill_dir, errors)
+        self.assertTrue(any("optional handoff lacks guardrail" in error for error in errors))
+
+    def test_optional_handoff_rejects_mandatory_or_out_of_section_reference(self):
+        original = (REPO_ROOT / "skills" / "spec-interview" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        fixtures = (
+            (
+                original.replace(
+                    "Stop after the suggestion;",
+                    "Invoke $completion-loop before continuing. Stop after the suggestion;",
+                ),
+                "mandatory sequencing",
+            ),
+            (
+                original + "\n## Required follow-up\n\nUse $completion-loop.\n",
+                "references sibling skill completion-loop",
+            ),
+            (
+                original.replace(
+                    "Choose the best-fit route first",
+                    "Do not suggest $visual-match. Choose the best-fit route first",
+                ),
+                "references sibling skill visual-match",
+            ),
+        )
+        for fixture, expected in fixtures:
+            with self.subTest(expected=expected):
+                with tempfile.TemporaryDirectory(dir=REPO_ROOT / "skills") as temp_dir:
+                    skill_dir = Path(temp_dir) / "spec-interview"
+                    skill_dir.mkdir()
+                    (skill_dir / "SKILL.md").write_text(fixture, encoding="utf-8")
+                    errors = []
+                    with redirect_stdout(io.StringIO()):
+                        checker.validate_standalone_package(skill_dir, errors)
+                self.assertTrue(any(expected in error for error in errors), errors)
+
     def test_milestone_runner_state_contract_uses_shared_namespace(self):
         errors = []
         with redirect_stdout(io.StringIO()):

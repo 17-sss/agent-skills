@@ -138,6 +138,7 @@ Use $commit-helper to inspect this repository's commit rules and staged changes,
 - Plan mode 안에서 읽기 전용 요구사항 인터뷰를 유지합니다.
 - 도구로 확인 가능한 사실을 사용자에게 되묻지 않습니다.
 - scope, non-goal, 제약과 testable completion criteria가 충분할 때 종료합니다.
+- readiness gate를 통과한 뒤에도 현재 작업에 표시된 최적의 workflow만 선택적으로 추천하며, 필수화·설치·실행하지 않습니다.
 
 사용 예시:
 
@@ -152,6 +153,7 @@ Use $commit-helper to inspect this repository's commit rules and staged changes,
 - 계획 중에는 파일을 수정하거나 패키지를 설치하지 않습니다.
 - Architect 승인 후에만 Critic 검토를 진행합니다.
 - 최종 handoff에 대상 파일, symbol, 위험, 대안과 검증 명령을 포함합니다.
+- 같은 revision이 승인된 뒤에도 사용 가능한 execution workflow만 선택적으로 추천하며, 필수화·설치·실행하지 않습니다.
 
 사용 예시:
 
@@ -220,6 +222,7 @@ Use $review-gate to review all current staged, unstaged, and untracked changes. 
 ## 사용 원칙
 
 - 스킬 하나만 설치해도 해당 핵심 워크플로가 동작해야 합니다.
+- 선택적 workflow handoff는 추천일 뿐입니다. 현재 작업의 available-skill inventory에 표시된 downstream workflow만 언급하며, inventory 또는 최적의 스킬을 사용할 수 없으면 아무것도 제안하지 않습니다.
 - 공통 스킬은 자동 선택될 수 있지만, 명확한 재현을 원하면 예시처럼 `$skill-name`을 직접 지정합니다.
 - Codex 특화 6개 스킬은 `allow_implicit_invocation: false`이며 명시적으로 호출합니다.
 - optional plugin이나 도구가 없으면 저장소 기본 도구와 안전한 fallback을 우선합니다.

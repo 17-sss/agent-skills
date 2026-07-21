@@ -35,6 +35,13 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("file type, executable mode bits, symlink target", text)
         self.assertIn("delegate recursively", text)
         self.assertIn("Wait for the answer", text)
+        self.assertIn("## Offer an optional next workflow", text)
+        self.assertIn("current Codex task's available-skill inventory", text)
+        self.assertIn("Do not inspect the filesystem", text)
+        self.assertIn("Do not install a missing skill", text)
+        self.assertIn("If the inventory is unavailable", text)
+        self.assertIn("Omit this section when the user ends early", text)
+        self.assertIn("the user explicitly chooses and invokes", text)
 
     def test_reviewed_plan_enforces_sequential_independent_gates_and_integrity(self):
         skill = read("skills/reviewed-plan/SKILL.md")
@@ -47,6 +54,13 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("deterministic content fingerprint", contract)
         self.assertIn("file type, executable mode bits, symlink target", contract)
         self.assertIn("discard the affected verdict", contract)
+        self.assertIn("## Offer an optional next workflow", skill)
+        self.assertIn("current Codex task's available-skill inventory", skill)
+        self.assertIn("Do not inspect the filesystem", skill)
+        self.assertIn("Do not install a missing skill", skill)
+        self.assertIn("If the inventory is unavailable", skill)
+        self.assertIn("the handoff is `NOT APPROVED`", skill)
+        self.assertIn("the user explicitly chooses and invokes", skill)
 
     def test_completion_loop_rechecks_and_rereviews_the_final_candidate(self):
         skill = read("skills/completion-loop/SKILL.md")
@@ -225,6 +239,14 @@ class NativeWorkflowContractTest(unittest.TestCase):
             "review-gate",
             "milestone-runner",
         )
+        optional_handoffs = {
+            "spec-interview": {
+                "reviewed-plan",
+                "completion-loop",
+                "milestone-runner",
+            },
+            "reviewed-plan": {"completion-loop", "milestone-runner"},
+        }
         for name in names:
             package = SKILLS / name
             openai = (package / "agents" / "openai.yaml").read_text(encoding="utf-8")
@@ -241,7 +263,13 @@ class NativeWorkflowContractTest(unittest.TestCase):
             for pattern in banned:
                 self.assertNotIn(pattern, combined.lower(), f"{name} contains {pattern}")
             for other_name in names:
-                if other_name != name:
+                if other_name in optional_handoffs.get(name, set()):
+                    self.assertIn(
+                        f"`${other_name}`",
+                        combined,
+                        f"{name} lacks allowed optional handoff {other_name}",
+                    )
+                elif other_name != name:
                     self.assertNotIn(other_name, combined, f"{name} depends on {other_name}")
 
 

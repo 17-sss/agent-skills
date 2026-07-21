@@ -9,7 +9,7 @@ This repository maintains six namespaced, portable Codex workflow skills:
 - `visual-match`
 - `review-gate`
 
-The skills preserve user-facing workflow and quality gates without requiring an external orchestration runtime. Each package installs independently. Only `milestone-runner` needs durable workflow state, stored in the target repository under `.agent-workflows/`; the other five packages do not create a state directory.
+The skills preserve user-facing workflow and quality gates without requiring an external orchestration runtime. Each package installs independently. Optional workflow handoffs are availability-gated recommendations, not runtime dependencies: they use only the current task's advertised skill inventory and never inspect, install, or invoke another package. Only `milestone-runner` needs durable workflow state, stored in the target repository under `.agent-workflows/`; the other five packages do not create a state directory.
 
 ## Native mapping
 
@@ -17,6 +17,7 @@ The skills preserve user-facing workflow and quality gates without requiring an 
 | --- | --- |
 | Structured interview prompt | Plan mode structured input, with one plain-text question as fallback |
 | Stored interview state | Current task context; write a durable specification only when the user requests one |
+| Workflow chaining | Readiness-gated, user-selected recommendations limited to downstream skills advertised in the current task |
 | Consensus role routing | Native reviewers with explicit Planner, Architect, and Critic contracts plus enforced read-only sandboxing |
 | Persistent completion loop | Goal mode plus a requirement-to-evidence completion audit |
 | Durable multi-goal execution | One native aggregate goal plus ordered `.agent-workflows/goals/<slug>/` plan and ledger artifacts |
@@ -87,6 +88,7 @@ Run this after a meaningful Codex release, an upstream workflow change, or a Pro
    - preserve only explicit durable goal artifacts under `.agent-workflows/` when the workflow genuinely needs restartable state
    - map genuinely new behavior to the smallest documented Codex capability
    - keep every skill installable independently
+   - keep optional handoffs recommendation-only and allowlisted; never infer installed skills from the filesystem or catalog
 
 5. Update only the affected `SKILL.md`, scripts, referenced contract, `agents/openai.yaml`, `metadata.json`, root catalog entry, source fingerprint, and `SKILL_NAMES` registry in the checker. Keep local names functional and let archive fingerprints detect upstream drift without preserving upstream filenames as package identities.
 
@@ -101,7 +103,7 @@ python3 scripts/check-native-workflow-skills.py --check-upstream --check-codex-d
 
 ### Checker CLI contract
 
-The default invocation is offline. It checks frontmatter, package-local links, executable helper bits, metadata and `agents/openai.yaml`, banned runtime dependencies, cross-skill dependencies, the exclusive `.agent-workflows/` state owner, the root catalog, and retired unprefixed directories. It also runs `skill-creator`'s `quick_validate.py` when that validator and a Python interpreter with PyYAML are available.
+The default invocation is offline. It checks frontmatter, package-local links, executable helper bits, metadata and `agents/openai.yaml`, banned runtime dependencies, hard cross-skill dependencies, the strict optional-handoff allowlist and availability guardrails, the exclusive `.agent-workflows/` state owner, the root catalog, and retired unprefixed directories. It also runs `skill-creator`'s `quick_validate.py` when that validator and a Python interpreter with PyYAML are available.
 
 Use the flags according to the evidence required:
 
@@ -132,6 +134,8 @@ Do not call the packages release-ready from the automated command alone. Run the
 - When repository inspection is delegated, verify exact content fingerprints before trusting the read-only result.
 - Skip optional delegation unless the child's effective sandbox is tool-enforced read-only; prompt wording is not a safety boundary.
 - Include file type, executable bits, symlink target, and content in path fingerprints; names and bytes alone miss identity-only changes.
+- Offer a downstream workflow only after the readiness gate passes, only when its exact name appears in the current task's available-skill inventory, and only as a user-selected recommendation.
+- When the inventory is absent, the best-fit route is unavailable, or material ambiguity remains, omit the optional handoff instead of searching installation paths or substituting an unsafe route.
 
 ### reviewed-plan
 
@@ -142,6 +146,8 @@ Do not call the packages release-ready from the automated command alone. Run the
 - Compare exact staged, unstaged, and untracked content across every delegated gate; `git status` text alone is insufficient.
 - Require an inherited or isolated effective read-only sandbox for Architect and Critic; otherwise return `NOT APPROVED`.
 - Keep Architect and Critic terminal review lanes; they must not reactivate workflows or delegate recursively.
+- Offer an execution workflow only after matching Architect `ACCEPT` and Critic `APPROVE`, only when its exact name appears in the current task's available-skill inventory, and only as a user-selected recommendation.
+- When approval, readiness, inventory, or the best-fit route is unavailable, omit the optional handoff instead of searching installation paths or substituting an unsafe route.
 
 ### completion-loop
 

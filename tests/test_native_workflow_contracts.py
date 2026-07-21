@@ -136,6 +136,33 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("### Checker CLI contract", maintenance)
         self.assertIn("goal-state-cli.md", maintenance)
 
+    def test_catalog_groups_every_skill_and_provides_copyable_usage(self):
+        readme = read("README.md")
+        common = (
+            "design-loop",
+            "handoff-memory",
+            "github-pr-review",
+            "github-pr-publish",
+            "commit-helper",
+        )
+        codex_native = (
+            "spec-interview",
+            "reviewed-plan",
+            "completion-loop",
+            "milestone-runner",
+            "visual-match",
+            "review-gate",
+        )
+        self.assertLess(readme.index("## 공통 스킬"), readme.index("## Codex 특화 워크플로"))
+        for name in common + codex_native:
+            heading = f"### {name}"
+            start = readme.index(heading)
+            end = readme.find("\n### ", start + len(heading))
+            section = readme[start:] if end == -1 else readme[start:end]
+            self.assertIn("사용 예시:", section, f"{name} lacks a usage label")
+            self.assertIn("```text", section, f"{name} lacks a text code block")
+            self.assertIn(f"${name}", section, f"{name} example is not explicit")
+
     def test_all_six_packages_are_explicit_and_runtime_independent(self):
         banned = (".omx", "tmux", "ask_codex", "ultrawork", "omx state")
         names = (

@@ -1,0 +1,28 @@
+{
+  "name": "agent-skills",
+  "plugins": [
+    {
+      "name": "codex",
+      "source": "./",
+      "skills": [
+        "./skills/spec-interview",
+        "./skills/reviewed-plan",
+        "./skills/completion-loop",
+        "./skills/milestone-runner",
+        "./skills/visual-match",
+        "./skills/review-gate"
+      ]
+    },
+    {
+      "name": "other",
+      "source": "./",
+      "skills": [
+        "./skills/design-loop",
+        "./skills/handoff-memory",
+        "./skills/github-pr-review",
+        "./skills/github-pr-publish",
+        "./skills/commit-helper"
+      ]
+    }
+  ]
+}

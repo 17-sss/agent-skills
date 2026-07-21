@@ -27,9 +27,17 @@ SKILL_NAMES = (
     "review-gate",
     "milestone-runner",
 )
+OTHER_SKILL_NAMES = (
+    "design-loop",
+    "handoff-memory",
+    "github-pr-review",
+    "github-pr-publish",
+    "commit-helper",
+)
 STATE_DIRECTORY = ".agent-workflows"
 SOURCE_MANIFEST = REPO_ROOT / "docs" / "native-workflow-sources.json"
 ROOT_README = REPO_ROOT / "README.md"
+TUI_GROUP_MANIFEST = REPO_ROOT / ".claude-plugin" / "marketplace.json"
 ALLOWED_REFERENCE_HOSTS = {
     "developers.openai.com",
     "github.com",
@@ -411,6 +419,68 @@ def validate_root_catalog(errors: list[str]) -> None:
     validate_markdown_links(ROOT_README, errors, allowed_root=REPO_ROOT)
 
 
+def validate_tui_group_manifest(errors: list[str]) -> None:
+    try:
+        manifest = json.loads(TUI_GROUP_MANIFEST.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        fail(f"{TUI_GROUP_MANIFEST.relative_to(REPO_ROOT)} is invalid: {exc}", errors)
+        return
+
+    if not isinstance(manifest, dict):
+        fail(f"{TUI_GROUP_MANIFEST.relative_to(REPO_ROOT)} must contain a JSON object", errors)
+        return
+    plugins = manifest.get("plugins")
+    if not isinstance(plugins, list) or not all(isinstance(item, dict) for item in plugins):
+        fail(
+            f"{TUI_GROUP_MANIFEST.relative_to(REPO_ROOT)} plugins must be a list of objects",
+            errors,
+        )
+        return
+    group_names = [item.get("name") for item in plugins]
+    if not all(isinstance(name, str) for name in group_names):
+        fail(f"{TUI_GROUP_MANIFEST.relative_to(REPO_ROOT)} group names must be strings", errors)
+        return
+
+    expected_groups = {
+        "codex": {f"./skills/{name}" for name in SKILL_NAMES},
+        "other": {f"./skills/{name}" for name in OTHER_SKILL_NAMES},
+    }
+    groups = {item.get("name"): item for item in plugins}
+    if set(groups) != set(expected_groups) or len(groups) != len(plugins):
+        fail(
+            f"{TUI_GROUP_MANIFEST.relative_to(REPO_ROOT)} groups must be exactly codex and other",
+            errors,
+        )
+        return
+
+    all_grouped_paths: list[str] = []
+    for group_name, expected_paths in expected_groups.items():
+        group = groups[group_name]
+        grouped_paths = group.get("skills")
+        if group.get("source") != "./":
+            fail(f"TUI group {group_name} source must be ./", errors)
+        if (
+            not isinstance(grouped_paths, list)
+            or not all(isinstance(path, str) for path in grouped_paths)
+            or len(grouped_paths) != len(set(grouped_paths))
+            or set(grouped_paths) != expected_paths
+        ):
+            fail(
+                f"TUI group {group_name} must exactly match its inventory: "
+                f"{sorted(expected_paths)}",
+                errors,
+            )
+            continue
+        all_grouped_paths.extend(grouped_paths)
+
+    if len(all_grouped_paths) != len(set(all_grouped_paths)):
+        fail("TUI groups must not contain the same skill more than once", errors)
+    for relative_path in all_grouped_paths:
+        skill_dir = REPO_ROOT / relative_path.removeprefix("./")
+        if not (skill_dir / "SKILL.md").is_file():
+            fail(f"{relative_path} does not point to an installable skill", errors)
+
+
 def find_skill_validator(explicit: str | None = None) -> Path | None:
     override = explicit or os.environ.get("SKILL_VALIDATOR")
     if override:
@@ -749,6 +819,7 @@ def main() -> int:
         validate_catalog_files(skill_dir, errors)
 
     validate_root_catalog(errors)
+    validate_tui_group_manifest(errors)
 
     validator_ran = run_skill_validator(
         args.require_validator,

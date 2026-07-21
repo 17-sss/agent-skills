@@ -7,6 +7,8 @@ This repository is a catalog of reusable agent skills. The repository root is no
 - `skills/` contains one directory per skill
 - Each skill should be self-contained and installable on its own
 - Root documentation should describe the catalog, not duplicate skill internals
+- `.claude-plugin/marketplace.json` is compatibility metadata used by the `skills` CLI to group the six Codex-native workflows under `Codex` and the cross-agent skills under `Other`
+- Keep the grouping manifest aligned with the Codex-native inventory without introducing Claude Code runtime dependencies into the skills
 
 ## Creating a New Skill
 
@@ -38,4 +40,5 @@ Rules:
 - Preserve the skill directory name once published
 - Update `SKILL.md`, `metadata.json`, and any existing package `README.md` together when the skill contract changes
 - Keep examples and references aligned with the actual script behavior
+- When either inventory changes, update `.claude-plugin/marketplace.json`, the root catalog, and the grouping contract tests together
 - Validate the skill after structural changes

@@ -67,6 +67,50 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
         self.assertIsNone(result)
         self.assertTrue(any("skill set mismatch" in error for error in errors))
 
+    def test_tui_group_manifest_matches_codex_native_inventory(self):
+        errors = []
+        with redirect_stdout(io.StringIO()):
+            checker.validate_tui_group_manifest(errors)
+        self.assertEqual(errors, [])
+
+    def test_tui_group_manifest_rejects_common_skills(self):
+        with tempfile.TemporaryDirectory(dir=REPO_ROOT) as temp_dir:
+            manifest_path = Path(temp_dir) / "marketplace.json"
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "plugins": [
+                            {
+                                "name": "codex",
+                                "source": "./",
+                                "skills": [
+                                    *[f"./skills/{name}" for name in checker.SKILL_NAMES],
+                                    "./skills/design-loop",
+                                ],
+                            },
+                            {
+                                "name": "other",
+                                "source": "./",
+                                "skills": [
+                                    f"./skills/{name}"
+                                    for name in checker.OTHER_SKILL_NAMES
+                                ],
+                            },
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            original = checker.TUI_GROUP_MANIFEST
+            checker.TUI_GROUP_MANIFEST = manifest_path
+            try:
+                errors = []
+                with redirect_stdout(io.StringIO()):
+                    checker.validate_tui_group_manifest(errors)
+            finally:
+                checker.TUI_GROUP_MANIFEST = original
+        self.assertTrue(any("TUI group codex must exactly match" in error for error in errors))
+
     def test_upstream_archive_matching_uses_content_fingerprints(self):
         payload = b"---\nname: source-skill\ndescription: fixture\n---\n"
         archive_bytes = io.BytesIO()

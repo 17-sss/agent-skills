@@ -14,6 +14,13 @@
 npx skills add https://github.com/17-sss/agent-skills
 ```
 
+선택 화면은 용도에 따라 두 그룹으로 표시됩니다.
+
+- `Codex`: Codex의 native Plan, Goal, Review와 subagent 계약을 사용하는 명시 호출형 워크플로
+- `Other`: Codex를 포함한 여러 호환 에이전트에서 사용할 수 있는 공통 스킬
+
+`skills` CLI는 현재 [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)의 명시적인 스킬 목록을 TUI 그룹 정보로 읽습니다. 이 파일은 설치 선택 화면을 위한 호환 metadata이며, 개별 스킬에 Claude Code runtime 의존성을 추가하지 않습니다.
+
 필요한 스킬 하나만 설치할 수도 있습니다.
 
 ```bash
@@ -247,11 +254,13 @@ python3 scripts/check-native-workflow-skills.py --check-upstream --check-codex-d
 
 ```text
 agent-skills/
-├── skills/       # 하나의 디렉터리마다 독립 설치 가능한 스킬 하나
-├── scripts/      # 여러 패키지 계약과 source drift를 검사하는 유지보수 도구
-├── tests/        # package와 workflow contract 회귀 테스트
-├── docs/         # native capability mapping과 forward-test 기록
-└── assets/       # 루트 문서에서 사용하는 이미지
+├── .claude-plugin/
+│   └── marketplace.json  # skills CLI의 Codex/Other TUI 그룹 metadata
+├── skills/          # 하나의 디렉터리마다 독립 설치 가능한 스킬 하나
+├── scripts/         # 여러 패키지 계약과 source drift를 검사하는 유지보수 도구
+├── tests/           # package와 workflow contract 회귀 테스트
+├── docs/            # native capability mapping과 forward-test 기록
+└── assets/          # 루트 문서에서 사용하는 이미지
 ```
 
 각 스킬 패키지는 필요에 따라 다음 파일을 가집니다.

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
 import unittest
 
 
@@ -162,6 +163,40 @@ class NativeWorkflowContractTest(unittest.TestCase):
             self.assertIn("사용 예시:", section, f"{name} lacks a usage label")
             self.assertIn("```text", section, f"{name} lacks a text code block")
             self.assertIn(f"${name}", section, f"{name} example is not explicit")
+
+    def test_skills_tui_groups_codex_workflows_and_leaves_common_skills_as_other(self):
+        manifest = json.loads(read(".claude-plugin/marketplace.json"))
+        codex_native = [
+            "spec-interview",
+            "reviewed-plan",
+            "completion-loop",
+            "visual-match",
+            "review-gate",
+            "milestone-runner",
+        ]
+        common = {
+            "design-loop",
+            "handoff-memory",
+            "github-pr-review",
+            "github-pr-publish",
+            "commit-helper",
+        }
+
+        groups = {plugin["name"]: plugin for plugin in manifest["plugins"]}
+        self.assertEqual(set(groups), {"codex", "other"})
+        codex_group = {Path(path).name for path in groups["codex"]["skills"]}
+        other_group = {Path(path).name for path in groups["other"]["skills"]}
+        self.assertEqual(codex_group, set(codex_native))
+        self.assertEqual(other_group, common)
+        self.assertTrue(codex_group.isdisjoint(other_group))
+        for group in groups.values():
+            self.assertEqual(group["source"], "./")
+            for path in group["skills"]:
+                self.assertTrue((REPO_ROOT / path / "SKILL.md").is_file())
+
+        readme = read("README.md")
+        self.assertIn("`Codex`:", readme)
+        self.assertIn("`Other`:", readme)
 
     def test_all_six_packages_are_explicit_and_runtime_independent(self):
         banned = (".omx", "tmux", "ask_codex", "ultrawork", "omx state")

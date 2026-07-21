@@ -19,6 +19,9 @@
       },
       "review-gate": {
         "sha256": "52cd2a7bed15900e23e9850542dc83e7f26a499745d97401445712f354e94ccc"
+      },
+      "milestone-runner": {
+        "sha256": "c6d8d253dd0f3041c0c671838a346218a03c1479169777ede02734dffe8d3c73"
       }
     }
   },

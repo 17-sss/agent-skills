@@ -86,7 +86,39 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("for a file audit", contract)
         self.assertIn("Final verdict precedence", contract)
 
-    def test_all_five_packages_are_explicit_and_runtime_independent(self):
+    def test_milestone_runner_is_standalone_sequential_and_goal_reconciled(self):
+        skill = read("skills/milestone-runner/SKILL.md")
+        contract = read("skills/milestone-runner/references/state-contract.md")
+        cli_reference = read("skills/milestone-runner/references/goal-state-cli.md")
+        script = read("skills/milestone-runner/scripts/goal_state.py")
+        self.assertIn("Keep this package standalone", skill)
+        self.assertIn("Do not invoke or require another skill", skill)
+        self.assertIn("Call `get_goal` first", skill)
+        self.assertIn("execute one goal at a time", skill.lower())
+        self.assertIn("--expected-revision", skill)
+        self.assertIn("fresh independent Codex review", skill)
+        self.assertIn("Only now call `update_goal`", skill)
+        self.assertIn(".agent-workflows/", contract)
+        self.assertIn("ledger.jsonl", contract)
+        self.assertIn("goal-state-cli.md", skill)
+        self.assertIn("--expected-revision", cli_reference)
+        self.assertIn("pending transaction", cli_reference)
+        self.assertIn("no delete command", cli_reference)
+        self.assertIn('STATE_DIRECTORY = ".agent-workflows"', script)
+        self.assertNotIn("create_goal", script)
+        self.assertNotIn("update_goal", script)
+
+    def test_catalog_documents_checker_modes_and_update_cadence(self):
+        readme = read("README.md")
+        maintenance = read("docs/native-workflow-skills-maintenance.md")
+        self.assertIn("### Workflow checker modes", readme)
+        self.assertIn("--check-upstream", readme)
+        self.assertIn("--check-codex-docs", readme)
+        self.assertIn("## Suggested cadence", maintenance)
+        self.assertIn("### Checker CLI contract", maintenance)
+        self.assertIn("goal-state-cli.md", maintenance)
+
+    def test_all_six_packages_are_explicit_and_runtime_independent(self):
         banned = (".omx", "tmux", "ask_codex", "ultrawork", "omx state")
         names = (
             "spec-interview",
@@ -94,6 +126,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
             "completion-loop",
             "visual-match",
             "review-gate",
+            "milestone-runner",
         )
         for name in names:
             package = SKILLS / name
@@ -110,6 +143,9 @@ class NativeWorkflowContractTest(unittest.TestCase):
             combined = "\n".join(surfaces)
             for pattern in banned:
                 self.assertNotIn(pattern, combined.lower(), f"{name} contains {pattern}")
+            for other_name in names:
+                if other_name != name:
+                    self.assertNotIn(other_name, combined, f"{name} depends on {other_name}")
 
 
 if __name__ == "__main__":

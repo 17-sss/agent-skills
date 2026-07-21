@@ -1,14 +1,15 @@
 # Codex-native workflow skill maintenance
 
-This repository replaces five frequently used orchestration workflows with portable Codex skills:
+This repository maintains six namespaced, portable Codex workflow skills:
 
 - `spec-interview`
 - `reviewed-plan`
 - `completion-loop`
+- `milestone-runner`
 - `visual-match`
 - `review-gate`
 
-The new skills preserve the user-facing workflow and quality gates. They do not emulate the old runtime, state directory, terminal UI, hook loop, or MCP compatibility layers.
+The skills preserve user-facing workflow and quality gates without requiring an external orchestration runtime. Each package installs independently. Only `milestone-runner` needs durable workflow state, stored in the target repository under `.agent-workflows/`; the other five packages do not create a state directory.
 
 ## Native mapping
 
@@ -18,6 +19,7 @@ The new skills preserve the user-facing workflow and quality gates. They do not 
 | Stored interview state | Current task context; write a durable specification only when the user requests one |
 | Consensus role routing | Native reviewers with explicit Planner, Architect, and Critic contracts plus enforced read-only sandboxing |
 | Persistent completion loop | Goal mode plus a requirement-to-evidence completion audit |
+| Durable multi-goal execution | One native aggregate goal plus ordered `.agent-workflows/goals/<slug>/` plan and ledger artifacts |
 | Automatic retry hooks | Explicit investigate, implement, verify, diagnose, and repair loop |
 | External architecture cross-check | Fresh native Codex reviewer running in an enforced read-only sandbox over captured requirements, diff, and logs |
 | Live URL or image implementation | Product Design skills when installed, otherwise Browser or repository-native automation |
@@ -25,7 +27,7 @@ The new skills preserve the user-facing workflow and quality gates. They do not 
 | Diff or commit review target selection | Native `/review` target picker or equivalent read-only Git inspection |
 | Code and architecture review roles | Two parallel native review lanes with enforced read-only isolation and independent evidence contracts |
 | Merge recommendation synthesis | Deterministic `APPROVE`, `COMMENT`, `REQUEST_CHANGES`, or `INCONCLUSIVE` precedence |
-| Runtime resume and cleanup | Goal state when available and ordinary task completion semantics |
+| Resume and cleanup | Native Goal state plus revisioned repository-local artifacts only when durable multi-goal state is required |
 
 ## Reviewed sources
 
@@ -37,6 +39,13 @@ The initial rewrite was reviewed on 2026-07-20 against:
 - current Codex surfaces for Plan mode, Goal mode, `/review`, subagents, skills, plugins, Browser, image input, and image generation
 
 Exact source fingerprints live in [native-workflow-sources.json](native-workflow-sources.json). The checker searches the current upstream skill archive by content, so legacy source filenames do not become local package identities. The hashes are drift detectors, not vendored copies and not a reason to reintroduce runtime-specific behavior.
+
+## Suggested cadence
+
+- Every two weeks, run the complete acceptance command to catch upstream and Codex documentation drift.
+- Run it immediately after a meaningful Codex release or a change to Goal mode, `/review`, subagents, skills, plugins, Browser, Chrome, Product Design, image input, or image generation.
+- Run the isolated forward-test matrix whenever a workflow contract changes. If no relevant behavior changed, run it at least quarterly as an end-to-end confidence check.
+- A source hash or manual fragment change opens a review; it does not by itself justify copying upstream implementation details into a native package.
 
 ## Periodic update procedure
 
@@ -73,7 +82,8 @@ Run this after a meaningful Codex release, an upstream workflow change, or a Pro
 4. Compare changed upstream text by behavior category:
 
    - preserve user-visible intent, gates, review order, and evidence requirements
-   - discard runtime state, compatibility code, terminal coordination, hidden retry, and plugin-specific shims
+   - discard unrelated runtime state, compatibility code, terminal coordination, hidden retry, and plugin-specific shims
+   - preserve only explicit durable goal artifacts under `.agent-workflows/` when the workflow genuinely needs restartable state
    - map genuinely new behavior to the smallest documented Codex capability
    - keep every skill installable independently
 
@@ -88,7 +98,23 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 python3 scripts/check-native-workflow-skills.py --check-upstream --check-codex-docs --require-validator
 ```
 
-It makes `skill-creator`'s `quick_validate.py` mandatory and verifies that the current official Codex manual still contains evidence for every capability recorded in the manifest. The system-skill location is only a convenience default: use `--validator <path>` or `SKILL_VALIDATOR` when the validator lives elsewhere. The checker tries the current Python, then `python3` and `python` from `PATH`, then the common `/usr/bin/python3` fallback, accepting only an interpreter that imports PyYAML. Use `--validator-python <path>` or `SKILL_VALIDATOR_PYTHON` to select another interpreter. Without `--require-validator`, dependency-free repository checks may still run, but a skipped validator is reported without claiming full validation. The checker never installs packages.
+### Checker CLI contract
+
+The default invocation is offline. It checks frontmatter, package-local links, executable helper bits, metadata and `agents/openai.yaml`, banned runtime dependencies, cross-skill dependencies, the exclusive `.agent-workflows/` state owner, the root catalog, and retired unprefixed directories. It also runs `skill-creator`'s `quick_validate.py` when that validator and a Python interpreter with PyYAML are available.
+
+Use the flags according to the evidence required:
+
+| Flag | Effect |
+| --- | --- |
+| `--require-validator` | Treat a missing `quick_validate.py`, missing PyYAML-capable interpreter, or validator failure as an acceptance failure |
+| `--check-upstream` | Use `git ls-remote` and current raw source files to compare the recorded upstream commit and hashes |
+| `--check-codex-docs` | Fetch the current official Codex manual and verify every capability fragment in the manifest |
+| `--validator <path>` | Override `SKILL_VALIDATOR` and the current Codex system-skill location |
+| `--validator-python <path>` | Override `SKILL_VALIDATOR_PYTHON` and automatic interpreter discovery |
+
+The network flags are opt-in and may be combined. The checker returns `0` only when every requested check passes and `1` after any validation error. Without `--require-validator`, dependency-free repository checks may still pass while an unavailable validator is explicitly reported as skipped. The checker never installs packages or writes workflow state.
+
+The validator location in the current Codex system skill is only a convenience default. Interpreter discovery tries the current Python, then `python3` and `python` from `PATH`, then `/usr/bin/python3`, and accepts the first candidate that imports PyYAML.
 
 Manual-fragment validation is a drift canary, not semantic proof. Permission inheritance, Goal access boundaries, Browser surface availability, and `/review` target behavior must also be confirmed in the behavioral forward tests or by a human reading the refreshed official section.
 
@@ -125,6 +151,18 @@ Do not call the packages release-ready from the automated command alone. Run the
 - Invalidate and repeat independent review whenever implementation artifacts change after review.
 - Because implementation turns are writable, run completion review through a separate native Codex execution explicitly sandboxed read-only; otherwise do not complete the goal.
 - Keep the completion reviewer terminal and include filesystem identity as well as content in the candidate fingerprint.
+
+### milestone-runner
+
+- Keep the package standalone; never make another catalog skill a required or implicit dependency.
+- Keep mutable state under `.agent-workflows/goals/<slug>/` and never under `.codex/` or an installed skill directory.
+- Keep the operator-facing command, output, exit, recovery, and troubleshooting contract aligned with [goal-state-cli.md](../skills/milestone-runner/references/goal-state-cli.md).
+- Preserve one native aggregate goal while repository artifacts track ordered subgoals; do not emulate multiple simultaneous native goals.
+- Keep the parent task as the single state owner. Delegated work returns evidence but never mutates the plan or ledger.
+- Require the current revision for every mutation and verify the ledger hash chain before trusting resume state.
+- Never overwrite an existing plan, skip an earlier blocked goal, delete superseded history, or weaken accepted verification through steering.
+- Keep the state helper limited to repository artifacts. Native `get_goal`, `create_goal`, and `update_goal` remain model-facing tool calls.
+- Finalize only after all subgoals are terminal, requirements are proved, verification passes, implementation changes receive an independent read-only review, and a fresh native goal snapshot is complete.
 
 ### visual-match
 
@@ -165,6 +203,10 @@ Run tests in disposable or read-only fixtures. Do not let validation agents edit
 ```
 
 ```text
+Use $milestone-runner to migrate this disposable two-module fixture in two ordered stages, checkpoint each stage, and finish only after tests and an independent review pass.
+```
+
+```text
 /goal Match the supplied checkout screenshot at desktop and mobile viewports, preserve behavior, and report every remaining visual difference. Use $visual-match.
 ```
 
@@ -181,6 +223,7 @@ For every forward test, verify the trace as well as the final prose: question co
 | `spec-interview` | Inspects repository evidence, asks exactly one material user decision, and waits | Fixture fingerprint remains unchanged |
 | `reviewed-plan` | Produces a repository-grounded plan, runs Architect before Critic, and reports both verdicts | Fixture fingerprint remains unchanged across both gates |
 | `completion-loop` | Reproduces the failure, implements the smallest fix, runs fresh checks, and independently reviews the final fingerprint | Only the disposable fixture changes and its tests pass |
+| `milestone-runner` | Creates `.agent-workflows/`, runs goals sequentially, rejects stale or out-of-order transitions, checkpoints evidence, and reconciles a completed native goal | Only the disposable fixture and its explicit durable state change; no other skill is invoked |
 | `visual-match` | Proves both the safe missing-browser blocker and a browser-enabled baseline/edit/recapture/comparison success path; never passes unresolved major drift | Only the disposable fixture and task-scoped captures change |
 | `review-gate` | Includes staged, unstaged, and untracked content, runs both lanes, and catches seeded actionable defects | The complete fixture fingerprint remains unchanged |
 
@@ -188,12 +231,13 @@ Keep forward-test fixtures outside the repository. Do not install dependencies, 
 
 ## Installation after migration
 
-The five packages use short functional identifiers and `Codex · …` OpenAI display names. They remain explicit-only and independently installable. Install each package from this catalog with the repository's normal skill installer:
+The six packages use short functional identifiers and `Codex · …` OpenAI display names. They remain explicit-only and independently installable. Install each package from this catalog with the repository's normal skill installer:
 
 ```bash
 npx skills add https://github.com/17-sss/agent-skills --skill spec-interview
 npx skills add https://github.com/17-sss/agent-skills --skill reviewed-plan
 npx skills add https://github.com/17-sss/agent-skills --skill completion-loop
+npx skills add https://github.com/17-sss/agent-skills --skill milestone-runner
 npx skills add https://github.com/17-sss/agent-skills --skill visual-match
 npx skills add https://github.com/17-sss/agent-skills --skill review-gate
 ```
@@ -203,6 +247,7 @@ Start a new Codex task after installation so skill discovery does not retain sta
 ## Known native differences
 
 - Without Goal mode, Codex Completion Loop can preserve the completion contract only inside the current task; it cannot promise cross-task automatic continuation.
+- Without Goal mode, Codex Milestone Runner can preserve repository-local plan and ledger artifacts but cannot promise automatic continuation. It also cannot clear or replace a conflicting active native goal. After a native goal is completed, `get_goal` may report no active goal, so preserve the successful `update_goal` completion result before querying again.
 - Plan mode is a semantic boundary, not a separate filesystem sandbox. Codex Reviewed Plan requires an effective read-only permission mode for independent gates and uses content fingerprints only as defense in depth.
 - Native subagents inherit the parent permission mode. A writable implementation turn therefore cannot claim an isolated review merely by prompting the child to stay read-only; Codex Completion Loop uses a separately sandboxed native Codex run or remains incomplete.
 - Browser and Product Design capabilities vary by Codex surface and installed plugins. Codex Visual Match degrades to repository-native automation and reports missing visual evidence.

@@ -52,6 +52,7 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
                 "completion-loop",
                 "visual-match",
                 "review-gate",
+                "milestone-runner",
             },
         )
         errors = []
@@ -271,6 +272,111 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
             with redirect_stdout(io.StringIO()):
                 checker.validate_runtime_independence(link, errors)
         self.assertTrue(any("must be self-contained" in error for error in errors))
+
+    def test_standalone_package_rejects_sibling_skill_dependencies(self):
+        with tempfile.TemporaryDirectory(dir=REPO_ROOT / "skills") as temp_dir:
+            skill_dir = Path(temp_dir)
+            (skill_dir / "SKILL.md").write_text(
+                "Invoke $completion-loop before continuing.\n",
+                encoding="utf-8",
+            )
+            errors = []
+            with redirect_stdout(io.StringIO()):
+                checker.validate_standalone_package(skill_dir, errors)
+        self.assertTrue(any("references sibling skill completion-loop" in error for error in errors))
+
+    def test_milestone_runner_state_contract_uses_shared_namespace(self):
+        errors = []
+        with redirect_stdout(io.StringIO()):
+            checker.validate_state_contract(
+                REPO_ROOT / "skills" / "milestone-runner",
+                errors,
+            )
+        self.assertEqual(errors, [])
+
+    def test_state_contract_rejects_native_goal_calls_in_helper(self):
+        for goal_call in ("create_goal", "get_goal", "update_goal"):
+            with self.subTest(goal_call=goal_call):
+                with tempfile.TemporaryDirectory(dir=REPO_ROOT / "skills") as temp_dir:
+                    skill_dir = Path(temp_dir) / "milestone-runner"
+                    (skill_dir / "references").mkdir(parents=True)
+                    (skill_dir / "scripts").mkdir()
+                    (skill_dir / "SKILL.md").write_text(
+                        ".agent-workflows/goals/<slug>/ pending transaction\n",
+                        encoding="utf-8",
+                    )
+                    (skill_dir / "references" / "state-contract.md").write_text(
+                        ".agent-workflows/ .pending-transaction.json "
+                        "implementation_changed\n",
+                        encoding="utf-8",
+                    )
+                    (skill_dir / "scripts" / "goal_state.py").write_text(
+                        'STATE_DIRECTORY = ".agent-workflows"\n'
+                        'TRANSACTION_FILE = ".pending-transaction.json"\n'
+                        "def validate_projection(): pass\n"
+                        f"{goal_call}()\n",
+                        encoding="utf-8",
+                    )
+                    errors = []
+                    with redirect_stdout(io.StringIO()):
+                        checker.validate_state_contract(skill_dir, errors)
+                self.assertTrue(
+                    any(
+                        f"must not call native goal tool {goal_call}" in error
+                        for error in errors
+                    )
+                )
+
+    def test_milestone_runner_state_contract_rejects_missing_markers_and_alt_roots(self):
+        with tempfile.TemporaryDirectory(dir=REPO_ROOT / "skills") as temp_dir:
+            skill_dir = Path(temp_dir) / "milestone-runner"
+            (skill_dir / "references").mkdir(parents=True)
+            (skill_dir / "scripts").mkdir()
+            (skill_dir / "SKILL.md").write_text(
+                ".agent-workflows/goals/<slug>/\n",
+                encoding="utf-8",
+            )
+            (skill_dir / "references" / "state-contract.md").write_text(
+                ".agent-workflows/ .pending-transaction.json implementation_changed\n",
+                encoding="utf-8",
+            )
+            (skill_dir / "scripts" / "goal_state.py").write_text(
+                'STATE_DIRECTORY = ".agent-workflows"\n'
+                'TRANSACTION_FILE = ".pending-transaction.json"\n'
+                'ALT_STATE = ".codex/workflows"\n'
+                "def validate_projection(): pass\n",
+                encoding="utf-8",
+            )
+            errors = []
+            with redirect_stdout(io.StringIO()):
+                checker.validate_state_contract(skill_dir, errors)
+        self.assertTrue(any("lacks state-contract marker 'pending transaction'" in e for e in errors))
+        self.assertTrue(any("alternate mutable state roots" in error for error in errors))
+
+    def test_bundled_scripts_must_be_executable(self):
+        with tempfile.TemporaryDirectory(dir=REPO_ROOT / "skills") as temp_dir:
+            skill_dir = Path(temp_dir)
+            scripts = skill_dir / "scripts"
+            scripts.mkdir()
+            script = scripts / "helper.py"
+            script.write_text("print('safe')\n", encoding="utf-8")
+            script.chmod(0o644)
+            errors = []
+            with redirect_stdout(io.StringIO()):
+                checker.validate_bundled_scripts(skill_dir, errors)
+        self.assertTrue(any("must be executable" in error for error in errors))
+
+    def test_non_milestone_runner_package_cannot_create_shared_state(self):
+        with tempfile.TemporaryDirectory(dir=REPO_ROOT / "skills") as temp_dir:
+            skill_dir = Path(temp_dir)
+            (skill_dir / "SKILL.md").write_text(
+                "Write .agent-workflows/goals/state.json.\n",
+                encoding="utf-8",
+            )
+            errors = []
+            with redirect_stdout(io.StringIO()):
+                checker.validate_state_contract(skill_dir, errors)
+        self.assertTrue(any("unnecessary shared workflow state" in error for error in errors))
 
     def test_explicit_validator_path_is_portable_and_checked(self):
         with tempfile.TemporaryDirectory(dir=REPO_ROOT) as temp_dir:

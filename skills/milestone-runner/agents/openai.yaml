@@ -1,0 +1,6 @@
+interface:
+  display_name: "Codex · Milestone Runner"
+  short_description: "Run durable multi-goal workflows with native Goal mode"
+  default_prompt: "Use $milestone-runner to turn this outcome into a durable sequential goal plan, execute each step, checkpoint evidence, and complete only after final verification."
+policy:
+  allow_implicit_invocation: false

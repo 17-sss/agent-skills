@@ -1,0 +1,11 @@
+{
+  "name": "milestone-runner",
+  "version": "0.1.0",
+  "organization": "17-sss",
+  "date": "July 2026",
+  "abstract": "Standalone Codex-native multi-goal execution workflow with repository-local state, sequential evidence checkpoints, safe resume and steering, final independent review, and native Goal mode reconciliation.",
+  "references": [
+    "https://developers.openai.com/codex/codex-manual.md",
+    "https://learn.chatgpt.com/docs/long-running-work"
+  ]
+}

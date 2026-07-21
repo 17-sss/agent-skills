@@ -73,6 +73,24 @@ Verified-completion workflow that pairs Codex Goal mode with an evidence-driven 
 - Audits every requirement against implementation artifacts and fresh evidence
 - Reports genuine blockers without treating ordinary difficulty as blocked work
 
+### milestone-runner
+
+Standalone durable multi-goal execution over native Codex Goal mode and repository-local checkpoints.
+
+**Use when:**
+- Invoking `$milestone-runner` for a large outcome that should survive task restarts
+- Breaking implementation into ordered, independently verifiable goals
+- Requiring evidence checkpoints, safe resume, explicit plan steering, and final goal reconciliation
+
+**Behavior:**
+- Creates only the required plan state under `.agent-workflows/goals/<slug>/` in the target repository
+- Executes one non-terminal goal at a time and rejects stale revision writes
+- Uses a hash-chained ledger without calling Codex goal tools from shell scripts
+- Blocks later work behind unresolved earlier goals and preserves superseded history
+- Requires fresh verification, an independent native read-only review for implementation changes, and a completed native goal snapshot before finalization
+- Installs and runs without any other catalog skill
+- Documents the bundled state helper's commands, revision discipline, recovery behavior, and failure handling in the [Goal state CLI reference](skills/milestone-runner/references/goal-state-cli.md)
+
 ### visual-match
 
 Strict visual-reference implementation loop for approved images, generated mockups, and live-URL baselines.
@@ -214,24 +232,39 @@ The native workflow skills are designed for these Codex entry points:
 /plan $spec-interview <idea or task>
 /plan $reviewed-plan <task to plan>
 /goal <outcome and verification criteria>. Use $completion-loop.
+Use $milestone-runner to complete <large outcome, constraints, and verification criteria> as a durable sequential plan.
 /goal <visual target and verification criteria>. Use $visual-match.
 Use $review-gate to review <files, commit, branch, checked-out PR-style target, or current changes>.
 ```
 
-The five native workflow packages intentionally omit per-skill README and AGENTS files because those files would only duplicate `SKILL.md` or root guidance. Their executable contract lives in `SKILL.md`, with detailed review and verification contracts under `references/`. They set `allow_implicit_invocation: false` so use is selected explicitly through the exact short skill names.
+The six native workflow packages intentionally omit per-skill README and AGENTS files because those files would only duplicate `SKILL.md` or root guidance. Their executable contract lives in `SKILL.md`, with detailed review and verification contracts under `references/`. They set `allow_implicit_invocation: false` and remain independently installable: no package requires another catalog skill.
 
 ## Maintenance
 
 See [Codex-native workflow skill maintenance](docs/native-workflow-skills-maintenance.md) for the upstream source snapshot, Codex capability mapping, periodic update checklist, validation command, forward-test prompts, and post-migration installation steps.
 
-Run the combined local and upstream check with:
+The two scripts added for the native workflow collection have separate responsibilities:
+
+- `skills/milestone-runner/scripts/goal_state.py` owns only one installed skill's durable repository state. Its complete operator contract is in the [Goal state CLI reference](skills/milestone-runner/references/goal-state-cli.md).
+- `scripts/check-native-workflow-skills.py` validates all six catalog packages. It does not edit packages, install dependencies, or create workflow state.
+
+### Workflow checker modes
+
+| Command | Network | Purpose |
+| --- | --- | --- |
+| `python3 scripts/check-native-workflow-skills.py` | No | Run dependency-free package, metadata, link, standalone, state-root, and catalog checks; also run `quick_validate.py` when available |
+| `python3 scripts/check-native-workflow-skills.py --require-validator` | No | Require the official `skill-creator` validator and a Python interpreter with PyYAML |
+| `python3 scripts/check-native-workflow-skills.py --check-upstream` | Yes | Compare the recorded source commit and file hashes with the current upstream ref |
+| `python3 scripts/check-native-workflow-skills.py --check-codex-docs` | Yes | Check the current official Codex manual for every recorded native capability fragment |
+
+Flags can be combined. Run the complete acceptance check with:
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 python3 scripts/check-native-workflow-skills.py --check-upstream --check-codex-docs --require-validator
 ```
 
-The checker tries the current Python, then `python3` and `python` from `PATH`, then `/usr/bin/python3`, accepting the first interpreter that can import PyYAML. Override that choice with `--validator-python <path>` or `SKILL_VALIDATOR_PYTHON`. Automated checks cover package contracts and current official documentation evidence; release confidence also requires the isolated forward-test matrix in the maintenance guide.
+The checker returns `0` only when every requested check passes and `1` when it records any validation error. It tries the current Python, then `python3` and `python` from `PATH`, then `/usr/bin/python3`, accepting the first interpreter that can import PyYAML. Override the validator with `--validator <path>` or `SKILL_VALIDATOR`, and its interpreter with `--validator-python <path>` or `SKILL_VALIDATOR_PYTHON`. Automated checks cover package contracts and current official documentation evidence; release confidence also requires the isolated forward-test matrix in the maintenance guide.
 
 ## Repository Structure
 

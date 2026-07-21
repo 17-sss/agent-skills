@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import hashlib
 import json
 import os
@@ -24,7 +25,9 @@ SKILL_NAMES = (
     "completion-loop",
     "visual-match",
     "review-gate",
+    "milestone-runner",
 )
+STATE_DIRECTORY = ".agent-workflows"
 SOURCE_MANIFEST = REPO_ROOT / "docs" / "native-workflow-sources.json"
 ROOT_README = REPO_ROOT / "README.md"
 ALLOWED_REFERENCE_HOSTS = {
@@ -128,6 +131,131 @@ def validate_runtime_independence(skill_dir: Path, errors: list[str]) -> None:
         for label, pattern in BANNED_PATTERNS.items():
             if pattern.search(text):
                 fail(f"{path.relative_to(REPO_ROOT)} contains banned {label}", errors)
+
+
+def validate_standalone_package(skill_dir: Path, errors: list[str]) -> None:
+    """Reject hard references to another locally cataloged workflow skill."""
+    if not skill_dir.is_dir():
+        return
+    other_names = [name for name in SKILL_NAMES if name != skill_dir.name]
+    for path in sorted(skill_dir.rglob("*")):
+        if not path.is_file() or path.is_symlink():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        for other_name in other_names:
+            pattern = re.compile(
+                rf"(?<![a-z0-9-])\$?{re.escape(other_name)}(?![a-z0-9-])",
+                re.IGNORECASE,
+            )
+            if pattern.search(text):
+                fail(
+                    f"{path.relative_to(REPO_ROOT)} references sibling skill {other_name}; "
+                    "every package must install and run independently",
+                    errors,
+                )
+
+
+def validate_bundled_scripts(skill_dir: Path, errors: list[str]) -> None:
+    scripts_dir = skill_dir / "scripts"
+    if not scripts_dir.is_dir():
+        return
+    for script in sorted(scripts_dir.iterdir()):
+        if script.is_file() and not script.is_symlink() and not os.access(script, os.X_OK):
+            fail(f"{script.relative_to(REPO_ROOT)} must be executable", errors)
+
+
+def validate_state_contract(skill_dir: Path, errors: list[str]) -> None:
+    if not skill_dir.is_dir():
+        return
+    surfaces: dict[Path, str] = {}
+    for path in sorted(skill_dir.rglob("*")):
+        if not path.is_file() or path.is_symlink():
+            continue
+        try:
+            surfaces[path] = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+    if skill_dir.name != "milestone-runner":
+        for path, text in surfaces.items():
+            if STATE_DIRECTORY in text:
+                fail(
+                    f"{path.relative_to(REPO_ROOT)} creates unnecessary shared workflow state; "
+                    "only milestone-runner may use it",
+                    errors,
+                )
+        return
+
+    required_markers = {
+        skill_dir / "SKILL.md": (
+            ".agent-workflows/goals/<slug>/",
+            "pending transaction",
+        ),
+        skill_dir / "references" / "state-contract.md": (
+            ".agent-workflows/",
+            ".init.lock",
+            ".pending-transaction.json",
+            "implementation_changed",
+        ),
+        skill_dir / "scripts" / "goal_state.py": (
+            'STATE_DIRECTORY = ".agent-workflows"',
+            'TRANSACTION_FILE = ".pending-transaction.json"',
+            "rename_directory_noreplace",
+            "validate_projection",
+        ),
+    }
+    for path, markers in required_markers.items():
+        text = surfaces.get(path)
+        if text is None:
+            fail(f"{path.relative_to(REPO_ROOT)} is missing or unreadable", errors)
+            continue
+        for marker in markers:
+            if marker not in text:
+                fail(
+                    f"{path.relative_to(REPO_ROOT)} lacks state-contract marker {marker!r}",
+                    errors,
+                )
+        if re.search(r"\.codex/[^\n]*\.agent-workflows", text, re.IGNORECASE):
+            fail(
+                f"{path.relative_to(REPO_ROOT)} nests mutable state under .codex",
+                errors,
+            )
+    script_text = surfaces.get(skill_dir / "scripts" / "goal_state.py", "")
+    for native_goal_call in ("create_goal", "get_goal", "update_goal"):
+        if native_goal_call in script_text:
+            fail(
+                f"{skill_dir.name} helper must not call native goal tool {native_goal_call}",
+                errors,
+            )
+    try:
+        script_tree = ast.parse(script_text)
+    except SyntaxError as exc:
+        fail(f"{skill_dir.name} helper is not valid Python: {exc}", errors)
+        return
+    string_literals = {
+        node.value
+        for node in ast.walk(script_tree)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str)
+    }
+    forbidden_state_literals = {
+        literal
+        for literal in string_literals
+        if literal.startswith((".codex", ".omx", "~/", "/home/", "/Users/"))
+        or "CODEX_HOME" in literal
+    }
+    if forbidden_state_literals:
+        fail(
+            f"{skill_dir.name} helper contains alternate mutable state roots: "
+            f"{sorted(forbidden_state_literals)}",
+            errors,
+        )
+    if "__file__" in script_text:
+        fail(
+            f"{skill_dir.name} helper must not store state relative to its installation path",
+            errors,
+        )
 
 
 def validate_links(skill_dir: Path, errors: list[str]) -> None:
@@ -613,6 +741,9 @@ def main() -> int:
         skill_dir = REPO_ROOT / "skills" / name
         validate_frontmatter(skill_dir, errors)
         validate_runtime_independence(skill_dir, errors)
+        validate_standalone_package(skill_dir, errors)
+        validate_bundled_scripts(skill_dir, errors)
+        validate_state_contract(skill_dir, errors)
         validate_links(skill_dir, errors)
         validate_catalog_files(skill_dir, errors)
 

@@ -128,17 +128,17 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertNotIn("update_goal", script)
 
     def test_catalog_documents_checker_modes_and_update_cadence(self):
-        readme = read("README.md")
         maintenance = read("docs/native-workflow-skills-maintenance.md")
-        self.assertIn("### Workflow checker modes", readme)
-        self.assertIn("--check-upstream", readme)
-        self.assertIn("--check-codex-docs", readme)
+        for readme_path in ("README.md", "README.ko.md"):
+            readme = read(readme_path)
+            self.assertIn("### Workflow checker modes", readme)
+            self.assertIn("--check-upstream", readme)
+            self.assertIn("--check-codex-docs", readme)
         self.assertIn("## Suggested cadence", maintenance)
         self.assertIn("### Checker CLI contract", maintenance)
         self.assertIn("goal-state-cli.md", maintenance)
 
     def test_catalog_groups_every_skill_and_provides_copyable_usage(self):
-        readme = read("README.md")
         common = (
             "design-loop",
             "handoff-memory",
@@ -154,15 +154,31 @@ class NativeWorkflowContractTest(unittest.TestCase):
             "visual-match",
             "review-gate",
         )
-        self.assertLess(readme.index("## 공통 스킬"), readme.index("## Codex 특화 워크플로"))
-        for name in common + codex_native:
-            heading = f"### {name}"
-            start = readme.index(heading)
-            end = readme.find("\n### ", start + len(heading))
-            section = readme[start:] if end == -1 else readme[start:end]
-            self.assertIn("사용 예시:", section, f"{name} lacks a usage label")
-            self.assertIn("```text", section, f"{name} lacks a text code block")
-            self.assertIn(f"${name}", section, f"{name} example is not explicit")
+        catalogs = (
+            ("README.md", "## Shared Skills", "## Codex-native Workflows", "Usage example:"),
+            ("README.ko.md", "## 공통 스킬", "## Codex 특화 워크플로", "사용 예시:"),
+        )
+        for path, common_heading, codex_heading, usage_label in catalogs:
+            readme = read(path)
+            self.assertLess(readme.index(common_heading), readme.index(codex_heading))
+            for name in common + codex_native:
+                heading = f"### {name}"
+                start = readme.index(heading)
+                end = readme.find("\n### ", start + len(heading))
+                section = readme[start:] if end == -1 else readme[start:end]
+                self.assertIn(usage_label, section, f"{path} {name} lacks a usage label")
+                self.assertIn("```text", section, f"{path} {name} lacks a text code block")
+                self.assertIn(f"${name}", section, f"{path} {name} example is not explicit")
+
+    def test_readme_defaults_to_english_and_links_the_korean_catalog(self):
+        english = read("README.md")
+        korean = read("README.ko.md")
+        self.assertIn("## Quick Start", english)
+        self.assertIn("## Shared Skills", english)
+        self.assertIn("[한국어](README.ko.md)", english)
+        self.assertIn("## 빠른 시작", korean)
+        self.assertIn("## 공통 스킬", korean)
+        self.assertIn("[English](README.md)", korean)
 
     def test_skills_tui_groups_codex_workflows_and_leaves_common_skills_as_other(self):
         manifest = json.loads(read(".claude-plugin/marketplace.json"))
@@ -194,9 +210,10 @@ class NativeWorkflowContractTest(unittest.TestCase):
             for path in group["skills"]:
                 self.assertTrue((REPO_ROOT / path / "SKILL.md").is_file())
 
-        readme = read("README.md")
-        self.assertIn("`Codex`:", readme)
-        self.assertIn("`Other`:", readme)
+        for readme_path in ("README.md", "README.ko.md"):
+            readme = read(readme_path)
+            self.assertIn("`Codex`:", readme)
+            self.assertIn("`Other`:", readme)
 
     def test_all_six_packages_are_explicit_and_runtime_independent(self):
         banned = (".omx", "tmux", "ask_codex", "ultrawork", "omx state")

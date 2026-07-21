@@ -37,6 +37,7 @@ OTHER_SKILL_NAMES = (
 STATE_DIRECTORY = ".agent-workflows"
 SOURCE_MANIFEST = REPO_ROOT / "docs" / "native-workflow-sources.json"
 ROOT_README = REPO_ROOT / "README.md"
+KOREAN_README = REPO_ROOT / "README.ko.md"
 TUI_GROUP_MANIFEST = REPO_ROOT / ".claude-plugin" / "marketplace.json"
 ALLOWED_REFERENCE_HOSTS = {
     "developers.openai.com",
@@ -405,18 +406,27 @@ def validate_catalog_files(skill_dir: Path, errors: list[str]) -> None:
 
 
 def validate_root_catalog(errors: list[str]) -> None:
-    try:
-        readme = ROOT_README.read_text(encoding="utf-8")
-    except OSError as exc:
-        fail(f"{ROOT_README.relative_to(REPO_ROOT)} is missing: {exc}", errors)
-        return
+    catalogs: dict[Path, str] = {}
+    for path in (ROOT_README, KOREAN_README):
+        try:
+            catalogs[path] = path.read_text(encoding="utf-8")
+        except OSError as exc:
+            fail(f"{path.relative_to(REPO_ROOT)} is missing: {exc}", errors)
 
-    for name in SKILL_NAMES:
-        if f"### {name}" not in readme:
-            fail(f"README.md lacks catalog heading for {name}", errors)
-        if f"${name}" not in readme:
-            fail(f"README.md lacks invocation for ${name}", errors)
-    validate_markdown_links(ROOT_README, errors, allowed_root=REPO_ROOT)
+    for path, readme in catalogs.items():
+        for name in SKILL_NAMES:
+            if f"### {name}" not in readme:
+                fail(f"{path.name} lacks catalog heading for {name}", errors)
+            if f"${name}" not in readme:
+                fail(f"{path.name} lacks invocation for ${name}", errors)
+        validate_markdown_links(path, errors, allowed_root=REPO_ROOT)
+
+    english = catalogs.get(ROOT_README, "")
+    korean = catalogs.get(KOREAN_README, "")
+    if "[한국어](README.ko.md)" not in english:
+        fail("README.md lacks the Korean language link", errors)
+    if "[English](README.md)" not in korean:
+        fail("README.ko.md lacks the English language link", errors)
 
 
 def validate_tui_group_manifest(errors: list[str]) -> None:

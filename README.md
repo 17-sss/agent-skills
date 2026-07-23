@@ -84,6 +84,8 @@ Inspect repository facts before implementation, ask one highest-leverage user de
 
 - Keep the interview and repository inspection non-mutating.
 - Do not ask the user for facts that tools can establish.
+- Present bounded decisions with the agent's native choice control when available; otherwise show the same 2 or 3 options as a numbered list with a custom-answer escape hatch.
+- Keep genuinely open-ended questions free-form instead of inventing choices.
 - Finish when scope, non-goals, constraints, and testable completion criteria are clear.
 - After readiness passes, optionally recommend only a best-fit workflow advertised in the current task; never require, install, or invoke it.
 

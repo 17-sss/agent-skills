@@ -40,12 +40,33 @@ Maintain a working ledger for:
 
 Ask the single highest-leverage unresolved question in each round.
 
-- Use structured input when the current agent provides it and it faithfully represents a bounded decision.
-- Use one concise plain-text question when the answer is open-ended or structured input is unavailable.
+- Apply the choice-presentation contract below whenever the question is a bounded decision.
+- Use one concise plain-text question when the answer is genuinely open-ended.
 - Wait for the answer before asking the next interview question.
 - Prioritize intent, desired outcome, scope, non-goals, and decision boundaries before implementation detail.
 - Pressure-test only material assumptions. Use one focused example, counterexample, terminology conflict, tradeoff, or boundary scenario.
 - Stay on the same issue while another answer could materially change the implementation or its verification. Do not extend the interview to satisfy a round count or numeric score.
+
+## Present bounded decisions as choices
+
+Prefer the current agent's native structured-choice input when the evidence supports a small, complete option set.
+
+- Ask exactly one decision per control, even if the interface accepts multiple questions.
+- Provide 2 or 3 mutually exclusive options. Give each a short label and one concise sentence explaining its impact or tradeoff.
+- Put the best-supported option first and mark it as recommended only when repository evidence or the user's stated priorities justify the recommendation.
+- Preserve an `Other/custom` escape hatch. Do not duplicate it when the interface supplies one automatically.
+- Do not force a closed choice when the option space is incomplete, options may be combined, terminology is unresolved, or the user's reasoning is itself required. Ask one open-ended question instead.
+- Do not invent options merely to make a question look structured. Every option must be materially distinct and compatible with the evidence already gathered.
+
+If native structured-choice input is unavailable, render the same decision as a numbered plain-text list with 2 or 3 options followed by `Other — answer in your own words.` Then wait for one selection or custom answer. Keep the fallback visually scannable:
+
+```text
+Which compatibility policy should govern existing clients?
+
+1. Preserve all clients (Recommended) — safest rollout, but it keeps the legacy path longer.
+2. Set a version cutoff — simpler implementation, but older clients must upgrade.
+Other — answer in your own words.
+```
 
 ## Apply the readiness gate
 

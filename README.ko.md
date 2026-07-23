@@ -84,6 +84,8 @@ Use $design-loop to polish the checkout screen. Preserve behavior, inspect deskt
 
 - 인터뷰와 저장소 조사를 non-mutating 상태로 유지합니다.
 - 도구로 확인 가능한 사실을 사용자에게 되묻지 않습니다.
+- 선택 범위가 명확한 결정은 가능한 경우 agent native choice control로 보여주고, 사용할 수 없으면 같은 2~3개 선택지와 custom-answer 항목을 번호 목록으로 표시합니다.
+- 답변 범위가 열린 질문에는 억지로 선택지를 만들지 않고 자유응답을 사용합니다.
 - scope, non-goal, 제약과 testable completion criteria가 충분할 때 종료합니다.
 - readiness gate를 통과한 뒤에도 현재 작업에 표시된 최적의 workflow만 선택적으로 추천하며, 필수화·설치·실행하지 않습니다.
 

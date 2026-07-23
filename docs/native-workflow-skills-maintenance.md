@@ -131,6 +131,8 @@ Do not call the packages release-ready from the automated command alone. Run the
 
 - Still inspect repository facts before asking the user.
 - Still ask one high-leverage question per round.
+- Prefer native structured-choice input for bounded decisions, with 2 or 3 mutually exclusive, impact-labeled options and an `Other/custom` escape hatch.
+- When structured input is unavailable, preserve the same decision as a numbered plain-text list; keep incomplete or genuinely open-ended decisions free-form.
 - Keep non-goals, decision boundaries, and testable completion criteria as mandatory readiness gates.
 - Do not restore numeric ambiguity scores or artificial interview length.
 - When repository inspection is delegated, verify exact content fingerprints before trusting the read-only result.
@@ -233,7 +235,7 @@ For every forward test, verify the trace as well as the final prose: question co
 
 | Skill | Required observable behavior | Integrity assertion |
 | --- | --- | --- |
-| `spec-interview` | Inspects repository evidence, asks exactly one material user decision, and waits | Fixture fingerprint remains unchanged |
+| `spec-interview` | Inspects repository evidence, asks exactly one material user decision, uses choices only for a complete bounded option set, preserves a custom answer, and waits | Fixture fingerprint remains unchanged |
 | `reviewed-plan` | Produces a repository-grounded plan, runs Architect before Critic, and reports both verdicts | Fixture fingerprint remains unchanged across both gates |
 | `completion-loop` | Reproduces the failure, implements the smallest fix, runs fresh checks, and independently reviews the final fingerprint | Only the disposable fixture changes and its tests pass |
 | `milestone-runner` | Creates `.agent-workflows/`, runs goals sequentially, rejects stale or out-of-order transitions, checkpoints evidence, and reconciles a completed native goal | Only the disposable fixture and its explicit durable state change; no other skill is invoked |

@@ -2,6 +2,10 @@
 
 This file records behavioral evidence that cannot be established by schema validation alone. Tests run only in disposable Git repositories under `/tmp`; no dependency installation, external write, user-configuration change, or production access is allowed.
 
+## 2026-07-23 choice-first interview contract update
+
+Status: pending forward test. `spec-interview` now prefers native structured-choice input for bounded decisions, preserves one decision per round and a custom-answer escape hatch, and falls back to an equivalent numbered list when structured input is unavailable. Structural tests can prove the contract text, but a fresh trace must still show that the agent uses choices only for complete option sets and keeps genuinely open-ended questions free-form.
+
 ## 2026-07-23 anchored scoring contract update
 
 Status: pending forward test. The package-local scorer now calculates a fixed-weight `visual_similarity_percent`, uses the lowest equivalent target score, and refuses a visual pass candidate below the accepted threshold, with low confidence, or while blocking or major differences remain. Unit and structural validation can prove the arithmetic and standalone dependency boundary, but the browser-enabled trace must still demonstrate honest component classification from rendered evidence. Optional pixel similarity must remain separate and nullable.
@@ -26,4 +30,4 @@ Status: partial. Five workflow success paths and the Visual Match safety-blocker
 
 ## Release rule
 
-Treat any `PENDING`, stale contract evidence, `FAIL`, unexpected workspace write, missing independent gate, evidence-free success, or undocumented capability gap as not release-ready. The five non-visual skills are eligible for release from this matrix; the current `visual-match` contract is not release-ready until both the revised missing-renderer approval path and the browser-enabled row pass. Delete disposable fixtures and task-scoped captures after the evidence has been summarized here.
+Treat any `PENDING`, stale contract evidence, `FAIL`, unexpected workspace write, missing independent gate, evidence-free success, or undocumented capability gap as not release-ready. `reviewed-plan`, `completion-loop`, `milestone-runner`, and `review-gate` are eligible for release from this matrix. The revised `spec-interview` choice-presentation contract needs a fresh trace, and the current `visual-match` contract is not release-ready until both the revised missing-renderer approval path and the browser-enabled row pass. Delete disposable fixtures and task-scoped captures after the evidence has been summarized here.

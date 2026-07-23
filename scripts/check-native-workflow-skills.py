@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Codex-native workflow skills and optionally check upstream drift."""
+"""Validate managed workflow skills and optionally check upstream drift."""
 
 from __future__ import annotations
 
@@ -19,13 +19,19 @@ from urllib.parse import urlparse
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SKILL_NAMES = (
+MANAGED_SKILL_NAMES = (
     "spec-interview",
     "reviewed-plan",
     "completion-loop",
     "visual-match",
     "review-gate",
     "milestone-runner",
+)
+CODEX_SKILL_NAMES = (
+    "reviewed-plan",
+    "completion-loop",
+    "milestone-runner",
+    "review-gate",
 )
 OPTIONAL_HANDOFF_HEADING = "## Offer an optional next workflow"
 OPTIONAL_HANDOFFS = {
@@ -42,10 +48,11 @@ OPTIONAL_HANDOFFS = {
 OPTIONAL_HANDOFF_MARKERS = (
     "Keep this package complete on its own.",
     "Do not invoke or activate another skill.",
-    "current Codex task's available-skill inventory",
+    "current task's available-skill inventory",
+    "current agent satisfies the runtime requirements",
     "Do not inspect the filesystem",
     "Do not install a missing skill.",
-    "If the inventory is unavailable, treat every downstream skill as unavailable.",
+    "If the inventory is unavailable or runtime compatibility is unclear",
     "Do not mention unavailable skills.",
     "the user explicitly chooses and invokes",
     "Offer at most one recommendation",
@@ -78,6 +85,8 @@ HARD_HANDOFF_PATTERNS = {
 }
 OTHER_SKILL_NAMES = (
     "design-loop",
+    "spec-interview",
+    "visual-match",
     "handoff-memory",
     "github-pr-review",
     "github-pr-publish",
@@ -260,7 +269,7 @@ def validate_standalone_package(skill_dir: Path, errors: list[str]) -> None:
                     errors,
                 )
 
-    other_names = [name for name in SKILL_NAMES if name != skill_dir.name]
+    other_names = [name for name in MANAGED_SKILL_NAMES if name != skill_dir.name]
     for path in sorted(skill_dir.rglob("*")):
         if not path.is_file() or path.is_symlink():
             continue
@@ -535,7 +544,7 @@ def validate_root_catalog(errors: list[str]) -> None:
             fail(f"{path.relative_to(REPO_ROOT)} is missing: {exc}", errors)
 
     for path, readme in catalogs.items():
-        for name in SKILL_NAMES:
+        for name in MANAGED_SKILL_NAMES:
             if f"### {name}" not in readme:
                 fail(f"{path.name} lacks catalog heading for {name}", errors)
             if f"${name}" not in readme:
@@ -573,7 +582,7 @@ def validate_tui_group_manifest(errors: list[str]) -> None:
         return
 
     expected_groups = {
-        "codex": {f"./skills/{name}" for name in SKILL_NAMES},
+        "codex": {f"./skills/{name}" for name in CODEX_SKILL_NAMES},
         "other": {f"./skills/{name}" for name in OTHER_SKILL_NAMES},
     }
     groups = {item.get("name"): item for item in plugins}
@@ -610,6 +619,26 @@ def validate_tui_group_manifest(errors: list[str]) -> None:
         skill_dir = REPO_ROOT / relative_path.removeprefix("./")
         if not (skill_dir / "SKILL.md").is_file():
             fail(f"{relative_path} does not point to an installable skill", errors)
+
+    for group_name, group in groups.items():
+        for relative_path in group.get("skills", []):
+            openai_path = (
+                REPO_ROOT
+                / relative_path.removeprefix("./")
+                / "agents"
+                / "openai.yaml"
+            )
+            try:
+                openai = openai_path.read_text(encoding="utf-8")
+            except OSError as exc:
+                fail(f"{openai_path.relative_to(REPO_ROOT)} is missing: {exc}", errors)
+                continue
+            display_match = re.search(r'^  display_name: "([^"]+)"$', openai, re.MULTILINE)
+            display_name = display_match.group(1) if display_match else ""
+            if group_name == "codex" and not display_name.startswith("Codex · "):
+                fail(f"{relative_path} is Codex-grouped but lacks a Codex display prefix", errors)
+            if group_name == "other" and display_name.startswith("Codex · "):
+                fail(f"{relative_path} is cross-agent but retains a Codex display prefix", errors)
 
 
 def find_skill_validator(explicit: str | None = None) -> Path | None:
@@ -689,7 +718,7 @@ def run_skill_validator(
     if python_executable != sys.executable:
         print(f"INFO quick_validate uses {python_executable}")
 
-    for name in SKILL_NAMES:
+    for name in MANAGED_SKILL_NAMES:
         skill_dir = REPO_ROOT / "skills" / name
         try:
             result = subprocess.run(
@@ -748,7 +777,7 @@ def load_manifest(errors: list[str]) -> dict[str, object] | None:
         return None
 
     upstream_skills = set(skills)
-    expected_skills = set(SKILL_NAMES)
+    expected_skills = set(MANAGED_SKILL_NAMES)
     if upstream_skills != expected_skills:
         fail(
             "source manifest skill set mismatch: "
@@ -756,7 +785,7 @@ def load_manifest(errors: list[str]) -> dict[str, object] | None:
             errors,
         )
 
-    for local_name in SKILL_NAMES:
+    for local_name in MANAGED_SKILL_NAMES:
         source = skills.get(local_name)
         if not isinstance(source, dict):
             fail(f"source manifest entry {local_name} must be an object", errors)
@@ -939,7 +968,7 @@ def main() -> int:
 
     errors: list[str] = []
     manifest = load_manifest(errors)
-    for name in SKILL_NAMES:
+    for name in MANAGED_SKILL_NAMES:
         skill_dir = REPO_ROOT / "skills" / name
         validate_frontmatter(skill_dir, errors)
         validate_runtime_independence(skill_dir, errors)
@@ -967,7 +996,7 @@ def main() -> int:
         print(f"\n{len(errors)} validation error(s)")
         return 1
     if validator_ran:
-        print("\nAll Codex-native workflow skill checks passed, including quick_validate.")
+        print("\nAll managed workflow skill checks passed, including quick_validate.")
     else:
         print("\nRepository checks passed; quick_validate was skipped.")
     return 0

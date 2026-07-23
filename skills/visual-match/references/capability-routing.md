@@ -1,6 +1,6 @@
 # Visual Match Capability Routing
 
-Choose the smallest available Codex-native surface that can produce and verify the required evidence. Detect availability at runtime; do not install a plugin or add a dependency silently.
+Choose the smallest capability available in the current agent surface that can produce and verify the required evidence. Detect availability at runtime; do not install a plugin or add a dependency silently.
 
 ## Reference type
 
@@ -17,7 +17,7 @@ Treat a named optional skill as available only when the current task's available
 
 ## Browser surface
 
-- Use the built-in Browser app when working in Codex App and an isolated browser profile is sufficient.
+- Use a built-in browser app when the current agent provides one and an isolated browser profile is sufficient.
 - Use the Chrome plugin or extension only when the task genuinely needs the user's existing Chrome profile, tabs, or authenticated session.
 - Use repository-native Playwright or equivalent automation in CLI or IDE environments where the built-in Browser is unavailable.
 - Reuse an existing screenshot or interaction harness before introducing another one.

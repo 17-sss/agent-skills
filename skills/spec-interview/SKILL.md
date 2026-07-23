@@ -5,7 +5,7 @@ description: Clarify ambiguous ideas or implementation requests through an evide
 
 # Spec Interview
 
-Recommended invocation: `/plan $spec-interview <idea or task>`.
+Recommended invocation: `Use $spec-interview to clarify <idea or task> before planning or implementation.` Use a read-only planning mode when the current agent provides one.
 
 Remain in requirements mode. Do not implement the solution or modify project files while this skill is active.
 
@@ -17,9 +17,9 @@ Remain in requirements mode. Do not implement the solution or modify project fil
    - an interpretation that needs confirmation
    - a goal, boundary, preference, or tradeoff only the user can decide
 3. Resolve discoverable facts with read-only tools. Cite concrete file paths, symbols, behavior, or authoritative external sources when they affect a question.
-4. Use a subagent only when an independent repository map materially improves speed or confidence. Keep human decisions with the main agent.
+4. Use a delegated worker only when an independent repository map materially improves speed or confidence. Keep human decisions with the main agent.
 
-Before delegated repository inspection, prove that the reviewer runs under a tool-enforced Codex `read-only` sandbox. A prose instruction to remain read-only is not enforcement because native subagents inherit the parent permission mode. Use an inherited read-only parent turn or another native isolated Codex run whose effective sandbox is explicitly read-only. Keep the inspection lane bounded: it must not activate another workflow or delegate recursively. If isolation cannot be proved, skip optional delegation and inspect directly in the main context.
+Before delegated repository inspection, prove that the worker runs behind a tool-enforced `read-only` boundary. A prose instruction to remain read-only is not enforcement. Use delegation only when the current agent can prove the delegated execution cannot write to the repository or external systems. Keep the inspection lane bounded: it must not activate another workflow or delegate recursively. If isolation cannot be proved, skip optional delegation and inspect directly in the main context.
 
 Also capture a content fingerprint from the current `HEAD`, staged and unstaged diff bytes, and a canonical serialization of each untracked path's file type, executable mode bits, symlink target when applicable, and content or content hash. Compare it after the subagent returns as defense in depth. If the fingerprint changed, stop the interview, report the exact drift, preserve the files, and do not trust the delegated result.
 
@@ -33,14 +33,14 @@ Maintain a working ledger for:
 - in-scope behavior
 - non-goals
 - constraints
-- decisions Codex may make autonomously
+- decisions the agent may make autonomously
 - decisions that require user approval
 - testable completion conditions
 - confirmed assumptions and unresolved risks
 
 Ask the single highest-leverage unresolved question in each round.
 
-- Use native structured input in Plan mode when it faithfully represents a bounded decision.
+- Use structured input when the current agent provides it and it faithfully represents a bounded decision.
 - Use one concise plain-text question when the answer is open-ended or structured input is unavailable.
 - Wait for the answer before asking the next interview question.
 - Prioritize intent, desired outcome, scope, non-goals, and decision boundaries before implementation detail.
@@ -54,7 +54,7 @@ End ordinary questioning when all of the following are true:
 - the desired outcome is concrete
 - in-scope and out-of-scope behavior are explicit
 - material constraints are known
-- Codex's decision boundary is explicit
+- the agent's decision boundary is explicit
 - completion can be tested or observed
 - another answer would not materially change the implementation direction or acceptance decision
 
@@ -79,7 +79,7 @@ Do not begin implementation. Hand the specification to the planning or execution
 
 ## Offer an optional next workflow
 
-Keep this package complete on its own. Do not invoke or activate another skill. Treat a downstream skill as available only when the current Codex task's available-skill inventory explicitly advertises its exact name. Do not inspect the filesystem, installation directories, catalog files, or downstream skill contents to infer availability. Do not install a missing skill. If the inventory is unavailable, treat every downstream skill as unavailable. Do not mention unavailable skills. Availability is not authorization: the user explicitly chooses and invokes any suggested workflow in a later turn.
+Keep this package complete on its own. Do not invoke or activate another skill. Treat a downstream skill as available only when the current task's available-skill inventory explicitly advertises its exact name and the current agent satisfies the runtime requirements stated in that advertised description. Do not inspect the filesystem, installation directories, catalog files, or downstream skill contents to infer availability. Do not install a missing skill. If the inventory is unavailable or runtime compatibility is unclear, treat the downstream skill as unavailable. Do not mention unavailable skills. Availability is not authorization: the user explicitly chooses and invokes any suggested workflow in a later turn.
 
 Offer at most one recommendation and one genuinely applicable alternative only after the readiness gate has passed and no remaining decision could materially change implementation direction or acceptance. Omit this section when the user ends early, material ambiguity remains, required authority is missing, or the user asks to stop without follow-up suggestions.
 

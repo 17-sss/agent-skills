@@ -16,12 +16,19 @@
 npx skills add https://github.com/17-sss/agent-skills
 ```
 
-선택 화면은 용도에 따라 두 그룹으로 표시됩니다.
+선택 화면은 runtime 호환성에 따라 두 그룹으로 표시됩니다.
 
 - `Codex`: Codex의 native Plan, Goal, Review와 subagent 계약을 사용하는 명시 호출형 워크플로
 - `Other`: Codex를 포함한 여러 호환 에이전트에서 사용할 수 있는 공통 스킬
 
-`skills` CLI는 현재 [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)의 명시적인 스킬 목록을 TUI 그룹 정보로 읽습니다. 이 파일은 설치 선택 화면을 위한 호환 metadata이며, 개별 스킬에 Claude Code runtime 의존성을 추가하지 않습니다.
+`skills` CLI는 현재 [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)의 명시적인 스킬 목록을 TUI 그룹 정보로 읽습니다. 그룹은 선택 화면 표시만 바꾸며 설치 디렉터리를 결정하거나 개별 스킬에 Claude Code runtime 의존성을 추가하지 않습니다. 검토한 의존성 표는 [스킬 분류와 설치](docs/skill-classification.md)에 있습니다.
+
+설치 대상 에이전트는 `--agent`로 별도 선택합니다. 현재 CLI에서 Codex의 프로젝트 스킬은 `.agents/skills/`, 전역 스킬은 `~/.codex/skills/`에 설치됩니다.
+
+```bash
+npx skills add https://github.com/17-sss/agent-skills --skill reviewed-plan --agent codex
+npx skills add https://github.com/17-sss/agent-skills --skill reviewed-plan --agent codex --global
+```
 
 필요한 스킬 하나만 설치할 수도 있습니다.
 
@@ -42,15 +49,15 @@ npx skills add https://github.com/17-sss/agent-skills --skill design-loop
 | 분류 | 스킬 | 이런 때 사용합니다 |
 | --- | --- | --- |
 | 공통 | [`design-loop`](skills/design-loop/SKILL.md) | UI를 실제 렌더 결과로 반복 개선할 때 |
+| 공통 | [`spec-interview`](skills/spec-interview/SKILL.md) | 구현 전에 모호한 요구사항을 한 질문씩 명확히 할 때 |
+| 공통 | [`visual-match`](skills/visual-match/SKILL.md) | 승인된 이미지나 URL과 구현 화면을 엄격히 맞출 때 |
 | 공통 | [`handoff-memory`](skills/handoff-memory/SKILL.md) | 저장소나 워크스페이스의 HANDOFF를 만들고 이어갈 때 |
 | 공통 | [`github-pr-review`](skills/github-pr-review/SKILL.md) | `gh`와 GitHub API로 PR을 검토하고 리뷰를 게시할 때 |
 | 공통 | [`github-pr-publish`](skills/github-pr-publish/SKILL.md) | 현재 브랜치를 안전하게 push하고 PR로 공개할 때 |
 | 공통 | [`commit-helper`](skills/commit-helper/SKILL.md) | 저장소 규칙과 staged diff에 맞는 커밋을 만들 때 |
-| Codex 특화 | [`spec-interview`](skills/spec-interview/SKILL.md) | 구현 전에 모호한 요구사항을 한 질문씩 명확히 할 때 |
 | Codex 특화 | [`reviewed-plan`](skills/reviewed-plan/SKILL.md) | Planner, Architect, Critic을 거친 구현 계획이 필요할 때 |
 | Codex 특화 | [`completion-loop`](skills/completion-loop/SKILL.md) | 명확한 Goal을 검증 가능한 완료까지 밀어붙일 때 |
 | Codex 특화 | [`milestone-runner`](skills/milestone-runner/SKILL.md) | 큰 작업을 재시작 가능한 순차 milestone로 실행할 때 |
-| Codex 특화 | [`visual-match`](skills/visual-match/SKILL.md) | 승인된 이미지나 URL과 구현 화면을 엄격히 맞출 때 |
 | Codex 특화 | [`review-gate`](skills/review-gate/SKILL.md) | 변경을 수정하지 않고 두 관점으로 독립 검토할 때 |
 
 ## 공통 스킬
@@ -69,6 +76,36 @@ UI 구현을 `inspect → implement → render → review → interact → fix �
 
 ```text
 Use $design-loop to polish the checkout screen. Preserve behavior, inspect desktop and mobile renders, test the primary flow, and iterate on major visual issues.
+```
+
+### spec-interview
+
+구현 전에 저장소 사실을 확인하고, 사용자가 결정해야 하는 가장 중요한 질문을 한 번에 하나씩 물어 실행 가능한 요구사항 명세를 만듭니다.
+
+- 인터뷰와 저장소 조사를 non-mutating 상태로 유지합니다.
+- 도구로 확인 가능한 사실을 사용자에게 되묻지 않습니다.
+- scope, non-goal, 제약과 testable completion criteria가 충분할 때 종료합니다.
+- readiness gate를 통과한 뒤에도 현재 작업에 표시된 최적의 workflow만 선택적으로 추천하며, 필수화·설치·실행하지 않습니다.
+
+사용 예시:
+
+```text
+Use $spec-interview to clarify organization-level API keys for this app. Inspect the existing model first, ask one material decision at a time, and do not implement anything yet.
+```
+
+### visual-match
+
+승인된 screenshot, 생성 이미지 또는 live URL을 기준으로 동일한 viewport와 UI state를 반복 캡처하며 구현을 맞춥니다.
+
+- semantic visual review를 우선하고 pixel diff는 위치를 찾는 보조 증거로만 사용합니다.
+- 승인된 viewport와 state마다 anchored `visual_similarity_percent`를 계산하고, 최저 점수 `90+`와 blocking·major 차이 없음 조건을 함께 요구합니다.
+- live reference는 기본적으로 읽기 전용이며 별도 승인 없이 외부 상태를 바꾸지 않습니다.
+- 렌더러가 없으면 승인 기반 Chromium fallback을 제안하고, 사용할 수 없으면 수정 전에 `BLOCKED`로 종료합니다.
+
+사용 예시:
+
+```text
+Use $visual-match to match the attached checkout screenshot at desktop and mobile viewports, preserve the purchase flow, report the lowest visual similarity score, and explain every remaining difference.
 ```
 
 ### handoff-memory
@@ -129,22 +166,7 @@ Use $commit-helper to inspect this repository's commit rules and staged changes,
 
 ## Codex 특화 워크플로
 
-아래 6개 스킬은 Codex의 `/plan`, `/goal`, `/review`, native subagent, sandbox와 Goal 도구 계약을 활용합니다. 모두 explicit-only이며 다른 카탈로그 스킬을 필수로 요구하지 않습니다.
-
-### spec-interview
-
-구현 전에 저장소 사실을 확인하고, 사용자가 결정해야 하는 가장 중요한 질문을 한 번에 하나씩 물어 실행 가능한 요구사항 명세를 만듭니다.
-
-- Plan mode 안에서 읽기 전용 요구사항 인터뷰를 유지합니다.
-- 도구로 확인 가능한 사실을 사용자에게 되묻지 않습니다.
-- scope, non-goal, 제약과 testable completion criteria가 충분할 때 종료합니다.
-- readiness gate를 통과한 뒤에도 현재 작업에 표시된 최적의 workflow만 선택적으로 추천하며, 필수화·설치·실행하지 않습니다.
-
-사용 예시:
-
-```text
-/plan $spec-interview Add organization-level API keys to this app. Inspect the existing model first, ask one material decision at a time, and do not implement anything yet.
-```
+아래 4개 스킬은 완료 gate를 충족하기 위해 Codex Goal, 격리된 Codex 실행, native review 또는 subagent 계약을 직접 요구합니다. 모두 explicit-only이며 다른 카탈로그 스킬을 필수로 요구하지 않습니다.
 
 ### reviewed-plan
 
@@ -191,21 +213,6 @@ Use $milestone-runner to migrate the authentication flow in three ordered stages
 
 상태 helper의 전체 명령 계약은 [Goal state CLI reference](skills/milestone-runner/references/goal-state-cli.md)에 있습니다.
 
-### visual-match
-
-승인된 screenshot, 생성 이미지 또는 live URL을 기준으로 동일한 viewport와 UI state를 반복 캡처하며 구현을 맞춥니다.
-
-- semantic visual review를 우선하고 pixel diff는 위치를 찾는 보조 증거로만 사용합니다.
-- 승인된 viewport와 state마다 anchored `visual_similarity_percent`를 계산하고, 최저 점수 `90+`와 blocking·major 차이 없음 조건을 함께 요구합니다.
-- live reference는 기본적으로 읽기 전용이며 별도 승인 없이 외부 상태를 바꾸지 않습니다.
-- 렌더러가 없으면 승인 기반 Chromium fallback을 제안하고, 사용할 수 없으면 수정 전에 `BLOCKED`로 종료합니다.
-
-사용 예시:
-
-```text
-/goal Match the attached checkout screenshot at desktop and mobile viewports, preserve the purchase flow, report the lowest visual similarity score, and explain every remaining difference. Use $visual-match.
-```
-
 ### review-gate
 
 현재 변경, 파일, commit, branch 또는 이미 읽을 수 있는 PR target을 correctness와 architecture 두 lane으로 독립 검토합니다.
@@ -224,19 +231,19 @@ Use $review-gate to review all current staged, unstaged, and untracked changes. 
 
 - 스킬 하나만 설치해도 해당 핵심 워크플로가 동작해야 합니다.
 - 선택적 workflow handoff는 추천일 뿐입니다. 현재 작업의 available-skill inventory에 표시된 downstream workflow만 언급하며, inventory 또는 최적의 스킬을 사용할 수 없으면 아무것도 제안하지 않습니다.
-- 공통 스킬은 자동 선택될 수 있지만, 명확한 재현을 원하면 예시처럼 `$skill-name`을 직접 지정합니다.
-- Codex 특화 6개 스킬은 `allow_implicit_invocation: false`이며 명시적으로 호출합니다.
+- 공통 스킬은 각자의 invocation policy를 따르며, 명확한 재현을 원하면 예시처럼 `$skill-name`을 직접 지정합니다.
+- Codex 특화 4개와 제어가 중요한 공통 `spec-interview`, `visual-match`는 `allow_implicit_invocation: false`이며 명시적으로 호출합니다.
 - optional plugin이나 도구가 없으면 저장소 기본 도구와 안전한 fallback을 우선합니다.
 - 외부 게시, push, 환경 설치와 destructive action은 스킬 호출만으로 승인된 것으로 보지 않습니다.
 
 ## 유지보수와 검증
 
-Codex 특화 스킬의 소스 snapshot, native capability mapping, 업데이트 주기와 forward-test 절차는 [Codex-native workflow skill maintenance](docs/native-workflow-skills-maintenance.md)에 정리되어 있습니다.
+관리 대상 6개 workflow 스킬의 소스 snapshot, native capability mapping, 업데이트 주기와 forward-test 절차는 [workflow skill maintenance](docs/native-workflow-skills-maintenance.md)에 정리되어 있습니다.
 
 두 스크립트의 역할은 다음과 같습니다.
 
 - `skills/milestone-runner/scripts/goal_state.py`: `milestone-runner` 하나의 durable repository state만 관리합니다.
-- `scripts/check-native-workflow-skills.py`: Codex 특화 6개 패키지의 구조, 독립성, metadata, native capability, TUI 그룹과 source drift를 검사합니다.
+- `scripts/check-native-workflow-skills.py`: 관리 대상 6개 패키지의 구조, 독립성, metadata, native capability, TUI 그룹과 source drift를 검사합니다.
 
 ### Workflow checker modes
 

@@ -1,11 +1,11 @@
 ---
 name: visual-match
-description: Implement or restyle a runnable interface against an approved image, generated reference, or live-URL baseline through repeated screenshot comparison and verified repair. Use when the user invokes $visual-match, asks for faithful screenshot or URL matching, or makes visual parity part of a Goal-mode completion contract.
+description: Implement or restyle a runnable interface against an approved image, generated reference, or live-URL baseline through repeated screenshot comparison and verified repair. Use when the user invokes $visual-match, asks for faithful screenshot or URL matching, or makes visual parity part of a completion contract.
 ---
 
 # Visual Match
 
-Recommended invocation: `/goal <visual target and completion criteria>. Use $visual-match.`
+Recommended invocation: `Use $visual-match to match <visual target> under <completion criteria>.`
 
 Use this workflow for strict reference matching. Use a general interface-design workflow when no fixed visual target exists.
 
@@ -30,7 +30,7 @@ Record:
 
 Treat a live reference as non-mutating by default. Prefer a local or staging fixture. Do not submit forms, make purchases, change settings or permissions, delete data, or trigger any other external state change while capturing or verifying a reference. Authentication or persistence does not authorize production mutations; require separate explicit, narrowly scoped authorization before any state-changing live interaction.
 
-For a generated reference, use the native image-generation skill or tool only when a raster mockup materially clarifies the target. Image generation may end the current turn; on the next turn, obtain explicit approval of the generated image before implementation. Do not begin the frontend implementation until approval is present.
+For a generated reference, use an available image-generation capability only when a raster mockup materially clarifies the target. If image generation ends the current turn, obtain explicit approval of the generated image before implementation on the next turn. Do not begin the frontend implementation until approval is present.
 
 ## Inspect the repository
 
@@ -46,7 +46,7 @@ Preserve established design-system boundaries. Do not introduce a new styling la
 
 ## Implement through a visual evidence loop
 
-Maintain the visual goal, acceptance criteria, evidence loop, completion audit, and blocker rules directly in the current task. Do not hand the loop to a separate persistence skill; this package must remain independently usable during migration.
+Maintain the visual target, acceptance criteria, evidence loop, completion audit, and blocker rules directly in the current task. Do not hand the loop to a separate persistence skill; this package must remain independently usable.
 
 Before editing, prove that an available capability can render and capture both the reference and implementation at every required viewport and state. Keep captures in a task-scoped temporary location or an existing ignored artifact directory. If equivalent capture is unavailable, offer the minimal isolated Chromium bootstrap from the capability-routing contract. State its network, disk, and cache effects and require explicit user approval unless renderer installation was already authorized; invoking this skill is not installation approval. Never change the target repository's manifests, lockfiles, or `node_modules`, install a branded browser or system packages, or use elevated privileges as part of this fallback. After an approved bootstrap, require a disposable screenshot smoke check. If approval is declined or the isolated browser cannot run, stop before editing and return a concrete `BLOCKED` result. Never claim parity from code inspection.
 

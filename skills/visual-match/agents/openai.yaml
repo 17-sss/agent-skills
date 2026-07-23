@@ -1,5 +1,5 @@
 interface:
-  display_name: "Codex · Visual Match"
+  display_name: "Visual Match"
   short_description: "Measure and match an approved visual reference"
   default_prompt: "Use $visual-match to implement this approved visual reference without mutating live reference state, compare equivalent screenshots, report the anchored visual similarity score, and verify code and visual results."
 policy:

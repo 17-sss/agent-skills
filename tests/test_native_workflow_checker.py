@@ -45,7 +45,7 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
 
     def test_inventory_and_manifest_mapping_are_exact(self):
         self.assertEqual(
-            set(checker.SKILL_NAMES),
+            set(checker.MANAGED_SKILL_NAMES),
             {
                 "spec-interview",
                 "reviewed-plan",
@@ -53,6 +53,27 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
                 "visual-match",
                 "review-gate",
                 "milestone-runner",
+            },
+        )
+        self.assertEqual(
+            set(checker.CODEX_SKILL_NAMES),
+            {
+                "reviewed-plan",
+                "completion-loop",
+                "milestone-runner",
+                "review-gate",
+            },
+        )
+        self.assertEqual(
+            set(checker.OTHER_SKILL_NAMES),
+            {
+                "design-loop",
+                "spec-interview",
+                "visual-match",
+                "handoff-memory",
+                "github-pr-review",
+                "github-pr-publish",
+                "commit-helper",
             },
         )
         self.assertIn("playwright.dev", checker.ALLOWED_REFERENCE_HOSTS)
@@ -67,13 +88,13 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
         self.assertIsNone(result)
         self.assertTrue(any("skill set mismatch" in error for error in errors))
 
-    def test_tui_group_manifest_matches_codex_native_inventory(self):
+    def test_tui_group_manifest_matches_runtime_dependency_inventory(self):
         errors = []
         with redirect_stdout(io.StringIO()):
             checker.validate_tui_group_manifest(errors)
         self.assertEqual(errors, [])
 
-    def test_tui_group_manifest_rejects_common_skills(self):
+    def test_tui_group_manifest_rejects_cross_agent_skills_in_codex(self):
         with tempfile.TemporaryDirectory(dir=REPO_ROOT) as temp_dir:
             manifest_path = Path(temp_dir) / "marketplace.json"
             manifest_path.write_text(
@@ -84,8 +105,11 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
                                 "name": "codex",
                                 "source": "./",
                                 "skills": [
-                                    *[f"./skills/{name}" for name in checker.SKILL_NAMES],
-                                    "./skills/design-loop",
+                                    *[
+                                        f"./skills/{name}"
+                                        for name in checker.CODEX_SKILL_NAMES
+                                    ],
+                                    "./skills/spec-interview",
                                 ],
                             },
                             {
@@ -346,7 +370,7 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
             encoding="utf-8"
         )
         fixture = original.replace(
-            "If the inventory is unavailable, treat every downstream skill as unavailable.",
+            "If the inventory is unavailable or runtime compatibility is unclear, treat the downstream skill as unavailable.",
             "",
         )
         with tempfile.TemporaryDirectory(dir=REPO_ROOT / "skills") as temp_dir:

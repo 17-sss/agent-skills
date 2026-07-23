@@ -1,5 +1,5 @@
 interface:
-  display_name: "Codex · Spec Interview"
+  display_name: "Spec Interview"
   short_description: "Clarify ambiguous work before planning or coding"
   default_prompt: "Use $spec-interview to clarify this idea one decision at a time, keep repository inspection non-mutating, and produce an execution-ready requirements specification."
 policy:

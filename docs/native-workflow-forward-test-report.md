@@ -1,4 +1,4 @@
-# Codex-native workflow forward-test report
+# Managed workflow forward-test report
 
 This file records behavioral evidence that cannot be established by schema validation alone. Tests run only in disposable Git repositories under `/tmp`; no dependency installation, external write, user-configuration change, or production access is allowed.
 

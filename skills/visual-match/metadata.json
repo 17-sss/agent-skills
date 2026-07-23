@@ -1,14 +1,13 @@
 {
   "name": "visual-match",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "organization": "17-sss",
   "date": "July 2026",
-  "abstract": "Strict visual-reference implementation workflow that routes across Codex-native Product Design, browser, image, and repository tooling, calculates an anchored semantic similarity score with an optional separate pixel metric, keeps live references non-mutating, and iterates on equivalent screenshots until visual and code evidence satisfy the accepted goal.",
+  "abstract": "Cross-agent visual-reference implementation workflow that routes across available browser, image, and repository tooling, calculates an anchored semantic similarity score with an optional separate pixel metric, keeps live references non-mutating, and iterates on equivalent screenshots until visual and code evidence satisfy the accepted target.",
   "references": [
     "https://learn.chatgpt.com/docs/browser",
     "https://learn.chatgpt.com/docs/image-inputs",
     "https://learn.chatgpt.com/docs/image-generation",
-    "https://learn.chatgpt.com/docs/agent-configuration/subagents",
     "https://playwright.dev/docs/browsers"
   ]
 }

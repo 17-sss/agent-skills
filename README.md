@@ -16,12 +16,19 @@ Open the interactive catalog and choose the skills to install.
 npx skills add https://github.com/17-sss/agent-skills
 ```
 
-The selection screen is divided into two groups.
+The selection screen is divided into two runtime-compatibility groups.
 
 - `Codex`: explicitly invoked workflows that use native Codex Plan, Goal, Review, and subagent contracts
 - `Other`: shared skills that work with Codex and other compatible agents
 
-The `skills` CLI currently reads the explicit skill lists in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) as TUI grouping metadata. This compatibility file does not add a Claude Code runtime dependency to any skill.
+The `skills` CLI currently reads the explicit skill lists in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) as TUI grouping metadata. The group changes only how skills are presented; it does not select an install directory or add a Claude Code runtime dependency. See [Skill classification and installation](docs/skill-classification.md) for the audited dependency matrix.
+
+Choose the target agent independently with `--agent`. For Codex, the current CLI installs project skills under `.agents/skills/` and global skills under `~/.codex/skills/`:
+
+```bash
+npx skills add https://github.com/17-sss/agent-skills --skill reviewed-plan --agent codex
+npx skills add https://github.com/17-sss/agent-skills --skill reviewed-plan --agent codex --global
+```
 
 You can also install a single skill.
 
@@ -42,15 +49,15 @@ Start a new agent task after installation so the refreshed skill discovery resul
 | Category | Skill | Use it when |
 | --- | --- | --- |
 | Shared | [`design-loop`](skills/design-loop/SKILL.md) | Iteratively improving a UI against real rendered evidence |
+| Shared | [`spec-interview`](skills/spec-interview/SKILL.md) | Resolving ambiguous requirements one material question at a time |
+| Shared | [`visual-match`](skills/visual-match/SKILL.md) | Matching an implementation to an approved image or URL |
 | Shared | [`handoff-memory`](skills/handoff-memory/SKILL.md) | Creating or resuming a repository or workspace HANDOFF |
 | Shared | [`github-pr-review`](skills/github-pr-review/SKILL.md) | Reviewing a PR with `gh` and GitHub APIs and optionally posting the review |
 | Shared | [`github-pr-publish`](skills/github-pr-publish/SKILL.md) | Safely pushing the current branch and publishing a pull request |
 | Shared | [`commit-helper`](skills/commit-helper/SKILL.md) | Creating a commit that matches repository rules and staged changes |
-| Codex-native | [`spec-interview`](skills/spec-interview/SKILL.md) | Resolving ambiguous requirements one material question at a time |
 | Codex-native | [`reviewed-plan`](skills/reviewed-plan/SKILL.md) | Producing an implementation plan reviewed by Planner, Architect, and Critic |
 | Codex-native | [`completion-loop`](skills/completion-loop/SKILL.md) | Driving a clear Goal to evidence-backed completion |
 | Codex-native | [`milestone-runner`](skills/milestone-runner/SKILL.md) | Executing large work as resumable, sequential milestones |
-| Codex-native | [`visual-match`](skills/visual-match/SKILL.md) | Matching an implementation to an approved image or URL |
 | Codex-native | [`review-gate`](skills/review-gate/SKILL.md) | Reviewing changes from two independent perspectives without modifying them |
 
 ## Shared Skills
@@ -69,6 +76,36 @@ Usage example:
 
 ```text
 Use $design-loop to polish the checkout screen. Preserve behavior, inspect desktop and mobile renders, test the primary flow, and iterate on major visual issues.
+```
+
+### spec-interview
+
+Inspect repository facts before implementation, ask one highest-leverage user decision at a time, and produce an execution-ready requirements specification.
+
+- Keep the interview and repository inspection non-mutating.
+- Do not ask the user for facts that tools can establish.
+- Finish when scope, non-goals, constraints, and testable completion criteria are clear.
+- After readiness passes, optionally recommend only a best-fit workflow advertised in the current task; never require, install, or invoke it.
+
+Usage example:
+
+```text
+Use $spec-interview to clarify organization-level API keys for this app. Inspect the existing model first, ask one material decision at a time, and do not implement anything yet.
+```
+
+### visual-match
+
+Match an implementation to an approved screenshot, generated image, or live URL by repeatedly capturing the same viewport and UI state.
+
+- Use semantic visual review first and pixel diff only as supporting localization evidence.
+- Report an anchored `visual_similarity_percent` for every accepted viewport and state; use the lowest score and require `90+` with no blocking or major difference.
+- Treat live references as read-only unless separately authorized to change external state.
+- If no renderer exists, offer the approved isolated Chromium fallback; return `BLOCKED` before editing if rendering remains unavailable.
+
+Usage example:
+
+```text
+Use $visual-match to match the attached checkout screenshot at desktop and mobile viewports, preserve the purchase flow, report the lowest visual similarity score, and explain every remaining difference.
 ```
 
 ### handoff-memory
@@ -129,22 +166,7 @@ Use $commit-helper to inspect this repository's commit rules and staged changes,
 
 ## Codex-native Workflows
 
-The following six skills use Codex `/plan`, `/goal`, `/review`, native subagents, sandboxes, and Goal tool contracts. They are explicit-only and do not require any other catalog skill.
-
-### spec-interview
-
-Inspect repository facts before implementation, ask one highest-leverage user decision at a time, and produce an execution-ready requirements specification.
-
-- Keep the interview read-only in Plan mode.
-- Do not ask the user for facts that tools can establish.
-- Finish when scope, non-goals, constraints, and testable completion criteria are clear.
-- After readiness passes, optionally recommend only a best-fit workflow advertised in the current task; never require, install, or invoke it.
-
-Usage example:
-
-```text
-/plan $spec-interview Add organization-level API keys to this app. Inspect the existing model first, ask one material decision at a time, and do not implement anything yet.
-```
+The following four skills require Codex Goal, isolated Codex execution, native review, or subagent contracts to satisfy their completion gates. They are explicit-only and do not require any other catalog skill.
 
 ### reviewed-plan
 
@@ -191,21 +213,6 @@ Use $milestone-runner to migrate the authentication flow in three ordered stages
 
 The full state-helper command contract is documented in the [Goal state CLI reference](skills/milestone-runner/references/goal-state-cli.md).
 
-### visual-match
-
-Match an implementation to an approved screenshot, generated image, or live URL by repeatedly capturing the same viewport and UI state.
-
-- Use semantic visual review first and pixel diff only as supporting localization evidence.
-- Report an anchored `visual_similarity_percent` for every accepted viewport and state; use the lowest score and require `90+` with no blocking or major difference.
-- Treat live references as read-only unless separately authorized to change external state.
-- If no renderer exists, offer the approved isolated Chromium fallback; return `BLOCKED` before editing if rendering remains unavailable.
-
-Usage example:
-
-```text
-/goal Match the attached checkout screenshot at desktop and mobile viewports, preserve the purchase flow, report the lowest visual similarity score, and explain every remaining difference. Use $visual-match.
-```
-
 ### review-gate
 
 Review current changes, files, a commit, a branch, or an already-readable PR target through independent correctness and architecture lanes.
@@ -224,19 +231,19 @@ Use $review-gate to review all current staged, unstaged, and untracked changes. 
 
 - Installing one skill must be sufficient for its core workflow to run.
 - Optional workflow handoffs are recommendations only. A skill may name only a downstream workflow advertised in the current task's available-skill inventory; when that inventory or the best-fit skill is unavailable, it makes no suggestion.
-- Shared skills may be selected automatically; specify `$skill-name` for reproducible explicit invocation.
-- All six Codex-native skills set `allow_implicit_invocation: false` and must be invoked explicitly.
+- Shared skills follow their own invocation policy; specify `$skill-name` for reproducible explicit invocation.
+- The four Codex-dependent workflows, plus the high-control shared `spec-interview` and `visual-match` workflows, set `allow_implicit_invocation: false` and must be invoked explicitly.
 - When an optional plugin or tool is unavailable, prefer repository-native tools and safe fallbacks.
 - Invoking a skill does not grant approval for external publishing, pushes, environment installation, or destructive actions.
 
 ## Maintenance and Validation
 
-The source snapshot, native capability mapping, update cadence, and forward-test process for Codex-native skills are documented in [Codex-native workflow skill maintenance](docs/native-workflow-skills-maintenance.md).
+The source snapshot, native capability mapping, update cadence, and forward-test process for the six managed workflow skills are documented in [workflow skill maintenance](docs/native-workflow-skills-maintenance.md).
 
 The two maintenance scripts have distinct responsibilities.
 
 - `skills/milestone-runner/scripts/goal_state.py`: manages durable repository state for `milestone-runner` only.
-- `scripts/check-native-workflow-skills.py`: validates the structure, independence, metadata, native capability contracts, TUI grouping, and source drift of the six Codex-native packages.
+- `scripts/check-native-workflow-skills.py`: validates the structure, independence, metadata, native capability contracts, TUI grouping, and source drift of the six managed workflow packages.
 
 ### Workflow checker modes
 

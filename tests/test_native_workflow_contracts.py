@@ -30,16 +30,18 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("single highest-leverage unresolved question", text)
         self.assertIn("Do not implement the solution or modify project files", text)
         self.assertIn("capture a content fingerprint", text)
-        self.assertIn("tool-enforced Codex `read-only` sandbox", text)
+        self.assertIn("tool-enforced `read-only` boundary", text)
         self.assertIn("skip optional delegation", text)
         self.assertIn("file type, executable mode bits, symlink target", text)
         self.assertIn("delegate recursively", text)
         self.assertIn("Wait for the answer", text)
         self.assertIn("## Offer an optional next workflow", text)
-        self.assertIn("current Codex task's available-skill inventory", text)
+        self.assertIn("current task's available-skill inventory", text)
+        self.assertIn("current agent satisfies the runtime requirements", text)
         self.assertIn("Do not inspect the filesystem", text)
         self.assertIn("Do not install a missing skill", text)
         self.assertIn("If the inventory is unavailable", text)
+        self.assertIn("runtime compatibility is unclear", text)
         self.assertIn("Omit this section when the user ends early", text)
         self.assertIn("the user explicitly chooses and invokes", text)
 
@@ -55,7 +57,8 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("file type, executable mode bits, symlink target", contract)
         self.assertIn("discard the affected verdict", contract)
         self.assertIn("## Offer an optional next workflow", skill)
-        self.assertIn("current Codex task's available-skill inventory", skill)
+        self.assertIn("current task's available-skill inventory", skill)
+        self.assertIn("current agent satisfies the runtime requirements", skill)
         self.assertIn("Do not inspect the filesystem", skill)
         self.assertIn("Do not install a missing skill", skill)
         self.assertIn("If the inventory is unavailable", skill)
@@ -157,6 +160,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
 
     def test_catalog_documents_checker_modes_and_update_cadence(self):
         maintenance = read("docs/native-workflow-skills-maintenance.md")
+        classification = read("docs/skill-classification.md")
         for readme_path in ("README.md", "README.ko.md"):
             readme = read(readme_path)
             self.assertIn("### Workflow checker modes", readme)
@@ -166,21 +170,25 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("### Checker CLI contract", maintenance)
         self.assertIn("goal-state-cli.md", maintenance)
         self.assertIn("score_visual_match.py", maintenance)
+        self.assertIn("minimum runtime surface", classification)
+        self.assertIn("`.agents/skills/<skill-name>`", classification)
+        self.assertIn("`~/.codex/skills/<skill-name>`", classification)
+        self.assertIn("`CODEX_SKILL_NAMES`", classification)
 
     def test_catalog_groups_every_skill_and_provides_copyable_usage(self):
         common = (
             "design-loop",
+            "spec-interview",
+            "visual-match",
             "handoff-memory",
             "github-pr-review",
             "github-pr-publish",
             "commit-helper",
         )
         codex_native = (
-            "spec-interview",
             "reviewed-plan",
             "completion-loop",
             "milestone-runner",
-            "visual-match",
             "review-gate",
         )
         catalogs = (
@@ -209,18 +217,18 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("## 공통 스킬", korean)
         self.assertIn("[English](README.md)", korean)
 
-    def test_skills_tui_groups_codex_workflows_and_leaves_common_skills_as_other(self):
+    def test_skills_tui_groups_by_runtime_dependency(self):
         manifest = json.loads(read(".claude-plugin/marketplace.json"))
         codex_native = [
-            "spec-interview",
             "reviewed-plan",
             "completion-loop",
-            "visual-match",
             "review-gate",
             "milestone-runner",
         ]
         common = {
             "design-loop",
+            "spec-interview",
+            "visual-match",
             "handoff-memory",
             "github-pr-review",
             "github-pr-publish",
@@ -239,12 +247,21 @@ class NativeWorkflowContractTest(unittest.TestCase):
             for path in group["skills"]:
                 self.assertTrue((REPO_ROOT / path / "SKILL.md").is_file())
 
+        for name in codex_group:
+            ui = read(f"skills/{name}/agents/openai.yaml")
+            self.assertIn('display_name: "Codex · ', ui)
+        for name in {"spec-interview", "visual-match"}:
+            ui = read(f"skills/{name}/agents/openai.yaml")
+            metadata = read(f"skills/{name}/metadata.json")
+            self.assertNotIn('display_name: "Codex · ', ui)
+            self.assertIn("Cross-agent", metadata)
+
         for readme_path in ("README.md", "README.ko.md"):
             readme = read(readme_path)
             self.assertIn("`Codex`:", readme)
             self.assertIn("`Other`:", readme)
 
-    def test_all_six_packages_are_explicit_and_runtime_independent(self):
+    def test_all_six_managed_workflows_are_explicit_and_runtime_independent(self):
         banned = (".omx", "tmux", "ask_codex", "ultrawork", "omx state")
         names = (
             "spec-interview",

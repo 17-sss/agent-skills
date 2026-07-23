@@ -1,6 +1,6 @@
-# Codex-native workflow skill maintenance
+# Managed workflow skill maintenance
 
-This repository maintains six namespaced, portable Codex workflow skills:
+This repository maintains six namespaced, portable workflow skills:
 
 - `spec-interview`
 - `reviewed-plan`
@@ -9,11 +9,13 @@ This repository maintains six namespaced, portable Codex workflow skills:
 - `visual-match`
 - `review-gate`
 
+`reviewed-plan`, `completion-loop`, `milestone-runner`, and `review-gate` are Codex-dependent. `spec-interview` and `visual-match` are cross-agent workflows because their core contracts complete without a Codex-exclusive command. The authoritative classification and install-path rules are in [skill-classification.md](skill-classification.md).
+
 The skills preserve user-facing workflow and quality gates without requiring an external orchestration runtime. Each package installs independently. Optional workflow handoffs are availability-gated recommendations, not runtime dependencies: they use only the current task's advertised skill inventory and never inspect, install, or invoke another package. Only `milestone-runner` needs durable workflow state, stored in the target repository under `.agent-workflows/`; the other five packages do not create a state directory.
 
 ## Native mapping
 
-| Previous responsibility | Codex-native replacement |
+| Previous responsibility | Managed replacement |
 | --- | --- |
 | Structured interview prompt | Plan mode structured input, with one plain-text question as fallback |
 | Stored interview state | Current task context; write a durable specification only when the user requests one |
@@ -68,7 +70,7 @@ Run this after a meaningful Codex release, an upstream workflow change, or a Pro
 
 3. Re-check these product contracts:
 
-   - `/plan` still provides a planning boundary and structured questions
+   - `/plan` still provides a planning boundary and structured questions for Codex-dependent planning workflows
    - `/goal` still provides persisted goals and automatic continuation
    - `/review` still supports base-branch, uncommitted, commit, and custom-instruction targets without modifying the worktree
    - goal creation, completion, and blocked-state rules have not changed
@@ -90,7 +92,7 @@ Run this after a meaningful Codex release, an upstream workflow change, or a Pro
    - keep every skill installable independently
    - keep optional handoffs recommendation-only and allowlisted; never infer installed skills from the filesystem or catalog
 
-5. Update only the affected `SKILL.md`, scripts, referenced contract, `agents/openai.yaml`, `metadata.json`, root catalog entry, source fingerprint, and `SKILL_NAMES` registry in the checker. Keep local names functional and let archive fingerprints detect upstream drift without preserving upstream filenames as package identities.
+5. Update only the affected `SKILL.md`, scripts, referenced contract, `agents/openai.yaml`, `metadata.json`, root catalog entry, source fingerprint, and checker inventory. If the minimum runtime changes, also update `CODEX_SKILL_NAMES`, `OTHER_SKILL_NAMES`, [skill-classification.md](skill-classification.md), and TUI grouping tests.
 
 6. Run structural validation, banned-dependency checks, official Codex-manual evidence checks, and the isolated forward-test matrix. Inspect the final diff after all validators run.
 
@@ -132,9 +134,9 @@ Do not call the packages release-ready from the automated command alone. Run the
 - Keep non-goals, decision boundaries, and testable completion criteria as mandatory readiness gates.
 - Do not restore numeric ambiguity scores or artificial interview length.
 - When repository inspection is delegated, verify exact content fingerprints before trusting the read-only result.
-- Skip optional delegation unless the child's effective sandbox is tool-enforced read-only; prompt wording is not a safety boundary.
+- Skip optional delegation unless the delegated worker has a tool-enforced read-only boundary; prompt wording is not a safety boundary.
 - Include file type, executable bits, symlink target, and content in path fingerprints; names and bytes alone miss identity-only changes.
-- Offer a downstream workflow only after the readiness gate passes, only when its exact name appears in the current task's available-skill inventory, and only as a user-selected recommendation.
+- Offer a downstream workflow only after the readiness gate passes, only when its exact name appears in the current task's available-skill inventory, only when the current agent satisfies its advertised runtime requirements, and only as a user-selected recommendation.
 - When the inventory is absent, the best-fit route is unavailable, or material ambiguity remains, omit the optional handoff instead of searching installation paths or substituting an unsafe route.
 
 ### reviewed-plan
@@ -202,7 +204,7 @@ Do not call the packages release-ready from the automated command alone. Run the
 Run tests in disposable or read-only fixtures. Do not let validation agents edit a live project or external system.
 
 ```text
-/plan Use $spec-interview. I want to add organization-level API keys to this existing app, but I have not decided ownership, migration, or revocation behavior.
+Use $spec-interview to clarify organization-level API keys for this existing app. I have not decided ownership, migration, or revocation behavior.
 ```
 
 ```text
@@ -218,7 +220,7 @@ Use $milestone-runner to migrate this disposable two-module fixture in two order
 ```
 
 ```text
-/goal Match the supplied checkout screenshot at desktop and mobile viewports, preserve behavior, report the lowest anchored visual similarity score, and explain every remaining difference. Use $visual-match.
+Use $visual-match to match the supplied checkout screenshot at desktop and mobile viewports, preserve behavior, report the lowest anchored visual similarity score, and explain every remaining difference.
 ```
 
 ```text
@@ -240,9 +242,9 @@ For every forward test, verify the trace as well as the final prose: question co
 
 Keep forward-test fixtures outside the repository. Do not install dependencies, touch user configuration, contact production systems, post external reviews, or leave browser sessions and temporary artifacts running. Record current results in [native-workflow-forward-test-report.md](native-workflow-forward-test-report.md).
 
-## Installation after migration
+## Installation
 
-The six packages use short functional identifiers and `Codex · …` OpenAI display names. They remain explicit-only and independently installable. Install each package from this catalog with the repository's normal skill installer:
+The six managed packages use short functional identifiers and remain explicit-only and independently installable. Only the four Codex-dependent packages use `Codex · …` OpenAI display names. Choose the target agent independently from the TUI classification:
 
 ```bash
 npx skills add https://github.com/17-sss/agent-skills --skill spec-interview
@@ -253,7 +255,7 @@ npx skills add https://github.com/17-sss/agent-skills --skill visual-match
 npx skills add https://github.com/17-sss/agent-skills --skill review-gate
 ```
 
-Start a new Codex task after installation so skill discovery does not retain stale definitions.
+For Codex, project installs intentionally use `.agents/skills/`; global installs use `~/.codex/skills/`. See [skill-classification.md](skill-classification.md) for the audited matrix and commands. Start a new agent task after installation so skill discovery does not retain stale definitions.
 
 ## Known native differences
 
@@ -261,6 +263,6 @@ Start a new Codex task after installation so skill discovery does not retain sta
 - Without Goal mode, Codex Milestone Runner can preserve repository-local plan and ledger artifacts but cannot promise automatic continuation. It also cannot clear or replace a conflicting active native goal. After a native goal is completed, `get_goal` may report no active goal, so preserve the successful `update_goal` completion result before querying again.
 - Plan mode is a semantic boundary, not a separate filesystem sandbox. Codex Reviewed Plan requires an effective read-only permission mode for independent gates and uses content fingerprints only as defense in depth.
 - Native subagents inherit the parent permission mode. A writable implementation turn therefore cannot claim an isolated review merely by prompting the child to stay read-only; Codex Completion Loop uses a separately sandboxed native Codex run or remains incomplete.
-- Browser and Product Design capabilities vary by Codex surface and installed plugins. Codex Visual Match falls back to repository-native automation, then offers a user-approved isolated Chromium renderer before reporting missing visual evidence.
+- Browser, image, and design capabilities vary by agent surface and installed plugins. Visual Match falls back to repository-native automation, then offers a user-approved isolated Chromium renderer before reporting missing visual evidence.
 - Native `/review` is sufficient for an ordinary isolated review. Codex Review Gate deliberately spends more tokens on two independent lanes and returns `INCONCLUSIVE` if that evidence cannot be collected.
 - Generated-image approval naturally spans turns because image generation can end the generation turn.

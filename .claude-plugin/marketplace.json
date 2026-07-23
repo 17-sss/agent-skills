@@ -5,11 +5,9 @@
       "name": "codex",
       "source": "./",
       "skills": [
-        "./skills/spec-interview",
         "./skills/reviewed-plan",
         "./skills/completion-loop",
         "./skills/milestone-runner",
-        "./skills/visual-match",
         "./skills/review-gate"
       ]
     },
@@ -18,6 +16,8 @@
       "source": "./",
       "skills": [
         "./skills/design-loop",
+        "./skills/spec-interview",
+        "./skills/visual-match",
         "./skills/handoff-memory",
         "./skills/github-pr-review",
         "./skills/github-pr-publish",

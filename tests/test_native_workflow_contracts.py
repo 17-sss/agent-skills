@@ -78,6 +78,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
         skill = read("skills/visual-match/SKILL.md")
         routing = read("skills/visual-match/references/capability-routing.md")
         rubric = read("skills/visual-match/references/comparison-rubric.md")
+        scorer = read("skills/visual-match/scripts/score_visual_match.py")
         self.assertIn("Before editing, prove that an available capability can render", skill)
         self.assertIn("stop before editing", skill)
         self.assertIn("offer the minimal isolated Chromium bootstrap", skill)
@@ -90,6 +91,19 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("return `BLOCKED` or `INCOMPLETE`", rubric)
         self.assertIn("Do not submit forms", skill)
         self.assertIn("separate explicit, narrowly scoped authorization", skill)
+        self.assertIn("visual_similarity_percent", skill)
+        self.assertIn("lowest target score", skill)
+        self.assertIn("visual_similarity_percent >= 90", skill)
+        self.assertIn("Python standard library", skill)
+        self.assertIn("current task's available-skill inventory", routing)
+        self.assertIn("pixel score and method as `null`", routing)
+        self.assertIn("`layout_geometry` | 30", rubric)
+        self.assertIn("overall visual_similarity_percent = minimum target score", rubric)
+        self.assertIn("Never average pixel similarity", rubric)
+        self.assertIn('"visual_pass_candidate"', scorer)
+        self.assertIn('"visual_similarity_percent"', scorer)
+        self.assertNotIn("subprocess", scorer)
+        self.assertNotIn("requests", scorer)
 
         report = read("docs/native-workflow-forward-test-report.md")
         self.assertIn("Status: partial", report)
@@ -151,6 +165,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("## Suggested cadence", maintenance)
         self.assertIn("### Checker CLI contract", maintenance)
         self.assertIn("goal-state-cli.md", maintenance)
+        self.assertIn("score_visual_match.py", maintenance)
 
     def test_catalog_groups_every_skill_and_provides_copyable_usage(self):
         common = (

@@ -2,6 +2,10 @@
 
 This file records behavioral evidence that cannot be established by schema validation alone. Tests run only in disposable Git repositories under `/tmp`; no dependency installation, external write, user-configuration change, or production access is allowed.
 
+## 2026-07-23 anchored scoring contract update
+
+Status: pending forward test. The package-local scorer now calculates a fixed-weight `visual_similarity_percent`, uses the lowest equivalent target score, and refuses a visual pass candidate below the accepted threshold, with low confidence, or while blocking or major differences remain. Unit and structural validation can prove the arithmetic and standalone dependency boundary, but the browser-enabled trace must still demonstrate honest component classification from rendered evidence. Optional pixel similarity must remain separate and nullable.
+
 ## 2026-07-21 renderer-bootstrap contract update
 
 Status: pending forward test. `visual-match` now offers an explicit, repository-isolated Chromium bootstrap before returning `BLOCKED` when no renderer exists. The 2026-07-20 safety-blocker trace predates that approval step and does not prove the revised contract. Re-run the missing-renderer path with installation prohibited and verify that it proposes the bounded bootstrap without downloading anything or changing the fixture. The browser-enabled success path also remains pending.

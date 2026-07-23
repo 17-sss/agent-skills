@@ -24,7 +24,7 @@ The skills preserve user-facing workflow and quality gates without requiring an 
 | Automatic retry hooks | Explicit investigate, implement, verify, diagnose, and repair loop |
 | External architecture cross-check | Fresh native Codex reviewer running in an enforced read-only sandbox over captured requirements, diff, and logs |
 | Live URL or image implementation | Product Design skills when installed, otherwise Browser, repository-native automation, or an approved isolated Chromium fallback |
-| Visual verdict score | Structured semantic comparison; pixel diff only as secondary evidence |
+| Visual verdict score | Fixed-weight anchored semantic score; optional pixel similarity remains separate secondary evidence |
 | Diff or commit review target selection | Native `/review` target picker or equivalent read-only Git inspection |
 | Code and architecture review roles | Two parallel native review lanes with enforced read-only isolation and independent evidence contracts |
 | Merge recommendation synthesis | Deterministic `APPROVE`, `COMMENT`, `REQUEST_CHANGES`, or `INCONCLUSIVE` precedence |
@@ -178,7 +178,9 @@ Do not call the packages release-ready from the automated command alone. Run the
 - Keep the bootstrap outside the target repository. Never mutate manifests, lockfiles, `node_modules`, branded browsers, system packages, or another skill as part of the fallback.
 - Preserve approval before implementing a generated reference.
 - Compare equivalent route, data, viewport, and UI states.
-- Do not replace semantic review with an arbitrary visual score.
+- Preserve the fixed scoring weights, anchored levels, N/A normalization, lowest-target aggregation, and default `90` threshold in `score_visual_match.py` and `comparison-rubric.md`.
+- Keep `visual_similarity_percent` semantic and scope-bound. Never blend optional pixel similarity into it or let a score override blocking or major differences.
+- Keep the scorer Python-standard-library-only, package-local, state-free, and independently executable without another skill or dependency installation.
 - Preflight capture capability before editing and return `BLOCKED` or `INCOMPLETE` when a blocking or major mismatch remains unresolved.
 - Keep live-reference interaction non-mutating by default and require separate explicit authority for state changes.
 
@@ -216,7 +218,7 @@ Use $milestone-runner to migrate this disposable two-module fixture in two order
 ```
 
 ```text
-/goal Match the supplied checkout screenshot at desktop and mobile viewports, preserve behavior, and report every remaining visual difference. Use $visual-match.
+/goal Match the supplied checkout screenshot at desktop and mobile viewports, preserve behavior, report the lowest anchored visual similarity score, and explain every remaining difference. Use $visual-match.
 ```
 
 ```text
@@ -233,7 +235,7 @@ For every forward test, verify the trace as well as the final prose: question co
 | `reviewed-plan` | Produces a repository-grounded plan, runs Architect before Critic, and reports both verdicts | Fixture fingerprint remains unchanged across both gates |
 | `completion-loop` | Reproduces the failure, implements the smallest fix, runs fresh checks, and independently reviews the final fingerprint | Only the disposable fixture changes and its tests pass |
 | `milestone-runner` | Creates `.agent-workflows/`, runs goals sequentially, rejects stale or out-of-order transitions, checkpoints evidence, and reconciles a completed native goal | Only the disposable fixture and its explicit durable state change; no other skill is invoked |
-| `visual-match` | With installation prohibited, offers the isolated Chromium fallback but performs no download and returns the safe missing-browser blocker; with a browser already available, completes baseline/edit/recapture/comparison and never passes unresolved major drift | Only the disposable fixture and task-scoped captures change |
+| `visual-match` | With installation prohibited, offers the isolated Chromium fallback but performs no download and returns the safe missing-browser blocker; with a browser already available, completes baseline/edit/recapture, scores every equivalent target, uses the lowest score, and never passes below threshold or with unresolved major drift | Only the disposable fixture and task-scoped captures change; the package-local scorer creates no state |
 | `review-gate` | Includes staged, unstaged, and untracked content, runs both lanes, and catches seeded actionable defects | The complete fixture fingerprint remains unchanged |
 
 Keep forward-test fixtures outside the repository. Do not install dependencies, touch user configuration, contact production systems, post external reviews, or leave browser sessions and temporary artifacts running. Record current results in [native-workflow-forward-test-report.md](native-workflow-forward-test-report.md).

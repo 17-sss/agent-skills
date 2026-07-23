@@ -13,6 +13,8 @@ Choose the smallest available Codex-native surface that can produce and verify t
 
 Product Design workflows are optional accelerators. The visual contract remains valid when they are unavailable.
 
+Treat a named optional skill as available only when the current task's available-skill inventory explicitly advertises its exact name. If the inventory is absent or the skill is unavailable, use the fallback in this table without mentioning or installing the missing skill. Do not inspect skill directories, catalog files, or the filesystem to infer availability.
+
 ## Browser surface
 
 - Use the built-in Browser app when working in Codex App and an isolated browser profile is sufficient.
@@ -35,6 +37,12 @@ When no existing surface can render and capture the required states, offer a Chr
 7. Remove task-scoped downloads after use. Report the location of any user-approved persistent cache.
 
 This is an approval-gated recovery path, not an implicit dependency. Never install it when an existing capability already produces equivalent evidence.
+
+## Scoring capability
+
+The package-local semantic score helper uses only the Python standard library and is always the preferred calculator for anchored component evidence. It does not inspect image pixels.
+
+For optional `pixel_similarity_percent`, reuse an existing repository image-comparison command, browser harness, or already available image metric. Do not add a package, plugin, lockfile entry, or system dependency solely to calculate the pixel score. When no deterministic metric is already available, report the pixel score and method as `null`; the semantic score and completion gates remain valid.
 
 ## Capture discipline
 

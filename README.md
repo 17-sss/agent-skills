@@ -196,13 +196,14 @@ The full state-helper command contract is documented in the [Goal state CLI refe
 Match an implementation to an approved screenshot, generated image, or live URL by repeatedly capturing the same viewport and UI state.
 
 - Use semantic visual review first and pixel diff only as supporting localization evidence.
+- Report an anchored `visual_similarity_percent` for every accepted viewport and state; use the lowest score and require `90+` with no blocking or major difference.
 - Treat live references as read-only unless separately authorized to change external state.
 - If no renderer exists, offer the approved isolated Chromium fallback; return `BLOCKED` before editing if rendering remains unavailable.
 
 Usage example:
 
 ```text
-/goal Match the attached checkout screenshot at desktop and mobile viewports, preserve the purchase flow, and report every remaining visual difference. Use $visual-match.
+/goal Match the attached checkout screenshot at desktop and mobile viewports, preserve the purchase flow, report the lowest visual similarity score, and explain every remaining difference. Use $visual-match.
 ```
 
 ### review-gate

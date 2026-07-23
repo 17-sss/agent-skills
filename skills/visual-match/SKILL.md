@@ -53,7 +53,7 @@ Before editing, prove that an available capability can render and capture both t
 1. Capture a baseline at the recorded route, viewport, data, and UI state.
 2. Implement the smallest coherent visual or interaction change.
 3. Render and capture the same state again.
-4. Compare the reference and result using the rubric. Rank blocking and major differences before minor polish.
+4. Compare the reference and result using the rubric. Rank blocking and major differences before minor polish, then assign the anchored component levels used by the bundled scorer.
 5. Translate each material difference into a concrete code hypothesis.
 6. Fix one related difference cluster, then recapture the same state.
 7. Exercise visible interactions and responsive states that belong to the accepted scope without mutating external reference state.
@@ -61,7 +61,15 @@ Before editing, prove that an available capability can render and capture both t
 
 Use pixel diff or image overlays only as secondary localization evidence. Anti-aliasing, font rendering, dynamic content, and animation can produce pixel noise; semantic visual review remains authoritative unless the user supplied an exact numeric tolerance.
 
-Do not invent or tune an arbitrary visual score. A pass requires the recorded acceptance criteria to be satisfied and all remaining differences to be explicitly classified.
+After every accepted candidate capture, write the structured scoring input defined in the rubric and run:
+
+```bash
+python3 <visual-match-skill-dir>/scripts/score_visual_match.py <evidence.json>
+```
+
+The helper uses only the Python standard library. It applies fixed component weights and anchored levels, normalizes categories that are genuinely not applicable, and uses the lowest target score across accepted viewports and states as `visual_similarity_percent`. Treat that value as a scope-bound semantic similarity estimate, not literal pixel identity. Do not alter weights or the default `90` threshold during implementation; use a different threshold only when the user established it as an acceptance criterion before the comparison loop.
+
+Record `pixel_similarity_percent` separately only when an already available deterministic image metric can compare equivalent captures. Report its method and capture conditions. Never blend it into `visual_similarity_percent`, install a dependency merely to obtain it, or substitute it for semantic review.
 
 ## Encode reusable decisions
 
@@ -81,10 +89,12 @@ Avoid turning one screenshot into global design rules without evidence that the 
 Before completing the visual goal:
 
 - capture fresh evidence for every required viewport and state
+- include the final structured score record for every target and the lowest overall `visual_similarity_percent`
+- require equivalent captures, `visual_similarity_percent >= 90` (or a threshold accepted before implementation), high confidence, and zero blocking or major differences
 - verify the primary visible interaction path
 - confirm no blocking overflow, clipping, overlap, unreadable text, or broken focus behavior remains
 - run applicable targeted tests, typecheck, lint, build, and runtime checks
 - review the final diff
 - list remaining visual differences and why they are accepted, blocked, or out of scope
 
-An unresolved blocking or major difference yields `BLOCKED` or `INCOMPLETE`, not success. Do not claim visual parity from code inspection or passing static checks alone.
+The score helper returns only a visual pass candidate. Functional validation and the completion audit remain mandatory. An ineligible comparison yields `INCONCLUSIVE`. An unresolved blocking or major difference yields `BLOCKED` or `INCOMPLETE`, not success. Do not claim visual parity from code inspection, a numeric score, pixel similarity, or passing static checks alone.

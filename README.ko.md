@@ -196,13 +196,14 @@ Use $milestone-runner to migrate the authentication flow in three ordered stages
 승인된 screenshot, 생성 이미지 또는 live URL을 기준으로 동일한 viewport와 UI state를 반복 캡처하며 구현을 맞춥니다.
 
 - semantic visual review를 우선하고 pixel diff는 위치를 찾는 보조 증거로만 사용합니다.
+- 승인된 viewport와 state마다 anchored `visual_similarity_percent`를 계산하고, 최저 점수 `90+`와 blocking·major 차이 없음 조건을 함께 요구합니다.
 - live reference는 기본적으로 읽기 전용이며 별도 승인 없이 외부 상태를 바꾸지 않습니다.
 - 렌더러가 없으면 승인 기반 Chromium fallback을 제안하고, 사용할 수 없으면 수정 전에 `BLOCKED`로 종료합니다.
 
 사용 예시:
 
 ```text
-/goal Match the attached checkout screenshot at desktop and mobile viewports, preserve the purchase flow, and report every remaining visual difference. Use $visual-match.
+/goal Match the attached checkout screenshot at desktop and mobile viewports, preserve the purchase flow, report the lowest visual similarity score, and explain every remaining difference. Use $visual-match.
 ```
 
 ### review-gate

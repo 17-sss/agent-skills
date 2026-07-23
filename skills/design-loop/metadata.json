@@ -1,6 +1,6 @@
 {
   "name": "design-loop",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "organization": "17-sss",
   "date": "July 2026",
   "abstract": "Reusable agent workflow for building, rendering, inspecting, interacting with, and iteratively refining product interfaces across app, CLI, and IDE surfaces. It requires fresh screenshot evidence for visual claims, checks desktop and mobile behavior, uses bounded improvement passes, offers an explicit repository-isolated Chromium fallback when no renderer exists, and invokes image generation only for justified raster assets.",

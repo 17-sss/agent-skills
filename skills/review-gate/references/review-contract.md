@@ -25,6 +25,8 @@ Accept a finding only when all of these are present:
 
 If evidence is incomplete, omit the finding or label it as a validation gap. Do not inflate confidence by repeating the same concern from both lanes.
 
+Sensitive-value redaction is evidence, not a defect by itself. A structural redaction marker may support a finding that a credential was committed or exposed, but never reproduce the value. If hidden material is necessary to validate behavior, scope, or impact, treat the affected decision as `INCONCLUSIVE` rather than weakening the redaction boundary.
+
 ## Lane statuses
 
 Correctness lane:
@@ -43,7 +45,7 @@ Architecture lane:
 
 Apply the first matching rule:
 
-1. `INCONCLUSIVE` — the scope is unreadable or drifted, a required read-only isolation gate is unavailable, a lane packet digest changed, the applicable worktree or selected-file baseline changed during review, or either required independent lane is missing, failed, or evidence-free.
+1. `INCONCLUSIVE` — the scope is unreadable or drifted, material evidence is withheld by the sensitivity guard, required read-only or packet-only isolation is unavailable, a lane packet digest changed, the applicable worktree or selected-file baseline changed during review, or either required independent lane is missing, failed, or evidence-free.
 2. `REQUEST_CHANGES` — any accepted finding is merge-blocking, correctness is `REQUEST_CHANGES`, or architecture is `BLOCK`.
 3. `COMMENT` — correctness is `COMMENT`, architecture is `WATCH`, or non-blocking findings remain.
 4. `APPROVE` — both lanes completed with evidence, correctness is `APPROVE`, architecture is `CLEAR`, and no accepted finding remains.

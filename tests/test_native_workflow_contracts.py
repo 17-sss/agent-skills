@@ -24,6 +24,12 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("PLAYWRIGHT_BROWSERS_PATH", routing)
         self.assertIn("Do not run `install-deps`, `--with-deps`, `sudo`", routing)
         self.assertIn("Remove task-scoped downloads after use", routing)
+        package_text = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in sorted((SKILLS / "design-loop").rglob("*"))
+            if path.is_file()
+        )
+        self.assertNotIn("https://github.com/17-sss/agent-skills", package_text)
 
     def test_spec_interview_is_one_question_read_only_and_drift_aware(self):
         text = read("skills/spec-interview/SKILL.md")
@@ -124,7 +130,17 @@ class NativeWorkflowContractTest(unittest.TestCase):
         skill = read("skills/review-gate/SKILL.md")
         contract = read("skills/review-gate/references/review-contract.md")
         self.assertIn("**change review** or **file audit**", skill)
-        self.assertIn("complete file bytes or explicit binary hashes", skill)
+        self.assertIn("## Protect sensitive review material", skill)
+        self.assertIn("Never place credential values", skill)
+        self.assertIn("non-echoing local checks", skill)
+        self.assertIn("parent-only fingerprint", skill)
+        self.assertIn("never its value or a value-derived hash", skill)
+        self.assertIn("keep its digest inside the parent-only fingerprint", skill)
+        self.assertIn("identical sanitized packet", skill)
+        self.assertIn("restricted to the sanitized packet", skill)
+        self.assertIn("Never ask the user to paste a secret", skill)
+        self.assertNotIn("Prefer inline bytes", skill)
+        self.assertNotIn("complete file bytes", skill)
         self.assertIn("**commit**", skill)
         self.assertIn("**base branch or checked-out PR-style target**", skill)
         self.assertIn("two separate task-scoped copies", skill)
@@ -140,6 +156,8 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("for a base branch or checked-out PR-style target", skill)
         self.assertIn("for a file audit, recompute", skill)
         self.assertIn("for a file audit", contract)
+        self.assertIn("never reproduce the value", contract)
+        self.assertIn("packet-only isolation", contract)
         self.assertIn("Final verdict precedence", contract)
 
     def test_milestone_runner_is_standalone_sequential_and_goal_reconciled(self):

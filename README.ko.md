@@ -219,7 +219,8 @@ Use $milestone-runner to migrate the authentication flow in three ordered stages
 
 현재 변경, 파일, commit, branch 또는 이미 읽을 수 있는 PR target을 correctness와 architecture 두 lane으로 독립 검토합니다.
 
-- staged, unstaged와 untracked 변경을 정확한 snapshot으로 고정합니다.
+- staged, unstaged와 untracked 변경을 sensitivity-screened snapshot으로 고정하고 원본 target fingerprint는 parent context에만 유지합니다.
+- credential 값은 reviewer packet에서 제외하며, redaction으로 핵심 증거가 사라지면 `INCONCLUSIVE`를 반환합니다.
 - 두 lane을 tool-enforced read-only sandbox에서 병렬 실행합니다.
 - prioritized findings와 `APPROVE`, `COMMENT`, `REQUEST_CHANGES`, `INCONCLUSIVE` 중 하나의 판정을 반환합니다.
 

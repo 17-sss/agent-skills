@@ -193,13 +193,25 @@ Do not call the packages release-ready from the automated command alone. Run the
 - Re-check native `/review` target semantics before changing scope resolution.
 - Keep current changes inclusive of staged, unstaged, and untracked files.
 - Preserve two independent, tool-enforced read-only lanes and never approve when either lane is unavailable or evidence-free.
-- Use target-specific snapshots for current changes, commits, branch ranges, and file audits. Give each lane identical captured content with its own non-writable packet and return `INCONCLUSIVE` if any digest or applicable worktree baseline drifts.
+- Use target-specific snapshots for current changes, commits, branch ranges, and file audits. Keep the original-target fingerprint in the parent context and give each lane an identical sanitized, non-writable packet.
+- Never put credential values or private keys in reviewer prompts, packets, temporary copies, or output. Restrict lane visibility to the sanitized packet when sensitive material exists; return `INCONCLUSIVE` when that isolation or material evidence is unavailable.
 - Keep file audits usable outside Git, and run any confirming checks only in a no-write or disposable environment with caches redirected.
 - Recompute the complete live content-and-filesystem-identity fingerprint after both lanes; `git status` is context, not a mutation detector.
 - Keep each review lane terminal so the two-lane workflow cannot recursively invoke itself.
 - Keep priority separate from the merge-blocking flag and retain architecture `WATCH` or `BLOCK` concerns visibly.
 - Do not restore runtime phase state, external advisor shims, universal complexity thresholds, or automatic fixes.
-- Keep change-review attribution separate from full-content file-audit findings.
+- Keep change-review attribution separate from selected-file audit findings.
+
+### Marketplace security assessments
+
+The `skills` installer displays cached remote assessments from multiple providers; its risk labels are not produced by this repository's structural checker. Open the provider detail page before changing a package so a documentation false positive is not confused with an unsafe workflow.
+
+- Keep installation commands in the root catalog. An installed package must not tell the agent to download or reinstall itself.
+- Treat credential-handling findings as a contract review, not a wording exercise. Sensitive values must stay out of prompts, generated output, delegated packets, and temporary copies.
+- Preserve required capability with a safer data flow. Do not delete read-only, approval, sandbox, or integrity safeguards merely to lower a label.
+- Public labels may remain stale until the changed commit is available to the registry and the provider rescans it. Record local validation separately from the external rescan result.
+
+See the [Snyk Agent Scan issue-code reference](https://github.com/snyk/agent-scan/blob/main/docs/issue-codes.md) for the meanings of suspicious-download and insecure-credential-handling findings.
 
 ## Forward-test prompts
 
@@ -240,7 +252,7 @@ For every forward test, verify the trace as well as the final prose: question co
 | `completion-loop` | Reproduces the failure, implements the smallest fix, runs fresh checks, and independently reviews the final fingerprint | Only the disposable fixture changes and its tests pass |
 | `milestone-runner` | Creates `.agent-workflows/`, runs goals sequentially, rejects stale or out-of-order transitions, checkpoints evidence, and reconciles a completed native goal | Only the disposable fixture and its explicit durable state change; no other skill is invoked |
 | `visual-match` | With installation prohibited, offers the isolated Chromium fallback but performs no download and returns the safe missing-browser blocker; with a browser already available, completes baseline/edit/recapture, scores every equivalent target, uses the lowest score, and never passes below threshold or with unresolved major drift | Only the disposable fixture and task-scoped captures change; the package-local scorer creates no state |
-| `review-gate` | Includes staged, unstaged, and untracked content, runs both lanes, and catches seeded actionable defects | The complete fixture fingerprint remains unchanged |
+| `review-gate` | Includes staged, unstaged, and untracked content, withholds seeded credential values from both lane packets, runs both lanes, and catches seeded actionable defects | The original fixture fingerprint remains unchanged and both sanitized packet digests match |
 
 Keep forward-test fixtures outside the repository. Do not install dependencies, touch user configuration, contact production systems, post external reviews, or leave browser sessions and temporary artifacts running. Record current results in [native-workflow-forward-test-report.md](native-workflow-forward-test-report.md).
 

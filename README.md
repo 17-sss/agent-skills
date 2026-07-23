@@ -219,7 +219,8 @@ The full state-helper command contract is documented in the [Goal state CLI refe
 
 Review current changes, files, a commit, a branch, or an already-readable PR target through independent correctness and architecture lanes.
 
-- Freeze staged, unstaged, and untracked changes into an exact snapshot.
+- Freeze staged, unstaged, and untracked changes into a sensitivity-screened snapshot while retaining a parent-only original-target fingerprint.
+- Keep credential values out of reviewer packets and return `INCONCLUSIVE` when redaction removes material evidence.
 - Run both lanes in tool-enforced read-only sandboxes.
 - Return prioritized findings and one of `APPROVE`, `COMMENT`, `REQUEST_CHANGES`, or `INCONCLUSIVE`.
 

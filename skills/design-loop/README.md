@@ -33,16 +33,6 @@ The skill prefers capabilities already present in the current app, CLI, IDE, or 
 6. Fix one issue cluster at a time and capture fresh evidence.
 7. Verify code checks and report remaining gaps.
 
-## Installation
-
-Install this skill from the collection:
-
-```bash
-npx skills add https://github.com/17-sss/agent-skills --skill design-loop
-```
-
-Or copy `skills/design-loop` to a supported global or project skill directory.
-
 ## Usage
 
 Explicit invocation:

@@ -2,6 +2,10 @@
 
 This file records behavioral evidence that cannot be established by schema validation alone. Tests run only in disposable Git repositories under `/tmp`; no dependency installation, external write, user-configuration change, or production access is allowed.
 
+## 2026-07-23 marketplace security hardening
+
+Status: pending external rescan and forward test. `design-loop` no longer ships a redundant self-install URL inside its package. `review-gate` now keeps the original target fingerprint in the parent context, removes credential values from delegated review packets, requires packet-only lane visibility when sensitive material exists, and returns `INCONCLUSIVE` when redaction removes material evidence. Structural tests can prove these package contracts; a fresh disposable trace must still demonstrate that seeded credentials never reach either lane, and the public registry labels cannot update until the committed revision is published and rescanned.
+
 ## 2026-07-23 choice-first interview contract update
 
 Status: pending forward test. `spec-interview` now prefers native structured-choice input for bounded decisions, preserves one decision per round and a custom-answer escape hatch, and falls back to an equivalent numbered list when structured input is unavailable. Structural tests can prove the contract text, but a fresh trace must still show that the agent uses choices only for complete option sets and keeps genuinely open-ended questions free-form.
@@ -30,4 +34,4 @@ Status: partial. Five workflow success paths and the Visual Match safety-blocker
 
 ## Release rule
 
-Treat any `PENDING`, stale contract evidence, `FAIL`, unexpected workspace write, missing independent gate, evidence-free success, or undocumented capability gap as not release-ready. `reviewed-plan`, `completion-loop`, `milestone-runner`, and `review-gate` are eligible for release from this matrix. The revised `spec-interview` choice-presentation contract needs a fresh trace, and the current `visual-match` contract is not release-ready until both the revised missing-renderer approval path and the browser-enabled row pass. Delete disposable fixtures and task-scoped captures after the evidence has been summarized here.
+Treat any `PENDING`, stale contract evidence, `FAIL`, unexpected workspace write, missing independent gate, evidence-free success, or undocumented capability gap as not release-ready. `reviewed-plan`, `completion-loop`, and `milestone-runner` are eligible for release from this matrix. The revised `spec-interview` choice-presentation and `review-gate` sensitive-packet contracts need fresh traces, and the current `visual-match` contract is not release-ready until both the revised missing-renderer approval path and the browser-enabled row pass. Delete disposable fixtures and task-scoped captures after the evidence has been summarized here.

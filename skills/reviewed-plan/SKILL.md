@@ -37,7 +37,15 @@ If the workspace fingerprint changes during a delegated gate, stop with `NOT APP
 
 Never run Architect and Critic in parallel. Never treat planning artifacts or a Planner draft as consensus evidence.
 
-Limit the full review sequence to five cycles. If approval is still unavailable, return the best current plan with `NOT APPROVED`, the unresolved findings, and the decision or evidence needed to proceed.
+Limit the Critic-driven re-review loop to five iterations.
+
+- Architect `REVISE` passes before the first Architect `ACCEPT` do not consume a re-review iteration.
+- The initial Architect `ACCEPT` → Critic verdict is the baseline review and does not consume a re-review iteration.
+- Each Critic `ITERATE` or `REJECT` starts one re-review iteration: Planner revision → Architect verdict → Critic verdict.
+- Architect `REVISE` passes within a started re-review remain part of that same iteration. Count the iteration as completed only after the subsequent Critic verdict.
+- Stop after five completed Critic-driven re-review iterations without `APPROVE`, then return the best current plan as `NOT APPROVED`, with unresolved findings and the decision or evidence needed to proceed.
+
+A non-approval verdict must report all currently identifiable blocking findings in one pass. Subsequent reviews should verify requested fixes and regressions introduced by those fixes, rather than introducing unrelated non-blocking preferences.
 
 For security, authentication, data migration, destructive operations, public contract changes, compliance, or production risk, also require:
 

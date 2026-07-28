@@ -1,6 +1,6 @@
 {
   "name": "reviewed-plan",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "organization": "17-sss",
   "date": "July 2026",
   "abstract": "Read-only consensus planning workflow that grounds a plan in repository evidence, enforces sequential sandbox-isolated review, and offers only availability- and runtime-gated, user-selected execution handoffs after approval.",

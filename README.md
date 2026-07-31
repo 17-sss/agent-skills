@@ -187,16 +187,17 @@ Usage example:
 
 ### completion-loop
 
-Complete a clearly scoped Codex Goal through investigation, implementation, verification, failure diagnosis, and repair.
+Complete a frozen, clearly scoped Codex Goal through investigation, implementation, risk-tiered verification, failure diagnosis, and focused repair.
 
-- Map every requirement to an implementation artifact and fresh evidence.
-- Diagnose and fix failed verification instead of repeating it blindly.
-- Require a separate read-only Codex review of the final implementation candidate.
+- Freeze objective, scope, non-goals, deployment target, acceptance criteria, evidence, risk, and authorized systems before editing.
+- Treat out-of-contract review observations as deferred instead of silently expanding the goal.
+- Deduplicate checks through an evidence ledger and use focused rereview after blocker fixes.
+- Spend at most one initial full review and one final full verification unless a recorded core-architecture change requires another review.
 
 Usage example:
 
 ```text
-/goal Fix the reproducible cache invalidation regression, preserve public behavior, pass the existing tests and typecheck, and review the final diff. Use $completion-loop.
+/goal Fix the reproducible cache invalidation regression for the local service, preserve public behavior, treat deployment automation as a non-goal, pass the existing tests and typecheck, and review the final diff. Use $completion-loop.
 ```
 
 ### milestone-runner

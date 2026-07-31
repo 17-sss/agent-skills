@@ -1,75 +1,135 @@
 ---
 name: completion-loop
-description: Drive a clearly scoped coding goal through investigation, implementation, evidence-based verification, and repair until its acceptance criteria are met or a genuine blocker is identified. Use when the user invokes $completion-loop or asks Codex to persist, finish, keep going, or not stop before verified completion; prefer Codex Goal mode for durable work.
+description: Drive a frozen, clearly scoped coding goal through investigation, implementation, risk-tiered verification, focused repair, and evidence-based completion without absorbing unrelated follow-up work. Use when the user invokes $completion-loop or asks Codex to persist, finish, keep going, or not stop before verified completion; prefer Codex Goal mode for durable work.
 ---
 
 # Completion Loop
 
-Recommended invocation: `/goal <outcome, constraints, and verification criteria>. Use $completion-loop.`
+Recommended invocation: `/goal <outcome, constraints, deployment target, and verification criteria>. Use $completion-loop.`
 
 Read [verification-contract.md](references/verification-contract.md) before starting the execution loop.
 
-## Establish the completion contract
+## Freeze the completion contract
 
 1. Read the active Codex goal when Goal mode and goal tools are available.
 2. Create a goal only when the user or system explicitly requested goal tracking and no active goal exists. Skill activation alone is not authorization to create one.
-3. State the desired outcome, constraints, acceptance criteria, and the commands or observations that can prove completion.
-4. Inspect applicable repository instructions, current implementation, tests, and working-tree status. Preserve unrelated user changes.
-5. Resolve material ambiguity before editing. Do not silently narrow the goal to make it easier.
+3. Write and freeze this contract before editing:
 
-If Goal mode is unavailable, keep the same completion contract in the current task context and state that cross-turn automatic continuation is not guaranteed.
+   - **Objective**
+   - **In scope**
+   - **Non-goals**
+   - **Deployment target**
+   - **Acceptance criteria**
+   - **Required evidence**
+   - **Risk tier** — `Low`, `Medium`, or `High`, with a short rationale
+   - **Authorized repositories and external systems**
+
+4. Inspect applicable repository instructions, current implementation, tests, and working-tree status. Preserve unrelated user changes.
+5. Resolve ambiguity that could materially change the contract. When a field is not part of the request, record `none`, `not authorized`, or `not part of this task` instead of silently widening it.
+6. Freeze the contract once implementation begins. Do not automatically add newly suggested requirements, repositories, deployment paths, or external systems.
+
+If Goal mode is unavailable, keep the same frozen contract in the current task context and state that cross-turn automatic continuation is not guaranteed.
 
 ## Execute the evidence loop
 
-Repeat while a concrete next action can advance the accepted goal:
+Repeat while a concrete in-scope action can advance an unmet acceptance criterion:
 
 1. Choose the smallest meaningful incomplete requirement.
 2. Investigate the current behavior and likely cause.
 3. Implement the bounded change.
 4. Run the smallest relevant check that can prove or disprove the change.
 5. Read the complete failure or success output.
-6. If the check fails, explain the cause it reveals and use that evidence to choose the next change.
-7. Expand verification from targeted tests to applicable typecheck, lint, build, integration, and runtime checks in proportion to risk.
+6. If the check fails, record what it disproves and use that evidence to choose the next change.
+7. Update the task-local evidence ledger defined in the verification contract.
+8. Broaden checks only as required by the frozen risk tier and changed boundary.
 
-Change strategy when the same failure recurs. Do not simulate persistence with arbitrary iteration counts, delete valid tests, weaken acceptance criteria, or claim that unexecuted checks “should” pass.
+Change strategy when the same failure recurs. Do not delete valid tests, weaken acceptance criteria, repeat an unchanged check without an invalidation reason, or claim that unexecuted checks “should” pass.
 
-The request to keep going does not authorize destructive actions, external production changes, credential use, or material scope expansion. Obtain the authority those actions normally require.
+The request to keep going does not authorize destructive actions, commits, new threads, external production changes, credential use, or material scope expansion. Obtain the authority those actions normally require.
 
-## Run the independent completion review
+## Classify findings against the frozen scope
 
-Before completing any goal that changed implementation artifacts, require a fresh independent Codex reviewer. Scale the review depth for large, security-sensitive, architectural, difficult-to-test, or otherwise high-risk diffs, but do not skip the independent gate for a small change.
+Adopt a newly discovered issue as a current blocker only when evidence shows that it:
 
-The implementation turn is normally writable, and native subagents inherit that permission mode. A read-only prompt is therefore not a safety boundary. Run the reviewer only through a native isolated Codex execution whose effective sandbox is explicitly `read-only` and whose app, connector, and network surface cannot mutate external state. A local Codex CLI may satisfy this with an ephemeral execution explicitly configured with `--sandbox read-only`; do not install or reconfigure Codex to create this gate. The reviewer is a terminal lane and must not activate another workflow or delegate recursively. If enforced isolation is unavailable, the independent gate is unavailable and the goal cannot be marked complete.
+- fails an acceptance criterion;
+- is a regression created by the current change;
+- creates a security vulnerability, data loss, authorization bypass, or service outage on a path used by the frozen contract; or
+- makes execution impossible on the declared deployment target.
 
-- Capture one candidate-state fingerprint from the current `HEAD`, exact staged and unstaged diff bytes, and a canonical serialization of each untracked path's file type, executable mode bits, symlink target when applicable, and content or content hash.
-- Provide the reviewer with the requirements, captured raw diff or changed-file bytes, verification output, and that fingerprint. Prefer passing captured bytes directly; do not instruct the reviewer to derive the candidate from a changing live worktree.
-- Do not provide the leader's conclusion, suspected answer, or intended verdict.
-- Require blocking findings, coverage gaps, residual risks, and confidence.
-- Recompute the fingerprint when the reviewer returns. If it changed during review, report the unexpected mutation, preserve the files, and do not reuse that review result.
-- Fix blocking findings and rerun affected verification. Any implementation-artifact change after review invalidates the prior result; obtain a fresh independent review of the new candidate state before completion.
+Classify future expansion, unused deployment paths, operational convenience work, unrelated legacy defects, style preferences, and new product features as `Deferred / Follow-up / Residual risk`. A reviewer cannot expand the contract.
 
-When an isolated reviewer is unavailable, perform an explicit self-review for useful provisional evidence, report the missing independent gate, and do not mark the goal complete until an independent result is available.
+Evaluate only the declared deployment target. Do not add container platforms, cloud services, schedulers, firewall automation, monitoring, backup systems, or other operational infrastructure unless the frozen contract requires them.
 
-## Audit completion
+Give every reviewer this instruction:
 
-Before declaring completion:
+> Do not invent requirements. Findings outside the frozen completion contract must be reported as deferred observations, not blockers.
 
-1. Re-read the active goal or completion contract.
-2. Inspect the final diff and working-tree status, and confirm they still match the independently reviewed candidate fingerprint.
-3. Map every requirement to its implementation artifact and fresh evidence.
-4. Confirm that no required task remains pending and no validation failure is being ignored.
-5. Record skipped checks and residual risks explicitly.
-6. Mark the active goal complete only after this audit passes and no required work remains.
+Reproduce each proposed blocker against the actual code and contract before accepting it. When classification is ambiguous, stop before implementation and ask the user whether to revise the frozen contract.
 
-Do not treat one passing test, a successful build, or reviewer approval as proof of the whole objective unless it covers every acceptance criterion.
+## Spend the review and verification budget
 
-## Handle blockers honestly
+Use the risk-tier matrix and review packet in the verification contract.
 
-Exhaust safe in-scope alternatives before stopping. Report:
+- **Initial full-scope review: at most one.** Use the frozen packet and the review depth required by the risk tier.
+- **Blocker repair: focused rereview only.** Recheck the finding's cause, modified files, directly connected call paths, new regression tests, and plausible adjacent regressions.
+- **Final full verification: at most one.** Run it only after targeted evidence and required review findings are clear. If it fails, rerun only failed or invalidated ledger entries after repair.
+- Do not repeat an identical full review packet or unchanged validation merely to seek a different answer.
+- Allow one additional full-scope review only when the current work genuinely changes a core architecture boundary such as authentication, database authorization, or a public API contract. Record the reason and apply the material-expansion checkpoint when that change was not already in scope.
 
-- the exact blocking condition
-- evidence that it blocks the accepted goal
-- alternatives already attempted
-- the minimum user decision, authority, credential, or external-state change needed
+After a focused rereview, classify every new finding again:
 
-Difficulty, slow progress, uncertainty, or a failing check is not by itself a blocker. When Goal mode defines a blocked-state threshold, follow that tool contract; do not mark blocked early. In environments that require recurrence across goal turns, wait until the same condition has met that recurrence rule.
+- a regression created by the repair remains a blocker;
+- a pre-existing issue that fails an acceptance criterion remains a blocker;
+- an issue outside the frozen contract is deferred;
+- an ambiguous issue requires user confirmation, not automatic expansion.
+
+An implementation change invalidates only evidence and review conclusions whose recorded invalidation conditions intersect the changed boundary. It does not automatically reset the entire review.
+
+When an independent review is required, run it through a tool-enforced read-only execution that cannot mutate the workspace or external systems. Keep it terminal and prevent recursive delegation. If that capability is unavailable, report the missing required evidence and request the minimum user decision needed; do not pretend the review occurred. If the user explicitly invokes a separate review workflow, follow that workflow's stricter contract without making it a dependency of this package.
+
+## Pause at material expansion
+
+Stop implementation and ask whether to revise the frozen contract when any of these occurs:
+
+- two consecutive review passes discover a new blocker category;
+- a new repository or cloud resource is required;
+- the deployment method must change;
+- an operational service absent from the contract must be added;
+- expected change volume or effort grows materially beyond the initial plan; or
+- a migration, API, or queue contract must be redesigned.
+
+Present the proposed contract delta, evidence, impact, and smallest alternatives. Do not implement the expanded work before the user approves it.
+
+## Audit and finish
+
+End the loop when:
+
+1. every acceptance criterion has an implementation artifact and valid evidence;
+2. all checks required by the risk tier pass or have an explicitly accepted gap;
+3. no current-scope blocker remains;
+4. final diff and working-tree status are understood and unrelated changes are preserved; and
+5. deferred observations and residual risks are recorded for handoff or the final report.
+
+Additional optimization, unused deployment paths, future automation, non-blocking architecture watch items, and unapproved expansion proposals do not prevent completion.
+
+Mark an active goal complete only after this audit passes. Follow the native blocked-state contract when a genuine blocker recurs; do not mark blocked merely because user confirmation is pending.
+
+## Batch commits and handoffs
+
+Do not create a commit unless the user authorized it. When commits are authorized, prefer stable boundaries for product/runtime implementation, tests/contracts, and deployment/docs. Combine consecutive fixes with the same cause instead of committing every review adjustment.
+
+Refresh a handoff only at a stable checkpoint, immediately before transferring work, or at final completion. Do not update it after every small repair.
+
+## Return a concise completion report
+
+Report only:
+
+- implementation result
+- verification executed
+- remaining blockers, if any
+- deferred items and residual risks
+- commits created
+- push, PR, and deploy status
+- next work that requires additional approval
+
+Do not narrate every internal review iteration.

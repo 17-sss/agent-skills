@@ -187,16 +187,17 @@ Use $commit-helper to inspect this repository's commit rules and staged changes,
 
 ### completion-loop
 
-명확한 Codex Goal을 조사, 구현, 검증, 실패 진단과 수정 루프로 완료합니다.
+범위가 고정된 명확한 Codex Goal을 조사, 구현, 위험도별 검증, 실패 진단과 집중 수정 루프로 완료합니다.
 
-- 요구사항마다 구현 artifact와 fresh evidence를 연결합니다.
-- 실패한 검증을 무작정 반복하지 않고 원인을 분리해 수정합니다.
-- 최종 구현 후보는 별도의 read-only Codex review를 통과해야 합니다.
+- 편집 전에 목표, 범위, non-goal, 배포 대상, acceptance criteria, 증거, 위험도와 승인된 시스템을 고정합니다.
+- 완료 계약 밖의 리뷰 관찰은 목표를 확장하지 않고 deferred로 분류합니다.
+- evidence ledger로 검증 중복을 제거하고 blocker 수정 뒤에는 focused rereview만 실행합니다.
+- 핵심 아키텍처 변경이 기록된 경우를 제외하면 최초 전체 리뷰와 최종 전체 검증은 각각 한 번만 실행합니다.
 
 사용 예시:
 
 ```text
-/goal Fix the reproducible cache invalidation regression, preserve public behavior, pass the existing tests and typecheck, and review the final diff. Use $completion-loop.
+/goal Fix the reproducible cache invalidation regression for the local service, preserve public behavior, treat deployment automation as a non-goal, pass the existing tests and typecheck, and review the final diff. Use $completion-loop.
 ```
 
 ### milestone-runner

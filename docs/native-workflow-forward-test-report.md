@@ -21,6 +21,12 @@ The first pass was frozen and independently audited from only the six raw PNGs a
 
 The browser success path therefore passes. The separate no-renderer approval/decline path remains pending because this trace reused an already installed system renderer and intentionally performed no bootstrap.
 
+## 2026-07-31 Completion Loop scope-control forward test
+
+Status: PASS. A disposable local-only Python fixture froze username normalization and Unicode preservation as acceptance criteria, explicitly excluded deployment infrastructure, and supplied two incoming review observations without their expected classifications. The revised `completion-loop` fixed the reproducible Unicode-loss regression, passed both targeted tests and `git diff --check`, classified missing Kubernetes readiness as deferred, and finished with zero blockers. It changed one implementation line and created no dependency, deployment artifact, commit, push, PR, or external write.
+
+Static contract tests additionally pin local-only Kubernetes deferral, out-of-scope findings during focused rereview, evidence-ledger deduplication, material-expansion checkpoints, current-fix regressions remaining blockers, and a single final full-verification budget.
+
 ## 2026-07-23 marketplace security hardening
 
 Status: pending external rescan and forward test. `design-loop` no longer ships a redundant self-install URL inside its package. `review-gate` now keeps the original target fingerprint in the parent context, removes credential values from delegated review packets, requires packet-only lane visibility when sensitive material exists, and returns `INCONCLUSIVE` when redaction removes material evidence. Structural tests can prove these package contracts; a fresh disposable trace must still demonstrate that seeded credentials never reach either lane, and the public registry labels cannot update until the committed revision is published and rescanned.

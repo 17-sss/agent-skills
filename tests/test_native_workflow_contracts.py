@@ -86,17 +86,64 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("the handoff is `NOT APPROVED`", skill)
         self.assertIn("the user explicitly chooses and invokes", skill)
 
-    def test_completion_loop_rechecks_and_rereviews_the_final_candidate(self):
+    def test_completion_loop_freezes_scope_and_budgets_review(self):
         skill = read("skills/completion-loop/SKILL.md")
         contract = read("skills/completion-loop/references/verification-contract.md")
-        self.assertIn("Any implementation-artifact change after review invalidates", skill)
-        self.assertIn("fresh independent review of the new candidate state", skill)
-        self.assertIn("--sandbox read-only", skill)
-        self.assertIn("must not activate another workflow or delegate recursively", skill)
-        self.assertIn("file type, executable mode bits, symlink target", skill)
-        self.assertIn("tool-enforced Codex `read-only` sandbox", contract)
-        self.assertIn("approval never carries forward across code changes", contract)
-        self.assertIn("requirement", contract.lower())
+        for field in (
+            "**Objective**",
+            "**In scope**",
+            "**Non-goals**",
+            "**Deployment target**",
+            "**Acceptance criteria**",
+            "**Required evidence**",
+            "**Risk tier**",
+            "**Authorized repositories and external systems**",
+        ):
+            self.assertIn(field, skill)
+        self.assertIn("Freeze the contract once implementation begins", skill)
+        self.assertIn("Initial full-scope review: at most one", skill)
+        self.assertIn("Blocker repair: focused rereview only", skill)
+        self.assertEqual(skill.count("Final full verification: at most one"), 1)
+        self.assertIn("one additional full-scope review only", skill)
+        self.assertIn("An implementation change invalidates only evidence", skill)
+        self.assertIn("material expansion", skill.lower())
+        self.assertIn("Do not invent requirements", skill)
+        self.assertIn("exact `base...HEAD` range", contract)
+        self.assertIn("one deterministic packet digest", contract)
+        self.assertIn("known existing failures", contract)
+
+    def test_completion_loop_keeps_scope_drift_deferred_and_deduplicates_evidence(self):
+        skill = read("skills/completion-loop/SKILL.md")
+        contract = read("skills/completion-loop/references/verification-contract.md")
+        self.assertIn(
+            "A local-only goal treats a Kubernetes-readiness finding as deferred",
+            contract,
+        )
+        self.assertIn(
+            "Defer findings outside the frozen contract",
+            contract,
+        )
+        self.assertIn(
+            "Do not rerun an unchanged test when the target fingerprint",
+            contract,
+        )
+        self.assertIn(
+            "two consecutive review passes introduce a new blocker category",
+            contract,
+        )
+        self.assertIn(
+            "Current implementation or repair creates a regression",
+            contract,
+        )
+        self.assertIn(
+            "Spend at most one final full verification",
+            contract,
+        )
+        self.assertIn("task-local evidence ledger", skill)
+        self.assertIn("does not authorize destructive actions, commits, new threads", skill)
+        self.assertIn("Combine consecutive fixes with the same cause", skill)
+        self.assertIn("Do not update it after every small repair", skill)
+        self.assertIn("Do not narrate every internal review iteration", skill)
 
     def test_visual_match_preflights_capture_and_cannot_pass_major_drift(self):
         skill = read("skills/visual-match/SKILL.md")

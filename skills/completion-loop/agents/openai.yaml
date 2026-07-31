@@ -1,6 +1,6 @@
 interface:
   display_name: "Codex · Completion Loop"
-  short_description: "Execute a goal through verified completion loops"
-  default_prompt: "Use $completion-loop to complete this scoped goal, run the relevant checks, obtain an isolated read-only review of the final candidate, and stop only with fresh evidence."
+  short_description: "Freeze scope and finish with focused evidence"
+  default_prompt: "Use $completion-loop to freeze the goal scope and deployment target, execute risk-tiered checks, focus rereview on accepted blockers, and finish with concise evidence."
 policy:
   allow_implicit_invocation: false

@@ -156,12 +156,15 @@ Do not call the packages release-ready from the automated command alone. Run the
 ### completion-loop
 
 - Verify goal-tool rules before changing completion or blocked behavior.
-- Preserve the requirement-to-artifact-to-evidence audit.
+- Preserve the frozen objective, scope, non-goals, deployment target, acceptance criteria, evidence, risk tier, and authorized-system contract.
+- Preserve the requirement-to-artifact-to-evidence audit and task-local evidence ledger invalidation rules.
 - Keep reviewer input free from the leader's verdict or suspected answer.
 - Do not turn persistence into expanded destructive or production authority.
-- Invalidate and repeat independent review whenever implementation artifacts change after review.
-- Because implementation turns are writable, run completion review through a separate native Codex execution explicitly sandboxed read-only; otherwise do not complete the goal.
-- Keep the completion reviewer terminal and include filesystem identity as well as content in the candidate fingerprint.
+- Classify only acceptance failures, current-change regressions, in-scope critical safety failures, and declared-deployment impossibility as blockers; keep other findings deferred.
+- Preserve one initial full-scope review, focused rereview after accepted blocker repairs, and one final full verification unless a recorded core-architecture change invalidates that budget.
+- Require a material-expansion checkpoint before adding repositories, cloud resources, deployment methods, operational services, or redesigned contracts.
+- When the risk tier requires independent review, use a separate native Codex execution explicitly sandboxed read-only. Keep the reviewer terminal and include filesystem identity as well as content in the frozen candidate packet.
+- Keep commits and handoff refreshes at stable boundaries instead of emitting them after each small review correction.
 
 ### milestone-runner
 

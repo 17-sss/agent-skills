@@ -1,6 +1,6 @@
 interface:
   display_name: "Visual Match"
   short_description: "Measure and match an approved visual reference"
-  default_prompt: "Use $visual-match to implement this approved visual reference without mutating live reference state, compare equivalent screenshots, report the anchored visual similarity score, and verify code and visual results."
+  default_prompt: "Use $visual-match to implement this approved visual reference, require a native paired-image verdict before every next UI edit, iterate on its reported differences, and finish only after the validated score and code checks pass."
 policy:
   allow_implicit_invocation: false

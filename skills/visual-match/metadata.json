@@ -1,9 +1,9 @@
 {
   "name": "visual-match",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "organization": "17-sss",
   "date": "July 2026",
-  "abstract": "Cross-agent visual-reference implementation workflow that requires native paired-image review before each UI edit, validates structured visual verdict evidence and iteration progress, keeps live references non-mutating, and iterates on equivalent screenshots until visual and code evidence satisfy the accepted target.",
+  "abstract": "Cross-agent visual-reference implementation workflow that compares equivalent renders from global landmarks to repeated grouping and local polish, requires native paired-image review before each coherent repair batch, validates semantic verdict progress, confirms the first pass with a fresh raw-pair audit, and uses dependency-free PNG hotspots only as secondary localization evidence.",
   "references": [
     "https://learn.chatgpt.com/docs/browser",
     "https://learn.chatgpt.com/docs/image-inputs",

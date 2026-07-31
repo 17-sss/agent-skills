@@ -2,6 +2,25 @@
 
 This file records behavioral evidence that cannot be established by schema validation alone. Tests run only in disposable Git repositories under `/tmp`; no dependency installation, external write, user-configuration change, or production access is allowed.
 
+## 2026-07-31 Visual Match A/B and browser-enabled forward test
+
+Status: PASS for the browser-enabled visual repair path. An approved three-view reference set and an older runnable implementation from the same design family were captured with the same existing system Firefox harness. The target implementation source was withheld from every implementation and judging lane. No dependency, browser, plugin, runtime state, repository artifact, or user configuration was installed or changed by the test.
+
+The current upstream visual workflow and the pre-change `visual-match` each received the same baseline, reference PNGs, viewport/state contract, and four-repair budget. The upstream lane produced a semantic pass at 96 and pixel similarities of 99.140%, 95.807%, and 96.199%. The pre-change lane produced a self-reported semantic pass at 99, but a source-blind judge scored it 92.8 because its desktop result flattened repeated card containers; the upstream result scored 98.0 in that comparison. This demonstrated why semantic grouping cannot be inferred from aggregate pixel similarity or a non-independent score.
+
+The revised `visual-match` adds outside-in landmark diagnosis, explicit repeated-container grouping, coherent multi-ID repair batches, a Python-standard-library PNG hotspot helper, and a fresh raw-pair audit after the first pass candidate. A new run from the untouched baseline converged in three repair batches:
+
+| Iteration | Semantic score | Home pixel | Community desktop pixel | Community mobile pixel |
+| ---: | ---: | ---: | ---: | ---: |
+| Baseline | 80 | 98.920% | 89.748% | 83.825% |
+| After batch 1 | 93 | 99.140% | 93.018% | 91.164% |
+| After batch 2 | 94 | 99.140% | 96.486% | 91.761% |
+| After batch 3 | 99 | 99.140% | 96.450% | 91.965% |
+
+The first pass was frozen and independently audited from only the six raw PNGs and capture contract. That audit returned zero blocking, major, or minor findings. A post-audit recapture was byte-identical. A final fresh image-only judge then scored the revised result 97.4 versus 92.8 for the upstream lane, preferring the revised repeated-card boundaries, bookmarks, title-width reservation, and solved-title grouping. The implementation lane accidentally saw a sibling result summary only after the implementation and audited captures were already frozen; no later UI edit occurred, and the final image-only judge was isolated from that exposure.
+
+The browser success path therefore passes. The separate no-renderer approval/decline path remains pending because this trace reused an already installed system renderer and intentionally performed no bootstrap.
+
 ## 2026-07-23 marketplace security hardening
 
 Status: pending external rescan and forward test. `design-loop` no longer ships a redundant self-install URL inside its package. `review-gate` now keeps the original target fingerprint in the parent context, removes credential values from delegated review packets, requires packet-only lane visibility when sensitive material exists, and returns `INCONCLUSIVE` when redaction removes material evidence. Structural tests can prove these package contracts; a fresh disposable trace must still demonstrate that seeded credentials never reach either lane, and the public registry labels cannot update until the committed revision is published and rescanned.
@@ -12,11 +31,11 @@ Status: pending forward test. `spec-interview` now prefers native structured-cho
 
 ## 2026-07-23 anchored scoring contract update
 
-Status: pending forward test. The package-local scorer now calculates a fixed-weight `visual_similarity_percent`, uses the lowest equivalent target score, and refuses a visual pass candidate below the accepted threshold, with low confidence, or while blocking or major differences remain. Unit and structural validation can prove the arithmetic and standalone dependency boundary, but the browser-enabled trace must still demonstrate honest component classification from rendered evidence. Optional pixel similarity must remain separate and nullable.
+Status: PASS for the browser-enabled path. The 2026-07-31 trace demonstrated fixed-weight `visual_similarity_percent`, lowest-target aggregation, blocking/major pass prevention, stable difference IDs, a fresh pass audit, and separate nullable pixel evidence against real rendered PNG pairs. The no-renderer path remains independently pending.
 
 ## 2026-07-21 renderer-bootstrap contract update
 
-Status: pending forward test. `visual-match` now offers an explicit, repository-isolated Chromium bootstrap before returning `BLOCKED` when no renderer exists. The 2026-07-20 safety-blocker trace predates that approval step and does not prove the revised contract. Re-run the missing-renderer path with installation prohibited and verify that it proposes the bounded bootstrap without downloading anything or changing the fixture. The browser-enabled success path also remains pending.
+Status: partial. The 2026-07-31 browser-enabled success path passed with an existing system renderer and no installation. The 2026-07-20 safety-blocker trace predates the approval step and does not prove the revised no-renderer contract. Re-run that path with installation prohibited and verify that it proposes the bounded bootstrap without downloading anything or changing the fixture.
 
 ## 2026-07-20 review
 
@@ -34,4 +53,4 @@ Status: partial. Five workflow success paths and the Visual Match safety-blocker
 
 ## Release rule
 
-Treat any `PENDING`, stale contract evidence, `FAIL`, unexpected workspace write, missing independent gate, evidence-free success, or undocumented capability gap as not release-ready. `reviewed-plan`, `completion-loop`, and `milestone-runner` are eligible for release from this matrix. The revised `spec-interview` choice-presentation and `review-gate` sensitive-packet contracts need fresh traces, and the current `visual-match` contract is not release-ready until both the revised missing-renderer approval path and the browser-enabled row pass. Delete disposable fixtures and task-scoped captures after the evidence has been summarized here.
+Treat any `PENDING`, stale contract evidence, `FAIL`, unexpected workspace write, missing independent gate, evidence-free success, or undocumented capability gap as not release-ready. `reviewed-plan`, `completion-loop`, and `milestone-runner` are eligible for release from this matrix. The revised `spec-interview` choice-presentation and `review-gate` sensitive-packet contracts need fresh traces. The `visual-match` browser-enabled repair path is release-ready from the 2026-07-31 evidence, while its no-renderer bootstrap path remains pending. Delete disposable fixtures and task-scoped captures after the evidence has been summarized here.

@@ -55,20 +55,24 @@ Create one evidence directory per task. Prefer an existing ignored artifact root
 After reference approval, one smallest runnable candidate may be implemented when no candidate exists. From that point forward, do not make another UI edit until the latest candidate has a valid native visual verdict:
 
 1. Capture the current candidate at every accepted viewport and state.
-2. Inspect each reference/candidate pair together through a native image-capable surface at the highest useful detail. Compare rendered evidence before consulting implementation code.
-3. Produce the structured evidence required by the visual verdict contract. The reviewer is read-only and must not edit files.
-4. Run the bundled scorer on that evidence. From iteration 2 onward, pass the previous report with `--previous`.
-5. Treat the validated report as the edit gate. A missing or invalid report prohibits the next UI edit.
-6. If the verdict is `revise`, convert its blocking and major differences, plus any material minor differences, into the next bounded edit plan. Tie every edit to a reported difference and concrete next check.
-7. Fix one related difference cluster, then recapture the same viewport and state before making another UI edit.
-8. If the verdict is `fail`, first repair capture equivalence or re-ground a category mismatch. Return `BLOCKED` only when the required evidence or correction is genuinely unavailable.
-9. Continue until every target passes or a concrete blocker prevents a safe, testable correction.
+2. Inspect each reference/candidate pair together through a native image-capable surface at the highest useful detail. Compare rendered evidence before consulting implementation code. Diagnose from outside in: capture frame, major page regions and landmarks, component geometry, typography and wrapping, then surfaces, assets, and local polish.
+3. Record a compact landmark table for each target when geometry differs. Measure visible edges or centers such as the header bottom, main-column sides, sidebar bounds, card tops, navigation bar, and floating controls. Do not infer exact CSS values from pixels; use the table to localize drift and verify direction.
+4. Produce the structured evidence required by the visual verdict contract. The reviewer is read-only and must not edit files.
+5. For equivalent same-size PNG captures supported by the bundled comparator, run the secondary pixel report after direct paired-image inspection. Use its changed bounds, hotspots, and optional heatmap to find residual regions; do not let it override the native verdict.
+6. Run the bundled semantic scorer on the native evidence. From iteration 2 onward, pass the previous report with `--previous`.
+7. Treat the validated report as the edit gate. A missing or invalid report prohibits the next UI edit.
+8. If the verdict is `revise`, convert its blocking and major differences, plus any material minor differences, into the next bounded edit plan. Tie every edit to a reported difference and concrete next check.
+9. Apply one coherent repair batch, then recapture every affected viewport and state before making another UI edit. A batch may resolve several reported difference IDs when they share a root cause or belong to the same responsive component; it must not include unrelated speculative cleanup.
+10. If the verdict is `fail`, first repair capture equivalence or re-ground a category mismatch. Return `BLOCKED` only when the required evidence or correction is genuinely unavailable.
+11. Continue until every target passes or a concrete blocker prevents a safe, testable correction.
 
 A non-pass verdict must report all currently identifiable material differences in one comparison. Later verdicts should verify requested fixes, unresolved differences, and regressions introduced by those fixes rather than introduce unrelated preferences. Preserve a difference ID while the same issue remains unresolved.
 
 If the score fails to improve and the same material difference survives two consecutive repair iterations, stop broad editing and re-check capture conditions, fonts, data, layout assumptions, and the associated code hypothesis. If the same blocker survives three evidence-backed attempts without a new correction path, return `BLOCKED` with the iteration evidence instead of cycling.
 
 Use pixel diff or image overlays only as secondary localization evidence. Anti-aliasing, font rendering, dynamic content, and animation can produce pixel noise; semantic visual review remains authoritative unless the user supplied an exact numeric tolerance.
+
+When the scorer first returns a pass candidate, freeze the candidate and perform one fresh final paired-image audit before completion. Inspect the raw pairs without the prior score, prior reasoning, pixel report, or implementation source. Explicitly check repeated container boundaries and grouping, major landmarks, typography and wrapping, responsive navigation, and visible controls. Prefer a fresh read-only reviewer when native delegation is both available and authorized; otherwise repeat the audit in the current native image surface with the prior verdict set aside. If the audit finds a blocking or major difference, record it in a new numbered evidence file, validate the non-pass report, and resume the repair loop. The skill must not require delegation or another installed skill.
 
 For the first verdict, run:
 
@@ -84,9 +88,19 @@ python3 <visual-match-skill-dir>/scripts/score_visual_match.py \
   --previous <previous-report.json>
 ```
 
-The helper uses only the Python standard library. It validates the paired-image evidence and required difference-to-suggestion links, calculates weighted target scores, uses the lowest target as both `score` and `visual_similarity_percent`, and reports progress against the previous iteration. It does not inspect images; a score without prior native paired-image inspection is invalid evidence. Do not alter the fixed weights or default `90` threshold during implementation. Use a different threshold only when the user established it before the comparison loop.
+For equivalent supported PNGs, run after visually inspecting the raw pair:
 
-Record `pixel_similarity_percent` separately only when an already available deterministic image metric can compare equivalent captures. Report its method and capture conditions. Never blend it into `visual_similarity_percent`, install a dependency merely to obtain it, or substitute it for semantic review.
+```bash
+python3 <visual-match-skill-dir>/scripts/compare_png.py \
+  <reference.png> \
+  <candidate.png> \
+  --heatmap <iteration-dir>/pixel-heatmap.png \
+  --output <iteration-dir>/pixel-report.json
+```
+
+Both helpers use only the Python standard library. The semantic scorer validates the paired-image evidence and required difference-to-suggestion links, calculates weighted target scores, uses the lowest target as both `score` and `visual_similarity_percent`, and reports progress against the previous iteration. It does not inspect images; a score without prior native paired-image inspection is invalid evidence. The PNG comparator validates dimensions, calculates a tolerance-based pixel metric, and reports changed bounds and grid hotspots. It supports non-interlaced 8-bit grayscale, RGB, grayscale-alpha, and RGBA PNGs. Do not alter the fixed semantic weights or default `90` threshold during implementation. Use a different semantic threshold only when the user established it before the comparison loop.
+
+Record `pixel_similarity_percent` separately when the bundled comparator or another already available deterministic image metric can compare equivalent captures. Report its method, tolerance, and capture conditions. If the capture format is unsupported, report the metric as `null`; do not install a dependency merely to obtain it. Never blend pixel similarity into `visual_similarity_percent` or substitute it for semantic review.
 
 ## Encode reusable decisions
 
@@ -106,6 +120,7 @@ Avoid turning one screenshot into global design rules without evidence that the 
 Before completing the visual goal:
 
 - capture fresh evidence for every required viewport and state
+- complete the fresh final paired-image audit after the first validated pass candidate
 - include every final native visual verdict, the validated aggregate report, and the lowest overall `score` / `visual_similarity_percent`
 - require equivalent captures, `score >= 90` (or a threshold accepted before implementation), category match, high confidence, and zero blocking or major differences
 - verify the primary visible interaction path

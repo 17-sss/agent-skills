@@ -28,6 +28,20 @@ Review:
 - responsive reflow, clipping, overflow, and touch behavior
 - visible interaction and motion behavior
 
+## Outside-in comparison
+
+Inspect and diagnose in this order so a missing structural region is not mistaken for several small spacing defects:
+
+1. capture frame and equivalence
+2. global page regions and responsive composition
+3. major landmarks such as header, sidebar, main column, cards, bottom navigation, and floating controls
+4. component geometry, alignment, typography, and wrapping
+5. colors, borders, shadows, icons, assets, and local polish
+
+For a material geometry difference, record a compact landmark table with the visible reference and candidate positions. Prefer a few reliable edges or centers over many approximate measurements. A missing or substantially displaced major region is a major difference even when large unchanged backgrounds make a pixel percentage appear high.
+
+Treat a repeated container boundary as grouping evidence, not automatic polish. If cards in the reference become an undifferentiated flat list, or the reverse, classify the hierarchy or surface change as major even when content positions remain close and the affected border pixels occupy little image area.
+
 ## Difference record
 
 For each material difference, record:
@@ -79,7 +93,7 @@ The default threshold is `90`. A different `--threshold` is valid only when the 
 
 ## Pixel evidence
 
-Use pixel diff to locate hotspots, not to decide meaning. Normalize viewport, fonts, animation, dynamic data, and capture timing first. Calculate `pixel_similarity_percent` only with an already available deterministic metric. Report the metric name, version when known, ignored regions or tolerance, and capture conditions. If no such tool exists, set the value and method to `null`; do not install a package or weaken standalone operation merely to obtain it.
+Use pixel diff to locate hotspots, not to decide meaning. Normalize viewport, fonts, animation, dynamic data, and capture timing first. For supported equivalent PNGs, use the bundled comparator after inspecting the raw pair. Its default metric counts a pixel as matching when the largest RGB-channel delta is at most `16`; report the tolerance, changed bounds, hotspots, and heatmap path when created. An alternate deterministic metric is valid when already available, but its method must be named. If neither metric supports the captures, set the value and method to `null`; do not install a package or weaken standalone operation merely to obtain it.
 
 Never average pixel similarity into the paired-image score. Pixel noise can be high while the product meaning matches, and a high pixel score can still hide a missing interaction or inaccessible state.
 
@@ -100,7 +114,7 @@ Combine the validated native verdict with the optional pixel metric and workflow
   "major_differences": 0,
   "minor_differences": 2,
   "confidence": "high",
-  "verdict": "PASS"
+  "completion_status": "PASS"
 }
 ```
 

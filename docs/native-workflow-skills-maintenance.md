@@ -182,9 +182,12 @@ Do not call the packages release-ready from the automated command alone. Run the
 - Keep the bootstrap outside the target repository. Never mutate manifests, lockfiles, `node_modules`, branded browsers, system packages, or another skill as part of the fallback.
 - Preserve approval before implementing a generated reference.
 - Compare equivalent route, data, viewport, and UI states.
-- Preserve the fixed scoring weights, anchored levels, N/A normalization, lowest-target aggregation, and default `90` threshold in `score_visual_match.py` and `comparison-rubric.md`.
+- Preserve the fixed scoring weights, anchored levels, lowest-target aggregation, and default `90` threshold in `score_visual_match.py` and `comparison-rubric.md`.
 - Keep `visual_similarity_percent` semantic and scope-bound. Never blend optional pixel similarity into it or let a score override blocking or major differences.
-- Keep the scorer Python-standard-library-only, package-local, state-free, and independently executable without another skill or dependency installation.
+- Keep the scorer and PNG comparator Python-standard-library-only, package-local, state-free, and independently executable without another skill or dependency installation.
+- Preserve outside-in visual diagnosis and raw paired-image inspection before consulting the comparator. Keep pixel tolerance, changed bounds, hotspots, and heatmaps as secondary localization evidence rather than pass authority.
+- Preserve the fresh raw-pair audit after the first semantic pass candidate. It must explicitly verify repeated container grouping and must not receive the prior verdict, score, pixel report, or source.
+- Allow one coherent repair batch to address several validated difference IDs only when they share a root cause or responsive component; require fresh captures before the next UI edit.
 - Preflight capture capability before editing and return `BLOCKED` or `INCOMPLETE` when a blocking or major mismatch remains unresolved.
 - Keep live-reference interaction non-mutating by default and require separate explicit authority for state changes.
 

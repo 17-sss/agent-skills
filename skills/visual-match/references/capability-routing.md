@@ -48,9 +48,17 @@ This is an approval-gated recovery path, not an implicit dependency. Never insta
 
 ## Scoring capability
 
-The package-local score helper uses only the Python standard library. It validates native paired-image reviewer evidence, aggregates weighted component scores, rejects contradictory verdict inputs, and reports iteration progress. It does not inspect image pixels and cannot replace the native visual review surface.
+The package-local semantic score helper uses only the Python standard library. It validates native paired-image reviewer evidence, aggregates weighted component scores, rejects contradictory verdict inputs, and reports iteration progress. It does not inspect image pixels and cannot replace the native visual review surface.
 
-For optional `pixel_similarity_percent`, reuse an existing repository image-comparison command, browser harness, or already available image metric. Do not add a package, plugin, lockfile entry, or system dependency solely to calculate the pixel score. When no deterministic metric is already available, report the pixel score and method as `null`; the semantic score and completion gates remain valid.
+The package also includes a dependency-free PNG comparator for secondary localization evidence. Run it only after inspecting the raw image pair. For equivalent same-size, non-interlaced 8-bit grayscale, RGB, grayscale-alpha, or RGBA captures, it reports:
+
+- the percentage of pixels within a configurable maximum-channel tolerance
+- changed and severe pixel percentages
+- mean channel error and changed bounds
+- ranked grid hotspots
+- an optional heatmap
+
+The default tolerance is `16`. Keep the method and tolerance visible beside `pixel_similarity_percent`; the number is neither the semantic score nor a pass gate. For an unsupported image format, use an existing repository metric or report the pixel score and method as `null`. Do not add a package, plugin, lockfile entry, or system dependency solely to calculate it.
 
 ## Capture discipline
 

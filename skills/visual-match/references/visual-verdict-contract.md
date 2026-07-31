@@ -4,7 +4,7 @@ Use this contract after every fresh candidate capture and before the next UI edi
 
 ## Reviewer boundary
 
-Inspect the approved reference and current candidate together through a native image-capable surface. Use the highest useful image detail and compare the same viewport and state. Review the pixels before reading implementation code so code intent cannot excuse a visible mismatch.
+Inspect the approved reference and current candidate together through a native image-capable surface. Use the highest useful image detail and compare the same viewport and state. Review the raw pair before reading implementation code or consulting a pixel report so code intent and aggregate numbers cannot excuse a visible mismatch.
 
 Use a fresh read-only visual review lane when the current surface and governing instructions authorize one. Otherwise perform the same paired-image inspection in the current agent. The workflow must still work without delegation or another installed skill.
 
@@ -24,6 +24,8 @@ Keep one task artifact root:
       candidate.png
       evidence.json
       report.json
+      pixel-report.json
+      pixel-heatmap.png
     002/
       candidate.png
       evidence.json
@@ -31,6 +33,8 @@ Keep one task artifact root:
 ```
 
 Use an existing ignored artifact directory when evidence must survive another turn. Otherwise use a task-scoped temporary directory. Do not write into the installed skill directory, `.agents/`, `.codex/`, dependency folders, or package-manager caches.
+
+Pixel artifacts are optional secondary evidence. Generate them only for equivalent captures supported by the bundled comparator or another already available deterministic metric.
 
 ## Evidence schema
 
@@ -117,6 +121,19 @@ Interpret it as follows:
 
 ## Edit gate
 
-Freeze each validated report before editing. Every next UI edit must cite at least one difference ID from that report. Recapture and produce a new report before another UI edit. Do not reuse approval after candidate code or relevant runtime data changes.
+Freeze each validated report before editing. Every next UI edit must cite at least one difference ID from that report. Several cited IDs may be repaired in one coherent batch when they share a root cause or responsive component. Recapture every affected target and produce a new report before another UI edit. Do not reuse approval after candidate code or relevant runtime data changes.
 
 Pass the prior `report.json` through `--previous` on later iterations. Treat a non-positive score delta with repeated material difference IDs as stalled evidence. Re-ground after two consecutive stalled repair iterations and stop after three evidence-backed attempts only when no new correction path exists.
+
+## Fresh pass audit
+
+The first validated pass candidate is provisional. Freeze its implementation and captures, then perform a fresh raw-pair audit without providing the prior verdict, semantic score, pixel report, or implementation source. The audit must explicitly verify:
+
+- page regions, major landmarks, and responsive composition
+- repeated card or row boundaries and the grouping they communicate
+- typography, wrapping, clipping, and density
+- navigation, visible controls, icons, and state
+
+Use a fresh read-only reviewer when native delegation is available and authorized. Otherwise perform a second clean inspection in the current native image surface. This is an independent perspective, not a dependency on another skill.
+
+If the fresh audit finds a blocking or major difference, write a new numbered evidence file with linked suggestions, run the scorer, and resume from that validated report. Complete only when the fresh audit finds no blocking or major difference and the candidate remains unchanged afterward.

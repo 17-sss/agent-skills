@@ -88,6 +88,7 @@ OTHER_SKILL_NAMES = (
     "spec-interview",
     "visual-match",
     "handoff-memory",
+    "project-chronicle",
     "github-pr-review",
     "github-pr-publish",
     "commit-helper",

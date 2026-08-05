@@ -1,0 +1,26 @@
+[
+  {
+    "query": "This repository has been active for two years but has no coherent history. Reconstruct why the major systems exist from Git and the docs, then create something a new engineer can understand later.",
+    "should_trigger": true
+  },
+  {
+    "query": "Record the work completed since the last project-history entry. Keep a lightweight run log but merge repeated authentication work into the existing period.",
+    "should_trigger": true
+  },
+  {
+    "query": "Why did this project move from the old worker architecture to queues? Trace the decision and its consequences from the existing chronicle and repository evidence.",
+    "should_trigger": true
+  },
+  {
+    "query": "Create a current HANDOFF.md with the unfinished task and the first command the next session should run.",
+    "should_trigger": false
+  },
+  {
+    "query": "Generate a release changelog from commits since v2.4.0.",
+    "should_trigger": false
+  },
+  {
+    "query": "Fix the failing authentication test and update the implementation.",
+    "should_trigger": false
+  }
+]

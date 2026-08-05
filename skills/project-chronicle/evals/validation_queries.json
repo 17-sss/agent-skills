@@ -1,0 +1,22 @@
+[
+  {
+    "query": "Bootstrap a durable project chronicle for this existing codebase. Inspect current docs and Git first, group the work into real periods, and mark any historical rationale you cannot verify.",
+    "should_trigger": true
+  },
+  {
+    "query": "We finished another milestone. Append this recording run and update the long-term timeline only if it changes the existing workstream story.",
+    "should_trigger": true
+  },
+  {
+    "query": "Audit whether docs/project-history still matches repository ancestry after the branch history rewrite; do not edit it yet.",
+    "should_trigger": true
+  },
+  {
+    "query": "Summarize the last ten commits in five bullets for standup.",
+    "should_trigger": false
+  },
+  {
+    "query": "Continue from the current handoff and implement its first unfinished next action.",
+    "should_trigger": false
+  }
+]

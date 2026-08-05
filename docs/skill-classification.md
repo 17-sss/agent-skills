@@ -19,6 +19,7 @@ Classify a skill by the minimum runtime surface required to satisfy its own comp
 | Other | `spec-interview` | The interview, read-only inspection, and specification work without an agent-exclusive command; delegation is optional |
 | Other | `visual-match` | Uses equivalent screenshots, browser automation, image evidence, and a package-local standard-library scorer |
 | Other | `handoff-memory` | Uses Git-trackable documents and filesystem operations |
+| Other | `project-chronicle` | Uses Git, repository documents, filesystem operations, and package-local standard-library evidence and validation helpers |
 | Other | `github-pr-review` | Uses `gh`, local Git, tests, and GitHub REST or GraphQL APIs |
 | Other | `github-pr-publish` | Uses `gh`, local Git, and GitHub REST APIs |
 | Other | `commit-helper` | Uses local Git and package-local Python helpers |

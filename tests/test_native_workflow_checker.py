@@ -71,6 +71,7 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
                 "spec-interview",
                 "visual-match",
                 "handoff-memory",
+                "project-chronicle",
                 "github-pr-review",
                 "github-pr-publish",
                 "commit-helper",

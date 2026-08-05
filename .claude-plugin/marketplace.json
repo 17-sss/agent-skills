@@ -19,6 +19,7 @@
         "./skills/spec-interview",
         "./skills/visual-match",
         "./skills/handoff-memory",
+        "./skills/project-chronicle",
         "./skills/github-pr-review",
         "./skills/github-pr-publish",
         "./skills/commit-helper"

@@ -52,6 +52,7 @@ Start a new agent task after installation so the refreshed skill discovery resul
 | Shared | [`spec-interview`](skills/spec-interview/SKILL.md) | Resolving ambiguous requirements one material question at a time |
 | Shared | [`visual-match`](skills/visual-match/SKILL.md) | Matching an implementation to an approved image or URL |
 | Shared | [`handoff-memory`](skills/handoff-memory/SKILL.md) | Creating or resuming a repository or workspace HANDOFF |
+| Shared | [`project-chronicle`](skills/project-chronicle/SKILL.md) | Reconstructing and maintaining durable project history from repository evidence |
 | Shared | [`github-pr-review`](skills/github-pr-review/SKILL.md) | Reviewing a PR with `gh` and GitHub APIs and optionally posting the review |
 | Shared | [`github-pr-publish`](skills/github-pr-publish/SKILL.md) | Safely pushing the current branch and publishing a pull request |
 | Shared | [`commit-helper`](skills/commit-helper/SKILL.md) | Creating a commit that matches repository rules and staged changes |
@@ -122,6 +123,20 @@ Usage example:
 
 ```text
 Use $handoff-memory to refresh the canonical handoff for this repository, preserve the completed milestone as a snapshot, and validate the final document.
+```
+
+### project-chronicle
+
+Reconstruct and maintain long-term project history from Git, repository documents, current code, and focused human clarification.
+
+- Bootstrap an existing project by grouping evidence into meaningful periods and workstreams instead of copying commit chronology.
+- Add one lightweight log record on every chronicle run while updating the timeline and detailed entries only when the durable story changes.
+- Separate verified facts, supported inference, and unknown history, and keep historical background distinct from current HANDOFF state.
+
+Usage example:
+
+```text
+Use $project-chronicle to reconstruct this repository's history from Git and current docs, group repeated work into explicit periods, and mark any rationale that cannot be verified.
 ```
 
 ### github-pr-review

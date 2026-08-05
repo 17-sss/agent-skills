@@ -52,6 +52,7 @@ npx skills add https://github.com/17-sss/agent-skills --skill design-loop
 | 공통 | [`spec-interview`](skills/spec-interview/SKILL.md) | 구현 전에 모호한 요구사항을 한 질문씩 명확히 할 때 |
 | 공통 | [`visual-match`](skills/visual-match/SKILL.md) | 승인된 이미지나 URL과 구현 화면을 엄격히 맞출 때 |
 | 공통 | [`handoff-memory`](skills/handoff-memory/SKILL.md) | 저장소나 워크스페이스의 HANDOFF를 만들고 이어갈 때 |
+| 공통 | [`project-chronicle`](skills/project-chronicle/SKILL.md) | 저장소 근거에서 장기 프로젝트 역사를 복원하고 계속 기록할 때 |
 | 공통 | [`github-pr-review`](skills/github-pr-review/SKILL.md) | `gh`와 GitHub API로 PR을 검토하고 리뷰를 게시할 때 |
 | 공통 | [`github-pr-publish`](skills/github-pr-publish/SKILL.md) | 현재 브랜치를 안전하게 push하고 PR로 공개할 때 |
 | 공통 | [`commit-helper`](skills/commit-helper/SKILL.md) | 저장소 규칙과 staged diff에 맞는 커밋을 만들 때 |
@@ -122,6 +123,20 @@ Use $visual-match to match the attached checkout screenshot at desktop and mobil
 
 ```text
 Use $handoff-memory to refresh the canonical handoff for this repository, preserve the completed milestone as a snapshot, and validate the final document.
+```
+
+### project-chronicle
+
+Git, 저장소 문서, 현재 코드와 필요한 경우의 짧은 사용자 확인을 바탕으로 장기 프로젝트 역사를 복원하고 유지합니다.
+
+- 기존 프로젝트의 근거를 커밋 나열이 아니라 의미 있는 기간과 workstream으로 통합합니다.
+- chronicle 실행마다 가벼운 log 기록을 남기고, 장기 서사가 바뀔 때만 timeline과 상세 entry를 갱신합니다.
+- 검증된 사실, 근거 있는 추정과 미확인 역사를 구분하고 현재 HANDOFF 상태와 역사적 배경을 분리합니다.
+
+사용 예시:
+
+```text
+Use $project-chronicle to reconstruct this repository's history from Git and current docs, group repeated work into explicit periods, and mark any rationale that cannot be verified.
 ```
 
 ### github-pr-review

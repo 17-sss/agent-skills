@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Chronicle"
+  short_description: "Preserve evidence-backed project history"
+  default_prompt: "Use $project-chronicle to reconstruct or record this project history from Git and repository evidence, then leave a concise long-term narrative for humans and AI."

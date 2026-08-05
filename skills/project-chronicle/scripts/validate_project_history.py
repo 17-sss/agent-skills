@@ -17,6 +17,7 @@ ANCHOR_RE = re.compile(
     r"<!--\s*project-chronicle:last-recorded-commit:\s*([^\s]+)\s*-->"
 )
 ENTRY_NAME_RE = re.compile(r"^\d{4}-\d{2}(?:-\d{2})?-[a-z0-9][a-z0-9-]*\.md$")
+COMMIT_HASH_RE = re.compile(r"[0-9a-fA-F]{7,64}")
 LOG_RECORD_RE = re.compile(r"^## \d{4}-\d{2}-\d{2} [—-] .+", re.MULTILINE)
 MARKDOWN_LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 ABSOLUTE_PATH_RE = re.compile(r"(?<![\w.])(?:/[A-Za-z0-9_.-]+){2,}|[A-Za-z]:\\(?:[^\s`]+)")
@@ -94,18 +95,38 @@ def resolve_history_path(root: Path, explicit: str | None) -> Path:
         return path
     for relative in (Path("docs/project-history"), Path("docs/history")):
         candidate = (root / relative).resolve()
-        if candidate.is_dir() and (
-            (candidate / "LOG.md").is_file()
-            or (
-                (candidate / "README.md").is_file()
-                and (candidate / "TIMELINE.md").is_file()
-            )
-        ):
+        if is_within(candidate, root) and is_chronicle_directory(candidate):
             return candidate
-    return (root / "docs/project-history").resolve()
+    default = (root / "docs/project-history").resolve()
+    if not is_within(default, root):
+        raise ValueError("default history path resolves outside project root")
+    return default
 
 
-def git_commit_exists(root: Path, revision: str) -> bool | None:
+def has_heading(text: str, heading: str) -> bool:
+    return re.search(rf"^{re.escape(heading)}\s*$", text, re.MULTILINE) is not None
+
+
+def is_chronicle_directory(candidate: Path) -> bool:
+    if not candidate.is_dir():
+        return False
+    log_path = candidate / "LOG.md"
+    if log_path.is_file() and ANCHOR_RE.search(
+        log_path.read_text(encoding="utf-8", errors="replace")
+    ):
+        return True
+    readme_path = candidate / "README.md"
+    timeline_path = candidate / "TIMELINE.md"
+    if not readme_path.is_file() or not timeline_path.is_file():
+        return False
+    readme = readme_path.read_text(encoding="utf-8", errors="replace")
+    timeline = timeline_path.read_text(encoding="utf-8", errors="replace")
+    return has_heading(readme, "# Project History") and has_heading(
+        timeline, "# Project Timeline"
+    )
+
+
+def resolve_git_commit(root: Path, revision: str) -> tuple[bool | None, str | None]:
     result = subprocess.run(
         ["git", "-C", str(root), "rev-parse", "--is-inside-work-tree"],
         text=True,
@@ -114,14 +135,34 @@ def git_commit_exists(root: Path, revision: str) -> bool | None:
         check=False,
     )
     if result.returncode != 0 or result.stdout.strip() != "true":
-        return None
+        return None, None
     verify = subprocess.run(
-        ["git", "-C", str(root), "cat-file", "-e", f"{revision}^{{commit}}"],
+        ["git", "-C", str(root), "rev-parse", "--verify", f"{revision}^{{commit}}"],
+        text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         check=False,
     )
-    return verify.returncode == 0
+    if verify.returncode != 0:
+        return False, None
+    return True, verify.stdout.strip()
+
+
+def git_commit_is_head_ancestor(root: Path, revision: str) -> bool | None:
+    head_exists, _ = resolve_git_commit(root, "HEAD")
+    if head_exists is not True:
+        return None
+    result = subprocess.run(
+        ["git", "-C", str(root), "merge-base", "--is-ancestor", revision, "HEAD"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if result.returncode == 0:
+        return True
+    if result.returncode == 1:
+        return False
+    return None
 
 
 def relative_label(path: Path, root: Path) -> str:
@@ -203,18 +244,40 @@ def validate_history(root: Path, history: Path, strict: bool) -> list[Finding]:
         else:
             anchor = anchor_match.group(1)
             if anchor == "none":
-                if git_commit_exists(root, "HEAD") is True:
+                head_exists, _ = resolve_git_commit(root, "HEAD")
+                if head_exists is True:
                     add(findings, "warning", log_label, "Git repository uses a 'none' commit anchor")
-            elif not re.fullmatch(r"[0-9a-fA-F]{7,40}", anchor):
+            elif not COMMIT_HASH_RE.fullmatch(anchor):
                 add(findings, "error", log_label, f"invalid commit anchor format: {anchor}")
             else:
-                if strict and len(anchor) != 40:
-                    add(findings, "error", log_label, "strict mode requires a full 40-character commit anchor")
-                exists = git_commit_exists(root, anchor)
+                exists, resolved_anchor = resolve_git_commit(root, anchor)
                 if exists is False:
                     add(findings, "error", log_label, f"commit anchor does not resolve: {anchor}")
                 elif exists is None:
+                    if strict and len(anchor) not in {40, 64}:
+                        add(
+                            findings,
+                            "error",
+                            log_label,
+                            "strict mode requires a full commit anchor",
+                        )
                     add(findings, "warning", log_label, "commit anchor cannot be verified outside Git")
+                else:
+                    if strict and resolved_anchor and len(anchor) != len(resolved_anchor):
+                        add(
+                            findings,
+                            "error",
+                            log_label,
+                            f"strict mode requires a full {len(resolved_anchor)}-character commit anchor",
+                        )
+                    ancestor = git_commit_is_head_ancestor(root, resolved_anchor or anchor)
+                    if ancestor is False:
+                        add(
+                            findings,
+                            "error" if strict else "warning",
+                            log_label,
+                            "commit anchor is not an ancestor of HEAD",
+                        )
         if strict and not LOG_RECORD_RE.search(log_text):
             add(findings, "error", log_label, "strict mode requires at least one dated log record")
 

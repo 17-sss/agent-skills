@@ -63,7 +63,7 @@ python3 <skill-dir>/scripts/collect_history_evidence.py \
   --format json
 ```
 
-`--since auto` reads the `project-chronicle:last-recorded-commit` marker from `LOG.md`. With no marker, it collects the available history up to the commit cap and reports truncation honestly. Use explicit `--since`, `--until`, and `--max-commits` ranges to investigate large histories without pretending a partial scan is complete.
+`--since auto` reads the `project-chronicle:last-recorded-commit` marker from `LOG.md`. With no marker, it collects the available history up to the commit cap and reports truncation honestly. Git commits and working-tree status are scoped to `--project-root`, including when it is a subdirectory of a larger worktree; for a subdirectory scope, include only tags whose tagged commit directly changes that scope. Use explicit `--since`, `--until`, and `--max-commits` ranges to investigate large histories without pretending a partial scan is complete; `git.head` remains the actual checkout HEAD while `git.range_until` identifies the selected upper revision.
 
 Inspect, in order of relevance:
 

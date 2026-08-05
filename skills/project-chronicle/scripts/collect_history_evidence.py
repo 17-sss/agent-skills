@@ -44,6 +44,7 @@ ROOT_DOC_PREFIXES = (
     "DECISIONS",
     "HANDOFF",
 )
+COMMIT_RECORD_TOKEN = "PROJECT_CHRONICLE_COMMIT"
 
 
 def parse_args() -> argparse.Namespace:
@@ -100,16 +101,36 @@ def resolve_history_path(root: Path, explicit: str | None) -> tuple[Path, str]:
         return candidate, "explicit"
 
     for relative in HISTORY_CANDIDATES:
-        candidate = root / relative
-        if candidate.is_dir() and (
-            (candidate / "LOG.md").is_file()
-            or (
-                (candidate / "README.md").is_file()
-                and (candidate / "TIMELINE.md").is_file()
-            )
-        ):
-            return candidate.resolve(), "existing"
-    return (root / HISTORY_CANDIDATES[0]).resolve(), "default"
+        candidate = (root / relative).resolve()
+        if is_within(candidate, root) and is_chronicle_directory(candidate):
+            return candidate, "existing"
+    default = (root / HISTORY_CANDIDATES[0]).resolve()
+    if not is_within(default, root):
+        raise ValueError("default history path resolves outside project root")
+    return default, "default"
+
+
+def has_heading(text: str, heading: str) -> bool:
+    return re.search(rf"^{re.escape(heading)}\s*$", text, re.MULTILINE) is not None
+
+
+def is_chronicle_directory(candidate: Path) -> bool:
+    if not candidate.is_dir():
+        return False
+    log_path = candidate / "LOG.md"
+    if log_path.is_file() and ANCHOR_RE.search(
+        log_path.read_text(encoding="utf-8", errors="replace")
+    ):
+        return True
+    readme_path = candidate / "README.md"
+    timeline_path = candidate / "TIMELINE.md"
+    if not readme_path.is_file() or not timeline_path.is_file():
+        return False
+    readme = readme_path.read_text(encoding="utf-8", errors="replace")
+    timeline = timeline_path.read_text(encoding="utf-8", errors="replace")
+    return has_heading(readme, "# Project History") and has_heading(
+        timeline, "# Project Timeline"
+    )
 
 
 def run_git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -166,12 +187,16 @@ def collect_commits(
     revision_range = f"{since}..{until}" if since else until
     command = [
         "log",
+        "-z",
         "--date=iso-strict",
         "--no-renames",
+        "--relative",
         f"--max-count={max_commits + 1}",
-        "--format=@@@%H%x1f%aI%x1f%an%x1f%P%x1f%s",
+        f"--format=%x00{COMMIT_RECORD_TOKEN}%x00%H%x00%aI%x00%an%x00%P%x00%s%x00",
         "--name-only",
         revision_range,
+        "--",
+        ".",
     ]
     result = run_git(root, *command)
     if result.returncode != 0:
@@ -179,12 +204,16 @@ def collect_commits(
 
     commits: list[dict[str, Any]] = []
     current: dict[str, Any] | None = None
-    for raw_line in result.stdout.splitlines():
-        if raw_line.startswith("@@@"):
+    first_path_after_header = False
+    tokens = result.stdout.split("\x00")
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        if token == COMMIT_RECORD_TOKEN and index > 0 and tokens[index - 1] == "":
             if current is not None:
                 current["paths"] = sorted(set(current["paths"]))
                 commits.append(current)
-            fields = raw_line[3:].split("\x1f", 4)
+            fields = tokens[index + 1 : index + 6]
             if len(fields) != 5:
                 raise ValueError("unexpected git log record format")
             commit_hash, authored_at, author, parents, subject = fields
@@ -196,8 +225,17 @@ def collect_commits(
                 "subject": subject,
                 "paths": [],
             }
-        elif raw_line.strip() and current is not None:
-            current["paths"].append(raw_line.strip())
+            first_path_after_header = True
+            index += 6
+            continue
+        if current is not None:
+            path = token
+            if path and first_path_after_header:
+                path = path[1:] if path.startswith("\n") else path
+                first_path_after_header = False
+            if path:
+                current["paths"].append(path)
+        index += 1
     if current is not None:
         current["paths"] = sorted(set(current["paths"]))
         commits.append(current)
@@ -206,7 +244,7 @@ def collect_commits(
     return commits[:max_commits], truncated, revision_range
 
 
-def collect_tags(root: Path) -> list[dict[str, str]]:
+def collect_tags(root: Path, *, scoped: bool) -> list[dict[str, str]]:
     result = run_git(
         root,
         "for-each-ref",
@@ -219,9 +257,28 @@ def collect_tags(root: Path) -> list[dict[str, str]]:
     tags: list[dict[str, str]] = []
     for line in result.stdout.splitlines():
         fields = line.split("\t")
-        if len(fields) == 3:
+        if len(fields) == 3 and (
+            not scoped or revision_directly_touches_scope(root, fields[0])
+        ):
             tags.append({"name": fields[0], "created_at": fields[1], "object": fields[2]})
     return tags
+
+
+def revision_directly_touches_scope(root: Path, revision: str) -> bool:
+    result = run_git(
+        root,
+        "diff-tree",
+        "--root",
+        "--no-commit-id",
+        "--name-only",
+        "--no-renames",
+        "-r",
+        "-m",
+        f"{revision}^{{commit}}",
+        "--",
+        ".",
+    )
+    return result.returncode == 0 and bool(result.stdout.strip())
 
 
 def is_document_candidate(relative: Path) -> bool:
@@ -262,7 +319,7 @@ def build_payload(args: argparse.Namespace) -> dict[str, Any]:
     history_path, history_source = resolve_history_path(root, args.history_path)
     documents, documents_truncated = collect_documents(root, args.max_documents)
     payload: dict[str, Any] = {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "project_root": str(root),
         "history": {
@@ -283,8 +340,8 @@ def build_payload(args: argparse.Namespace) -> dict[str, Any]:
 
     anchor = read_anchor(history_path) if args.since == "auto" else args.since
     resolved_anchor = verify_revision(root, anchor) if anchor else None
-    head = git_value(root, "rev-parse", "--verify", "HEAD")
-    if head is None and args.until == "HEAD":
+    actual_head = git_value(root, "rev-parse", "--verify", "HEAD")
+    if actual_head is None and args.until == "HEAD":
         resolved_until = None
         commits: list[dict[str, Any]] = []
         commits_truncated = False
@@ -294,18 +351,37 @@ def build_payload(args: argparse.Namespace) -> dict[str, Any]:
         commits, commits_truncated, revision_range = collect_commits(
             root, resolved_anchor, resolved_until, args.max_commits
         )
-    status_result = run_git(root, "status", "--short", "--branch", "--untracked-files=all")
+    status_result = run_git(
+        root, "status", "--short", "--branch", "--untracked-files=all", "--", "."
+    )
+    git_root = git_value(root, "rev-parse", "--show-toplevel")
+    scope_path = "."
+    if git_root:
+        scope_path = root.relative_to(Path(git_root).resolve()).as_posix() or "."
     roots = (
-        git_value(root, "rev-list", "--max-parents=0", "--reverse", resolved_until)
+        git_value(
+            root,
+            "rev-list",
+            "--max-parents=0",
+            "--reverse",
+            resolved_until,
+            "--",
+            ".",
+        )
         if resolved_until
         else None
     )
 
     payload["git"] = {
         "available": True,
-        "root": git_value(root, "rev-parse", "--show-toplevel"),
+        "root": git_root,
+        "scope": {
+            "kind": "repository" if scope_path == "." else "subdirectory",
+            "path": scope_path,
+        },
         "branch": git_value(root, "branch", "--show-current"),
-        "head": resolved_until,
+        "head": actual_head,
+        "range_until": resolved_until,
         "base_anchor": resolved_anchor,
         "anchor_is_ancestor": is_ancestor(root, resolved_anchor, resolved_until),
         "revision_range": revision_range,
@@ -316,7 +392,7 @@ def build_payload(args: argparse.Namespace) -> dict[str, Any]:
         "root_commits": roots.splitlines() if roots else [],
         "commits": commits,
         "commits_truncated": commits_truncated,
-        "tags": collect_tags(root),
+        "tags": collect_tags(root, scoped=scope_path != "."),
     }
     return payload
 
@@ -337,6 +413,9 @@ def print_summary(payload: dict[str, Any]) -> None:
         print(f"git: unavailable ({git['reason']})")
         return
     print(f"git_head: {git['head']}")
+    if git["range_until"] != git["head"]:
+        print(f"range_until: {git['range_until']}")
+    print(f"git_scope: {git['scope']['kind']} ({git['scope']['path']})")
     print(f"base_anchor: {git['base_anchor'] or 'none'}")
     print(f"anchor_is_ancestor: {git['anchor_is_ancestor']}")
     print(f"range: {git['revision_range']}")

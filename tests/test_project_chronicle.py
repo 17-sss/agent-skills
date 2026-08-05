@@ -26,6 +26,7 @@ class ProjectChronicleScriptTest(unittest.TestCase):
         self.run_command("git", "add", "README.md")
         self.run_command("git", "commit", "-qm", "feat: initialize fixture")
         self.first_commit = self.run_command("git", "rev-parse", "HEAD").stdout.strip()
+        self.initial_branch = self.run_command("git", "branch", "--show-current").stdout.strip()
         self.run_command("git", "tag", "v0.1.0")
 
     def tearDown(self):
@@ -46,18 +47,26 @@ class ProjectChronicleScriptTest(unittest.TestCase):
     def run_script(
         self, script: Path, *args: str, check: bool = True
     ) -> subprocess.CompletedProcess[str]:
+        return self.run_script_for_root(script, self.project, *args, check=check)
+
+    def run_script_for_root(
+        self, script: Path, project_root: Path, *args: str, check: bool = True
+    ) -> subprocess.CompletedProcess[str]:
         return self.run_command(
             sys.executable,
             str(script),
             "--project-root",
-            str(self.project),
+            str(project_root),
             *args,
             check=check,
         )
 
     def write_valid_history(self, anchor: str | None = None) -> Path:
         anchor = anchor or self.first_commit
-        history = self.project / "docs" / "project-history"
+        return self.write_valid_history_at(self.project, anchor)
+
+    def write_valid_history_at(self, project: Path, anchor: str) -> Path:
+        history = project / "docs" / "project-history"
         entries = history / "entries"
         entries.mkdir(parents=True)
         (history / "README.md").write_text(
@@ -166,6 +175,7 @@ Collector and validator behavior can be verified.
         result = self.run_script(COLLECTOR, "--since", "auto", "--format", "json")
         payload = json.loads(result.stdout)
 
+        self.assertEqual(payload["schema_version"], 2)
         self.assertEqual(payload["history"]["path"], "docs/project-history")
         self.assertEqual(payload["history"]["selection"], "default")
         self.assertIn("README.md", payload["documents"]["paths"])
@@ -178,12 +188,46 @@ Collector and validator behavior can be verified.
         unrelated = self.project / "docs" / "history"
         unrelated.mkdir(parents=True)
         (unrelated / "legacy-note.md").write_text("# Legacy note\n", encoding="utf-8")
+        (unrelated / "LOG.md").write_text("# Deployment Log\n", encoding="utf-8")
 
         result = self.run_script(COLLECTOR, "--since", "auto", "--format", "json")
         payload = json.loads(result.stdout)
 
         self.assertEqual(payload["history"]["path"], "docs/project-history")
         self.assertEqual(payload["history"]["selection"], "default")
+
+        validation = self.run_script(VALIDATOR, "--format", "json", check=False)
+        validation_payload = json.loads(validation.stdout)
+        self.assertEqual(validation_payload["history_path"], "docs/project-history")
+
+    def test_collector_scopes_git_evidence_to_subdirectory_project_root(self):
+        app = self.project / "app"
+        sibling = self.project / "sibling"
+        app.mkdir()
+        sibling.mkdir()
+        (app / "README.md").write_text("# App\n", encoding="utf-8")
+        self.run_command("git", "add", "app/README.md")
+        self.run_command("git", "commit", "-qm", "feat(app): initialize")
+        app_commit = self.run_command("git", "rev-parse", "HEAD").stdout.strip()
+        self.run_command("git", "tag", "app-v0.1.0")
+        (sibling / "history.md").write_text("unrelated\n", encoding="utf-8")
+        self.run_command("git", "add", "sibling/history.md")
+        self.run_command("git", "commit", "-qm", "feat(sibling): unrelated work")
+        self.run_command("git", "tag", "sibling-v0.1.0")
+        (sibling / "dirty.txt").write_text("unrelated dirty work\n", encoding="utf-8")
+
+        result = self.run_script_for_root(COLLECTOR, app, "--format", "json")
+        payload = json.loads(result.stdout)
+
+        self.assertEqual(payload["git"]["scope"], {"kind": "subdirectory", "path": "app"})
+        self.assertEqual([item["hash"] for item in payload["git"]["commits"]], [app_commit])
+        self.assertEqual(payload["git"]["commits"][0]["paths"], ["README.md"])
+        self.assertFalse(payload["git"]["dirty"])
+        self.assertFalse(any("sibling" in line for line in payload["git"]["status"]))
+        self.assertEqual(payload["git"]["root_commits"], [])
+        self.assertEqual(
+            {item["name"] for item in payload["git"]["tags"]}, {"app-v0.1.0"}
+        )
 
     def test_collector_handles_an_unborn_git_repository(self):
         with tempfile.TemporaryDirectory() as empty_dir:
@@ -257,6 +301,32 @@ Collector and validator behavior can be verified.
         self.assertEqual(payload["git"]["commits"][0]["paths"], ["feature.txt"])
         self.assertTrue(payload["git"]["dirty"])
 
+    def test_collector_preserves_actual_head_when_until_is_older(self):
+        (self.project / "feature.txt").write_text("next milestone\n", encoding="utf-8")
+        self.run_command("git", "add", "feature.txt")
+        self.run_command("git", "commit", "-qm", "feat: add next milestone")
+        actual_head = self.run_command("git", "rev-parse", "HEAD").stdout.strip()
+
+        result = self.run_script(
+            COLLECTOR, "--until", self.first_commit, "--format", "json"
+        )
+        payload = json.loads(result.stdout)
+
+        self.assertEqual(payload["git"]["head"], actual_head)
+        self.assertEqual(payload["git"]["range_until"], self.first_commit)
+
+    def test_collector_handles_paths_that_start_with_record_sentinel(self):
+        (self.project / "@@@odd").write_text("valid Git path\n", encoding="utf-8")
+        self.run_command("git", "add", "@@@odd")
+        self.run_command("git", "commit", "-qm", "test: add unusual path")
+        commit_hash = self.run_command("git", "rev-parse", "HEAD").stdout.strip()
+
+        result = self.run_script(COLLECTOR, "--format", "json")
+        payload = json.loads(result.stdout)
+        record = next(item for item in payload["git"]["commits"] if item["hash"] == commit_hash)
+
+        self.assertEqual(record["paths"], ["@@@odd"])
+
     def test_strict_validator_accepts_complete_history(self):
         self.write_valid_history()
         result = self.run_script(VALIDATOR, "--strict", "--format", "json")
@@ -279,6 +349,88 @@ Collector and validator behavior can be verified.
         self.assertEqual(result.returncode, 1)
         self.assertFalse(payload["valid"])
         self.assertTrue(any("broken relative link" in item["message"] for item in payload["errors"]))
+
+    def test_strict_validator_rejects_anchor_outside_head_ancestry(self):
+        self.run_command("git", "checkout", "-qb", "side-history")
+        (self.project / "side.txt").write_text("side history\n", encoding="utf-8")
+        self.run_command("git", "add", "side.txt")
+        self.run_command("git", "commit", "-qm", "feat: add side history")
+        side_commit = self.run_command("git", "rev-parse", "HEAD").stdout.strip()
+        self.run_command("git", "checkout", "-q", self.initial_branch)
+        (self.project / "main.txt").write_text("main history\n", encoding="utf-8")
+        self.run_command("git", "add", "main.txt")
+        self.run_command("git", "commit", "-qm", "feat: add main history")
+        self.write_valid_history(side_commit)
+
+        result = self.run_script(VALIDATOR, "--strict", "--format", "json", check=False)
+        payload = json.loads(result.stdout)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertTrue(
+            any("not an ancestor of HEAD" in item["message"] for item in payload["errors"])
+        )
+
+    def test_strict_validator_accepts_full_sha256_anchor(self):
+        with tempfile.TemporaryDirectory() as sha_dir:
+            project = Path(sha_dir)
+            initialized = subprocess.run(
+                ["git", "init", "-q", "--object-format=sha256"],
+                cwd=project,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
+            if initialized.returncode != 0:
+                self.skipTest("installed Git does not support SHA-256 repositories")
+            for key, value in (
+                ("user.name", "Project Chronicle Test"),
+                ("user.email", "chronicle@example.com"),
+            ):
+                subprocess.run(
+                    ["git", "config", key, value],
+                    cwd=project,
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+            (project / "README.md").write_text("# SHA-256 fixture\n", encoding="utf-8")
+            subprocess.run(
+                ["git", "add", "README.md"], cwd=project, check=True
+            )
+            subprocess.run(
+                ["git", "commit", "-qm", "feat: initialize SHA-256 fixture"],
+                cwd=project,
+                check=True,
+            )
+            anchor = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=project,
+                text=True,
+                stdout=subprocess.PIPE,
+                check=True,
+            ).stdout.strip()
+            self.assertEqual(len(anchor), 64)
+            self.write_valid_history_at(project, anchor)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(VALIDATOR),
+                    "--project-root",
+                    str(project),
+                    "--strict",
+                    "--format",
+                    "json",
+                ],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
+
+        payload = json.loads(result.stdout)
+        self.assertEqual(result.returncode, 0)
+        self.assertTrue(payload["valid"])
 
 
 class ProjectChronicleContractTest(unittest.TestCase):

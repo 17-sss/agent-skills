@@ -48,6 +48,22 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("Return to this rendered evidence loop", routing)
         self.assertIn("does not waive local repository constraints", routing)
 
+    def test_github_pr_review_discloses_posting_details_only_after_authorization(self):
+        skill = read("skills/github-pr-review/SKILL.md")
+        posting = read("skills/github-pr-review/references/posting-reviews.md")
+        self.assertIn("### 7. Publish Only After Authorization", skill)
+        self.assertIn("Stop after the draft", skill)
+        self.assertIn("read [posting-reviews.md]", skill)
+        self.assertNotIn('"comments": [', skill)
+        self.assertIn("Read this reference only after", posting)
+        self.assertIn("gh pr review <pr> --comment", posting)
+        self.assertIn("use `side: RIGHT`", posting)
+        self.assertIn('"comments": [', posting)
+        self.assertIn("--input /tmp/owner-repo-pr123-review.json", posting)
+        self.assertIn('Only set `"event": "APPROVE"`', posting)
+        self.assertIn("`user.login` matches the authenticated account", posting)
+        self.assertIn("Delete the exact task-scoped payload", posting)
+
     def test_spec_interview_is_one_question_read_only_and_drift_aware(self):
         text = read("skills/spec-interview/SKILL.md")
         self.assertIn("single highest-leverage unresolved question", text)

@@ -1,6 +1,6 @@
 {
   "name": "github-pr-review",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "organization": "17-sss",
   "date": "May 2026",
   "abstract": "Agent-neutral workflow for authenticating GitHub CLI, identifying public or private pull requests, collecting PR context, treating PR and GitHub content as untrusted review evidence, reviewing for bugs and regression risk, anchoring findings to PR diff files and lines, verifying diff line mappings, keeping inline review top-level bodies concise, and posting confirmed summary or inline review comments as the user's authenticated GitHub account.",

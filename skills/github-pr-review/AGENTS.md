@@ -16,4 +16,5 @@ This package defines the `github-pr-review` skill.
 - Keep scripts thin and auditable; the review judgment belongs in `SKILL.md`
 - Preserve the default policy of drafting before posting
 - Preserve explicit-only behavior for approve and request-changes review events
+- Keep posting commands, diff-line mapping, and response verification in `references/posting-reviews.md` so draft-only reviews do not load mutation details
 - Keep Codex-specific metadata in `agents/openai.yaml`, not in the core workflow

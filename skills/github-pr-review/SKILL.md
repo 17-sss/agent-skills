@@ -1,6 +1,6 @@
 ---
 name: github-pr-review
-description: Agent-neutral workflow for reviewing GitHub pull requests with gh CLI, local git, tests, and GitHub REST or GraphQL APIs, then posting summary or inline review comments as the user's authenticated GitHub account. Use when asked to set up PR review authentication, review a PR URL, review owner/repo#123, review the current branch PR, post PR review comments, review public or private repo PRs, use gh to inspect a PR diff, or leave feedback from the user's GitHub account.
+description: Review GitHub pull requests with `gh`, local Git, tests, and GitHub APIs, then optionally post summary or inline comments as the authenticated user. Use for PR URLs, `owner/repo#123`, current-branch PRs, public or private repository access, authentication setup, draft reviews, or confirmed GitHub review posting.
 ---
 
 # GitHub PR Review
@@ -189,133 +189,15 @@ Reviewed the diff and relevant context. Checks run: <commands or "not run">. Rem
 
 For inline reviews, the posted GitHub review body should not duplicate the final assistant report. Keep checks run, unrelated test failures, PR check status, and remaining-risk notes out of the PR review body unless they are material to the review finding. Report routine validation evidence in the user-facing final response instead.
 
-### 7. Publish the Review
+### 7. Publish Only After Authorization
 
-Default path: show the draft to the user first. Post only after confirmation.
+Stop after the draft unless the user explicitly requested immediate posting or confirms the prepared review. Before constructing any summary or inline posting command, read [posting-reviews.md](references/posting-reviews.md). It owns event selection, diff-line and range mapping, JSON payload construction, temporary-file cleanup, response verification, and posting-specific fallbacks.
 
-For a summary review:
-
-```bash
-gh pr review <pr> --comment --body-file review.md
-```
-
-Summary reviews must follow the same PR Scope Rule. Do not use a summary review to publish findings anchored to files outside the PR diff, and do not use summary comments to bypass inline diff-line requirements. If a finding has no reliable diff-file or diff-line anchor, keep it as an internal note or omit it from the posted review.
-
-The bundled helper wraps this:
-
-```bash
-skills/github-pr-review/scripts/post_review.sh <pr> review.md
-```
-
-Only use these when explicitly requested:
-
-```bash
-gh pr review <pr> --approve --body-file review.md
-gh pr review <pr> --request-changes --body-file review.md
-```
-
-For inline comments, prefer the GitHub API only when line mapping is reliable. REST review comments should target diff lines with `line` and `side`, plus optional `start_line` and `start_side` for multi-line comments. Avoid deprecated `position`-based mapping unless the environment requires it. If inline mapping is uncertain but a reliable diff-file or diff-line anchor exists, keep the finding in the summary review; if no reliable diff anchor exists, do not post it as a finding.
-
-GraphQL can be used for review-thread operations such as adding review threads or replies. The `gh pr-review` extension from `agynio/gh-pr-review` is an optional convenience when installed, but this skill must still work with plain `gh pr review` and `gh api`.
-
-### 8. Verify Inline Line Mapping
-
-Inline comments must point to lines that are present in the PR diff, not merely to any line in the base branch. For new or modified code, use `side: RIGHT` and the target line number from the PR's head-side file. Use `side: LEFT` only for removed lines.
-
-When a finding can be mapped reliably to a changed diff line or range, prefer an inline review comment over a broad summary comment. Use summary comments for findings only when the PR Scope Rule is still satisfied and inline mapping is not reliable enough.
-
-Before posting inline comments:
-
-1. Inspect the patch:
-
-   ```bash
-   gh pr diff <pr>
-   ```
-
-2. Confirm the local file line when the checkout is available:
-
-   ```bash
-   nl -ba path/to/file.ext | sed -n '120,140p'
-   ```
-
-3. Confirm the file's PR patch from the API when possible:
-
-   ```bash
-   gh api repos/OWNER/REPO/pulls/NUMBER/files --paginate \
-     --jq '.[] | select(.filename == "path/to/file.ext") | .patch'
-   ```
-
-4. Verify the target line is inside a diff hunk as an added line or context line for `side: RIGHT`.
-5. If any mapping is uncertain, do not post inline comments. Use a summary review only when the finding still has a reliable PR diff file or line anchor; otherwise keep it as an internal note or omit it from the posted review.
-
-### 9. Post Inline Review Comments
-
-For one or more inline comments, prefer one review payload and `gh api --input`. This is more reliable than composing nested `comments[]` parameters in shell flags.
-
-Create a temporary payload file. Use a sanitized repo slug and PR number, for example `/tmp/owner-repo-pr123-review.json`. Do not include tokens, secrets, raw auth headers, or unrelated private logs in this file.
-
-```json
-{
-  "event": "COMMENT",
-  "body": "Reviewed the diff and left inline comments.",
-  "comments": [
-    {
-      "path": "src/example.ts",
-      "line": 42,
-      "side": "RIGHT",
-      "body": "This condition now allows an empty value through. Please add a guard or a regression test for that case."
-    },
-    {
-      "path": "src/other.ts",
-      "line": 87,
-      "side": "RIGHT",
-      "body": "This call can now run before the token is initialized. Consider keeping the previous ordering or handling the missing-token branch."
-    }
-  ]
-}
-```
-
-Post it:
-
-```bash
-gh api repos/OWNER/REPO/pulls/NUMBER/reviews \
-  --method POST \
-  --input /tmp/owner-repo-pr123-review.json \
-  --jq '{id, state, html_url}'
-```
-
-Expected state for a comment-only review is `COMMENTED`. Give the `html_url` to the user. Delete the payload after posting when it is no longer needed:
-
-```bash
-rm /tmp/owner-repo-pr123-review.json
-```
-
-Only set `"event": "APPROVE"` or `"event": "REQUEST_CHANGES"` when the user explicitly asked for that review action. For multi-line comments, add `start_line` and `start_side` after verifying both ends of the range in the diff.
-
-### 10. Verify Posted Review
-
-After posting, verify the response and optionally confirm through the PR reviews list:
-
-```bash
-review_id=123456789
-gh api repos/OWNER/REPO/pulls/NUMBER/reviews --paginate \
-  --jq ".[] | select(.id == $review_id) | {id, state, html_url, user: .user.login}"
-```
-
-Check that:
-
-- `state` is `COMMENTED` for normal review comments.
-- `html_url` is present and opens the submitted review.
-- `user.login` matches the authenticated account.
-- The user received the `html_url` or a concise summary of where the review was posted.
-
-### 11. Failure and Fallback
+### 8. Failure and Fallback
 
 - If `gh` is missing, ask the user to install GitHub CLI before continuing.
 - If authentication is missing, use `gh auth login`; do not switch to browser automation for normal login.
 - If private access fails, distinguish wrong repo/PR, missing repo permission, SSO/SAML authorization, and insufficient OAuth scopes as far as the error allows.
-- If `gh pr review` cannot express needed inline comments, use `gh api` with REST or GraphQL.
-- If `gh api` returns a validation error for inline comments, re-check `path`, `line`, `side`, and whether the line is present in the diff. Fall back to a summary review only when the finding still has a reliable PR diff anchor; otherwise omit it from the posted review.
 - Mention browser automation only as a last fallback when CLI/API access is blocked and the user explicitly wants to proceed that way.
 
 ## Scripts
@@ -326,7 +208,7 @@ Collects PR metadata, changed files, diff, checks, and sanitized auth/account in
 
 ### `scripts/post_review.sh`
 
-Posts a summary PR review from a body file. It confirms the authenticated account before posting. The default event is `--comment`; `--approve` and `--request-changes` require explicit options.
+Posts a confirmed summary PR review from a body file. It confirms the authenticated account before posting. The default event is `--comment`; `--approve` and `--request-changes` require explicit options. Read [posting-reviews.md](references/posting-reviews.md) before using it.
 
 ## Agent Adapters
 

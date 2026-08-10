@@ -1,4 +1,4 @@
 interface:
   display_name: "Design Loop"
-  short_description: "Build and refine UI through rendered visual feedback"
-  default_prompt: "Use $design-loop to build or improve this interface, inspect rendered desktop and mobile states, test interactions, and iterate until the visual quality is verified."
+  short_description: "Design, build, and verify UI through rendered feedback"
+  default_prompt: "Use $design-loop to build or improve this interface, use an available Product Design workflow when design exploration is needed, inspect rendered desktop and mobile states, test interactions, and iterate until the visual quality is verified."

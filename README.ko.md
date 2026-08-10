@@ -67,11 +67,12 @@ npx skills add https://github.com/17-sss/agent-skills --skill design-loop
 
 ### design-loop
 
-UI 구현을 `inspect → implement → render → review → interact → fix → verify` 루프로 다듬습니다. 데스크톱·모바일 화면, 주요 상호작용, 시각적 회귀를 실제 렌더 결과로 확인합니다.
+UI 구현을 `inspect → implement → render → review → interact → fix → verify` 루프로 다듬습니다. 데스크톱·모바일 화면, 주요 상호작용, 시각적 회귀를 실제 렌더 결과로 확인합니다. Product Design 워크플로를 사용할 수 있고 디자인 탐색이 필요한 작업이면 선택적 가속기로 사용한 뒤 같은 구현·검증 루프로 돌아옵니다.
 
 - 기존 디자인 문서, 토큰, 컴포넌트와 저장소 실행 명령을 먼저 확인합니다.
 - 브라우저나 screenshot 수단이 없으면 사용자 승인 후 격리된 Chromium fallback을 제안합니다.
 - 렌더 증거 없이 시각적 완성이나 상호작용 성공을 주장하지 않습니다.
+- Product Design은 선택 사항으로 유지하며, 독립 실행을 위해 설치하거나 필수 의존성으로 만들지 않습니다.
 
 사용 예시:
 

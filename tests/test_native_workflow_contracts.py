@@ -31,6 +31,23 @@ class NativeWorkflowContractTest(unittest.TestCase):
         )
         self.assertNotIn("https://github.com/17-sss/agent-skills", package_text)
 
+    def test_design_loop_product_design_routing_is_optional_and_standalone(self):
+        skill = read("skills/design-loop/SKILL.md")
+        routing = read("skills/design-loop/references/surface-capability-guide.md")
+        self.assertIn("Product Design is explicitly invoked", skill)
+        self.assertIn("Keep the package usable when that plugin is unavailable", skill)
+        self.assertIn("## Optional Product Design Routing", routing)
+        self.assertIn("optional accelerators, not package dependencies", routing)
+        self.assertIn("current task's available-skill inventory", routing)
+        self.assertIn("Do not inspect the filesystem", routing)
+        self.assertIn("do not install a missing plugin or skill", routing)
+        self.assertIn("`$product-design:ideate`", routing)
+        self.assertIn("`$product-design:audit`", routing)
+        self.assertIn("`$product-design:image-to-code`", routing)
+        self.assertIn("`$product-design:url-to-code`", routing)
+        self.assertIn("Return to this rendered evidence loop", routing)
+        self.assertIn("does not waive local repository constraints", routing)
+
     def test_spec_interview_is_one_question_read_only_and_drift_aware(self):
         text = read("skills/spec-interview/SKILL.md")
         self.assertIn("single highest-leverage unresolved question", text)

@@ -13,6 +13,22 @@ Choose capabilities by what the task needs, not by assuming a fixed tool name. A
 | Inspect an image | Native image input or local image viewer | Pass the screenshot to a fresh inspection turn as an image input |
 | Generate a raster asset | Image-generation tool or `$imagegen` | Use a temporary placeholder and report the missing capability |
 
+## Optional Product Design Routing
+
+Product Design workflows are optional accelerators, not package dependencies. Treat a focused workflow as available only when the current task's available-skill inventory advertises its exact name and its described runtime is compatible. Do not inspect the filesystem or installation directories to infer availability, and do not install a missing plugin or skill. When unavailable, continue with the repository's design contract and the capability paths in this guide.
+
+When Product Design is explicitly invoked or design exploration is the primary task, choose the smallest matching route:
+
+| Need | Optional focused route | Standalone path |
+| --- | --- | --- |
+| Establish a brief or explore a new direction | `$product-design:ideate` after its context step | Use the user's brief, local design contract, and two or three bounded variants |
+| Audit an existing product flow before changing it | `$product-design:audit` | Capture the current flow and apply the bundled visual review rubric |
+| Implement a selected screenshot, mockup, or generated concept | `$product-design:image-to-code` | Inspect the reference and implement it with repository-native components and tokens |
+| Recreate a live URL as a local frontend | `$product-design:url-to-code` | Use an available browser for read-only capture, then implement locally |
+| Compare a Product Design build with its source target | Product Design's advertised design-QA workflow | Capture equivalent states and apply the bundled review rubric |
+
+Return to this rendered evidence loop after the focused route produces a selected target, audit evidence, or implementation. Product Design output does not waive local repository constraints, before-and-after capture, responsive and interaction checks, or final verification.
+
 Do not call a capability "Vision" as though it were always a separate tool. The important action is to load and inspect actual rendered pixels.
 
 ## App or Desktop

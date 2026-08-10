@@ -67,11 +67,12 @@ These workflows do not depend on commands exclusive to one agent. They work in C
 
 ### design-loop
 
-Refine UI implementation through an `inspect → implement → render → review → interact → fix → verify` loop. Validate desktop and mobile layouts, primary interactions, and visual regressions against real rendered output.
+Refine UI implementation through an `inspect → implement → render → review → interact → fix → verify` loop. Validate desktop and mobile layouts, primary interactions, and visual regressions against real rendered output. When Product Design workflows are available and the task needs design exploration, use them as optional accelerators before returning to the same implementation and verification loop.
 
 - Inspect existing design docs, tokens, components, and repository commands first.
 - If no browser or screenshot capability exists, offer an isolated Chromium fallback only after user approval.
 - Never claim visual completion or interaction success without rendered evidence.
+- Keep Product Design optional; do not install or require it for the standalone workflow.
 
 Usage example:
 

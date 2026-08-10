@@ -20,6 +20,7 @@ The skill prefers capabilities already present in the current app, CLI, IDE, or 
 - Checking desktop and mobile rendered states
 - Testing visible interaction states and primary user flows
 - Comparing two or three visual alternatives
+- Using an available Product Design workflow to explore or implement a visual direction
 - Integrating a generated raster asset and reviewing it in context
 - Extracting reusable design rules from a successful implementation
 
@@ -53,6 +54,8 @@ See [prompt-recipes.md](references/prompt-recipes.md) for the full visual loop p
 - **No render-capable path:** offer a user-approved Chromium-only bootstrap that does not modify the target repository or install system packages. If it is declined or cannot launch, complete only separately valid non-visual work and report visual verification as a concrete gap.
 
 Tool names vary by installation. The skill selects capabilities rather than depending on one fixed browser or screenshot integration.
+
+Product Design workflows are optional accelerators for exploration, audits, URL capture, or implementing a selected visual target. The skill remains standalone: it uses only workflows advertised in the current task, never installs a missing plugin, and returns to the same rendered, responsive, interaction, and verification loop afterward.
 
 ## Related Workflows
 

@@ -34,6 +34,7 @@ Rules:
 - Keep root-level files generic to the collection
 - Put install or agent-specific details in the skill package, not the repo root
 - Prefer adding helper scripts and references over bloating `SKILL.md`
+- Use `metadata.json` references for primary capability documentation or standards only; do not record other skills as inspiration, provenance, or comparison sources
 - Keep shared mutable project data in the target repository, not inside agent-specific config folders by default
 
 ## Updating an Existing Skill

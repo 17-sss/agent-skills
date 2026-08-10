@@ -1,6 +1,6 @@
 ---
 name: design-loop
-description: Build, inspect, and iteratively refine runnable product interfaces through screenshot-based visual review, responsive checks, interaction testing, and selective image generation. Use when an agent is asked to create or polish UI, frontend, product, dashboard, admin, landing-page, or game screens; improve an existing interface beyond a first draft; validate desktop and mobile layouts; compare visual alternatives; or extract reusable design rules from a successful implementation.
+description: Build and iteratively refine runnable product interfaces through rendered screenshots, interaction checks, and selective image generation. Use for new or existing UI, frontend, dashboards, admin, landing pages, or game screens; Product Design-assisted concepts; responsive validation; visual alternatives; or reusable design-rule extraction.
 ---
 
 # Design Loop
@@ -15,7 +15,8 @@ Operate on the rendered product, not code alone. Adapt the loop to the browser, 
 
 - Preserve the user's requested mode. For audit-only or review-only requests, inspect and report without editing.
 - Treat an existing `DESIGN.md`, design system, component library, token set, and product brief as constraints rather than optional inspiration.
-- Use a durable design-source skill or the repository's established design-doc workflow when the main task is defining product direction before implementation.
+- When Product Design is explicitly invoked or design exploration is the primary task, use the optional routing in [surface-capability-guide.md](references/surface-capability-guide.md) before implementation. Keep the package usable when that plugin is unavailable.
+- Use a durable design-source workflow or the repository's established design-doc workflow when the main task is defining product direction before implementation.
 - Use a strict visual-matching workflow when the user provides an approved screenshot, mockup, or live URL and pixel fidelity is the acceptance criterion.
 - Use image generation for raster assets that materially improve the product. Reuse existing icons, logos, illustrations, and code-native design primitives before generating replacements.
 - Do not claim visual quality, responsive correctness, or successful interaction without inspecting fresh rendered evidence.
@@ -49,7 +50,7 @@ Prefer existing components and tokens. Distinguish observed rules from inferred 
 
 When the user explicitly asks for current design principles, references, or best practices, research current primary or authoritative sources after inspecting the local contract. Cite the sources used, translate them into task-specific decisions, and do not replace the product's established identity with generic trends.
 
-Read [surface-capability-guide.md](references/surface-capability-guide.md) before choosing the render, screenshot, interaction, or image-generation path.
+Read [surface-capability-guide.md](references/surface-capability-guide.md) before choosing the Product Design, render, screenshot, interaction, or image-generation path.
 
 If no existing capability can render and capture the applicable target, offer a minimal isolated Chromium bootstrap before treating visual verification as unavailable. State the network download, disk use, and cache location, and require explicit user approval unless the user already authorized installing a renderer. The skill invocation alone is not installation approval. Do not modify the target repository's manifests, lockfiles, or `node_modules`; do not install a branded browser or system packages; and do not use elevated privileges. After an approved bootstrap, prove it with a disposable screenshot smoke check. If approval is declined or the isolated browser cannot run, continue only with separately valid non-visual work and report the exact visual verification gap.
 
@@ -80,13 +81,7 @@ If a custom bitmap asset is genuinely needed, use the current image-generation c
 
 ### 5. Review rendered evidence
 
-Read [visual-review-rubric.md](references/visual-review-rubric.md). Inspect screenshots at every target viewport and rank issues:
-
-- **Blocking:** prevents task completion, hides content, breaks navigation, or creates a serious accessibility failure
-- **Major:** damages hierarchy, readability, responsive behavior, or interaction clarity
-- **Minor:** polish, consistency, or low-impact alignment issue
-
-Review the rendered image first. Consult DOM, styles, and component code after identifying the visible symptom. Do not infer visual success from a passing build.
+Read [visual-review-rubric.md](references/visual-review-rubric.md). Inspect every target viewport, apply its blocking/major/minor severity model, and review the rendered image before consulting DOM, styles, or component code. Do not infer visual success from a passing build.
 
 ### 6. Exercise the user journey
 

@@ -179,7 +179,7 @@ python3 scripts/check_staleness.py --project-root <path> --scope workspace --doc
 
 ## Package Layout
 
-- `SKILL.md` - Main skill definition
+- `SKILL.md` - Compact core contract, default commands, and task-based reference routing
 - `AGENTS.md` - Maintainer guidance for this skill package
 - `metadata.json` - Catalog metadata
 - `evals/train_queries.json` - Starter should-trigger and should-not-trigger queries
@@ -189,10 +189,10 @@ python3 scripts/check_staleness.py --project-root <path> --scope workspace --doc
 - `scripts/check_staleness.py` - Checks whether the notes lag behind repo activity
 - `scripts/resolve_handoff_path.py` - Path resolver and initializer
 - `references/handoff-template.md` - HANDOFF template
-- `references/agent-usage-best-practices.md` - Recommended agent workflow
-- `references/snapshot-strategy.md` - When to snapshot and how to label it
-- `references/workspace-memory-guide.md` - Workspace memory structure guidance
-- `references/agent-integrations.md` - Agent-specific install notes
+- `references/agent-usage-best-practices.md` - On-demand start, resume, update, and close-out workflow
+- `references/snapshot-strategy.md` - On-demand snapshot decisions, kinds, and labels
+- `references/workspace-memory-guide.md` - On-demand workspace and workstream structure guidance
+- `references/agent-integrations.md` - On-demand agent-specific install notes
 
 ## Trigger Evals
 

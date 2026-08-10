@@ -64,6 +64,21 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("`user.login` matches the authenticated account", posting)
         self.assertIn("Delete the exact task-scoped payload", posting)
 
+    def test_handoff_memory_routes_detail_without_losing_resume_contract(self):
+        skill = read("skills/handoff-memory/SKILL.md")
+        usage = read("skills/handoff-memory/references/agent-usage-best-practices.md")
+        workspace = read("skills/handoff-memory/references/workspace-memory-guide.md")
+        snapshots = read("skills/handoff-memory/references/snapshot-strategy.md")
+        self.assertIn("## Core Contract", skill)
+        self.assertIn("ambiguous result instead of guessing", skill)
+        self.assertIn("`Next Actions` as the default execution queue", skill)
+        self.assertIn("--resume --format json", skill)
+        self.assertIn("--workspace-wide", skill)
+        self.assertIn("## Reference Routing", skill)
+        self.assertIn("Resume Execution Priority", usage)
+        self.assertIn("`last_active_workstream`", workspace)
+        self.assertIn("## When Not to Create a Snapshot", snapshots)
+
     def test_spec_interview_is_one_question_read_only_and_drift_aware(self):
         text = read("skills/spec-interview/SKILL.md")
         self.assertIn("single highest-leverage unresolved question", text)

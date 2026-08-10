@@ -1,13 +1,13 @@
 ---
 name: review-gate
-description: Review a Git change set or explicit files without modifying them by combining independent Codex-native correctness and architecture lanes, then return prioritized file-and-line findings and a deterministic readiness verdict. Use when the user invokes $review-gate, requests a comprehensive code review, wants current changes, files, or a commit reviewed, or asks for an evidence-grounded quality, security, regression, test-gap, performance, or maintainability assessment.
+description: Run a strict, read-only pre-PR or pre-merge gate over current changes, commits, branch ranges, or explicit files using independent Codex-native correctness and architecture lanes. Use for final readiness decisions, high-risk changes, or an explicit $review-gate request; use native /review for routine or lightweight review.
 ---
 
 # Review Gate
 
 Recommended invocation: `Use $review-gate to review <files, commit, branch, checked-out PR-style target, or current changes>.`
 
-Use native `/review` for a standard single-reviewer pass or its interactive Git target picker. Use this skill when the user wants the stronger two-lane review and deterministic merge gate below. If the native surface already selected a review target, reuse it instead of resolving a different scope.
+Use native `/review` for a routine or lightweight single-reviewer pass and its interactive Git target picker. Reserve this skill for final pre-PR or pre-merge readiness, high-risk changes, or an explicit request for the stronger two-lane deterministic gate below. If the native surface already selected a review target, reuse it instead of resolving a different scope.
 
 Remain read-only. Do not edit, format, generate, stage, commit, push, post review comments, or open a pull request. A later request to fix findings is a separate execution task.
 

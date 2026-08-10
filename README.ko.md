@@ -59,7 +59,7 @@ npx skills add https://github.com/17-sss/agent-skills --skill design-loop
 | Codex 특화 | [`reviewed-plan`](skills/reviewed-plan/SKILL.md) | Planner, Architect, Critic을 거친 구현 계획이 필요할 때 |
 | Codex 특화 | [`completion-loop`](skills/completion-loop/SKILL.md) | 명확한 Goal을 검증 가능한 완료까지 밀어붙일 때 |
 | Codex 특화 | [`milestone-runner`](skills/milestone-runner/SKILL.md) | 큰 작업을 재시작 가능한 순차 milestone로 실행할 때 |
-| Codex 특화 | [`review-gate`](skills/review-gate/SKILL.md) | 변경을 수정하지 않고 두 관점으로 독립 검토할 때 |
+| Codex 특화 | [`review-gate`](skills/review-gate/SKILL.md) | 고위험 변경을 공개하거나 병합하기 전에 엄격한 두-lane gate를 실행할 때 |
 
 ## 공통 스킬
 
@@ -234,7 +234,7 @@ Use $milestone-runner to migrate the authentication flow in three ordered stages
 
 ### review-gate
 
-현재 변경, 파일, commit, branch 또는 이미 읽을 수 있는 PR target을 correctness와 architecture 두 lane으로 독립 검토합니다.
+현재 변경, 파일, commit, branch 또는 이미 읽을 수 있는 PR target을 PR 생성·병합 전 최종 readiness gate로 correctness와 architecture 두 lane에서 독립 검토합니다. 일상적이거나 가벼운 검토에는 native `/review`를 사용합니다.
 
 - staged, unstaged와 untracked 변경을 sensitivity-screened snapshot으로 고정하고 원본 target fingerprint는 parent context에만 유지합니다.
 - credential 값은 reviewer packet에서 제외하며, redaction으로 핵심 증거가 사라지면 `INCONCLUSIVE`를 반환합니다.
@@ -244,7 +244,7 @@ Use $milestone-runner to migrate the authentication flow in three ordered stages
 사용 예시:
 
 ```text
-Use $review-gate to review all current staged, unstaged, and untracked changes. Keep the worktree unchanged and return independent correctness and architecture verdicts.
+Use $review-gate as the final pre-PR gate for this high-risk change. Keep the worktree unchanged and return independent correctness and architecture verdicts.
 ```
 
 ## 사용 원칙

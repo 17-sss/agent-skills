@@ -59,7 +59,7 @@ Start a new agent task after installation so the refreshed skill discovery resul
 | Codex-native | [`reviewed-plan`](skills/reviewed-plan/SKILL.md) | Producing an implementation plan reviewed by Planner, Architect, and Critic |
 | Codex-native | [`completion-loop`](skills/completion-loop/SKILL.md) | Driving a clear Goal to evidence-backed completion |
 | Codex-native | [`milestone-runner`](skills/milestone-runner/SKILL.md) | Executing large work as resumable, sequential milestones |
-| Codex-native | [`review-gate`](skills/review-gate/SKILL.md) | Reviewing changes from two independent perspectives without modifying them |
+| Codex-native | [`review-gate`](skills/review-gate/SKILL.md) | Running a strict two-lane gate before a high-risk change is published or merged |
 
 ## Shared Skills
 
@@ -234,7 +234,7 @@ The full state-helper command contract is documented in the [Goal state CLI refe
 
 ### review-gate
 
-Review current changes, files, a commit, a branch, or an already-readable PR target through independent correctness and architecture lanes.
+Run a final pre-PR or pre-merge readiness gate over current changes, files, a commit, a branch, or an already-readable PR target through independent correctness and architecture lanes. Use native `/review` for routine or lightweight review.
 
 - Freeze staged, unstaged, and untracked changes into a sensitivity-screened snapshot while retaining a parent-only original-target fingerprint.
 - Keep credential values out of reviewer packets and return `INCONCLUSIVE` when redaction removes material evidence.
@@ -244,7 +244,7 @@ Review current changes, files, a commit, a branch, or an already-readable PR tar
 Usage example:
 
 ```text
-Use $review-gate to review all current staged, unstaged, and untracked changes. Keep the worktree unchanged and return independent correctness and architecture verdicts.
+Use $review-gate as the final pre-PR gate for this high-risk change. Keep the worktree unchanged and return independent correctness and architecture verdicts.
 ```
 
 ## Usage Principles

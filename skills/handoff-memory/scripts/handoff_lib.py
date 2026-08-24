@@ -830,6 +830,15 @@ def extract_sections(text: str) -> list[str]:
     return _SECTION_RE.findall(text)
 
 
+def section_line_starts(text: str) -> list[tuple[int, str]]:
+    starts: list[tuple[int, str]] = []
+    for index, line in enumerate(text.splitlines()):
+        match = _SECTION_RE.fullmatch(line)
+        if match:
+            starts.append((index, match.group(1).strip()))
+    return starts
+
+
 def section_bodies(text: str) -> dict[str, str]:
     matches = list(_SECTION_RE.finditer(text))
     sections: dict[str, str] = {}

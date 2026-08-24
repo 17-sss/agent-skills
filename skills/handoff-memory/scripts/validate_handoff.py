@@ -17,6 +17,7 @@ from handoff_lib import (
     resume_usable_blockers,
     required_sections,
     resolve_document,
+    section_line_starts,
 )
 
 
@@ -26,11 +27,7 @@ MAX_REPORTED_SECTIONS = 3
 
 def largest_section_metrics(text: str) -> list[dict[str, int | str]]:
     lines = text.splitlines()
-    starts = [
-        (index, line.removeprefix("## ").strip())
-        for index, line in enumerate(lines)
-        if line.startswith("## ")
-    ]
+    starts = section_line_starts(text)
     sections: list[dict[str, int | str]] = []
     for position, (start, name) in enumerate(starts):
         end = starts[position + 1][0] if position + 1 < len(starts) else len(lines)

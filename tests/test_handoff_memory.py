@@ -126,6 +126,26 @@ Continue from the current fixture state.
             "Recent Changes",
         )
 
+    def test_length_advisory_uses_the_validator_section_syntax(self):
+        handoff = self.write_handoff_with_line_count(221)
+        handoff.write_text(
+            handoff.read_text(encoding="utf-8").replace("\n## ", "\n##\t"),
+            encoding="utf-8",
+        )
+
+        result = self.run_validator(
+            "--scope", "repo", "--document", "handoff", "--strict", "--format", "json"
+        )
+        payload = json.loads(result.stdout)
+
+        self.assertTrue(payload["valid"])
+        self.assertEqual(payload["document_metrics"]["line_count"], 221)
+        self.assertEqual(
+            payload["document_metrics"]["largest_sections"][0]["name"],
+            "Recent Changes",
+        )
+        self.assertNotIn("Largest sections: .", payload["warnings"][0])
+
     def test_length_advisory_does_not_apply_to_durable_companion_documents(self):
         decisions = self.project / "_memory" / "DECISIONS.md"
         decisions.parent.mkdir(parents=True)

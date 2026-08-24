@@ -36,6 +36,7 @@ This package defines the `handoff-memory` skill.
 - Keep `SKILL.md`, `README.md`, and `metadata.json` aligned
 - Update templates if the expected memory sections change
 - Keep the scripts in `scripts/` aligned with the documented workflow
+- Keep HANDOFF-only length metrics, advisory wording, and boundary tests aligned when the recommendation changes
 - Keep `references/agent-usage-best-practices.md` aligned with the actual recommended agent flow
 - Keep `references/snapshot-strategy.md` aligned with snapshot kinds and script flags
 - Keep detailed workspace, resume, snapshot, template, and installation guidance in the routed reference files instead of duplicating it in `SKILL.md`

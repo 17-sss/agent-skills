@@ -93,6 +93,8 @@ Read [agent-usage-best-practices.md](references/agent-usage-best-practices.md) f
 - Keep implementation detail in repo handoffs, workspace coordination in the workspace handoff, and initiative-specific coordination in its workstream.
 - Touch companion documents only when durable shared context changes.
 - Include a short resume checklist and only the files, commands, dashboards, or docs needed to continue.
+- Treat the validator's 220-line HANDOFF guidance as a non-blocking maintenance advisory. When it fires, use the reported largest sections to remove stale or duplicated completed detail without dropping unresolved risks or next actions.
+- Before a substantial compaction, create a snapshot when the previous point-in-time state is worth preserving. Keep older completed detail in that snapshot, Git history, or an existing repository-owned history document; the canonical HANDOFF must remain current-state oriented.
 
 Use [handoff-template.md](references/handoff-template.md) when creating or substantially restructuring a document.
 

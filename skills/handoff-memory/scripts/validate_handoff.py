@@ -20,6 +20,27 @@ from handoff_lib import (
 )
 
 
+RECOMMENDED_HANDOFF_MAX_LINES = 220
+MAX_REPORTED_SECTIONS = 3
+
+
+def largest_section_metrics(text: str) -> list[dict[str, int | str]]:
+    lines = text.splitlines()
+    starts = [
+        (index, line.removeprefix("## ").strip())
+        for index, line in enumerate(lines)
+        if line.startswith("## ")
+    ]
+    sections: list[dict[str, int | str]] = []
+    for position, (start, name) in enumerate(starts):
+        end = starts[position + 1][0] if position + 1 < len(starts) else len(lines)
+        sections.append({"name": name, "line_count": end - start})
+    return sorted(
+        sections,
+        key=lambda section: (-int(section["line_count"]), str(section["name"])),
+    )[:MAX_REPORTED_SECTIONS]
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Validate a canonical repo-local, workspace-wide, or workstream document."
@@ -98,9 +119,34 @@ def main() -> int:
         resolution.target_scope,
         resolution.document,
     )
+    line_count = len(text.splitlines())
+    largest_sections = (
+        largest_section_metrics(text) if resolution.document == "handoff" else []
+    )
+    document_metrics = {
+        "line_count": line_count,
+        "recommended_max_lines": (
+            RECOMMENDED_HANDOFF_MAX_LINES
+            if resolution.document == "handoff"
+            else None
+        ),
+        "largest_sections": largest_sections,
+    }
     warnings: list[str] = []
-    if len(text.splitlines()) > 220:
-        warnings.append("Document is longer than 220 lines; consider tightening it.")
+    if (
+        resolution.document == "handoff"
+        and line_count > RECOMMENDED_HANDOFF_MAX_LINES
+    ):
+        section_summary = ", ".join(
+            f"{section['name']} ({section['line_count']} lines)"
+            for section in largest_sections
+        )
+        warnings.append(
+            f"HANDOFF is {line_count} lines; recommended maximum is "
+            f"{RECOMMENDED_HANDOFF_MAX_LINES}. Largest sections: {section_summary}. "
+            "Keep current state, risks, and next actions here; preserve older completed "
+            "detail in a snapshot or an existing repository history document."
+        )
     portability_paths = foreign_absolute_paths(text, resolution.project_root)
     if portability_paths:
         warnings.append(
@@ -122,6 +168,7 @@ def main() -> int:
         "placeholder_lines": placeholders,
         "resume_blockers": resume_blockers,
         "foreign_absolute_paths": portability_paths,
+        "document_metrics": document_metrics,
         "warnings": warnings,
     }
 

@@ -76,6 +76,17 @@ When the user says "continue", "resume", or "pick up where we left off", treat t
 - When a task deeply changes one repo and lightly affects others, update the repo handoff in detail and keep the workspace handoff at the coordination level
 - On resume, favor executing the first unfinished next action over reopening settled design questions
 
+### Overlength Maintenance
+
+The validator's recommended HANDOFF maximum is an advisory, not a validity gate. When a HANDOFF exceeds it:
+
+- Use `document_metrics.largest_sections` to find where completed or duplicated detail accumulated.
+- Keep `TL;DR` to the smallest current summary, keep only recent changes that still affect continuation, and keep validation evidence relevant to the current state.
+- Preserve every unresolved risk, blocker, and justified next action even when the document remains above the recommendation.
+- Use this package's snapshot support before a substantial rewrite when the previous point-in-time state is worth retaining.
+- Move older completed detail only to an existing repository-owned history document when that document already owns long-term history; otherwise rely on the snapshot and Git rather than creating a new history system implicitly.
+- Re-run validation after compaction. Do not truncate mechanically to satisfy the line count.
+
 ## End-of-Session Flow
 
 1. Refresh the canonical document metadata and structure.

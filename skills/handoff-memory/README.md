@@ -33,6 +33,7 @@ Path resolution and validation still work outside Git, but freshness checks are 
 - Narrows workspace stale checks to the selected workstream or repo set named in the selected handoff instead of falling back to unrelated child repos
 - Treats `Next Actions` and `Resume Prompt` as authoritative resume-time execution guidance unless the user or repo state clearly invalidates them
 - Returns an ambiguous result instead of guessing when multiple workstreams still match a resume request
+- Reports the actual HANDOFF line count and largest sections when the non-blocking 220-line maintenance recommendation is exceeded
 
 ## Workflow Summary
 
@@ -114,6 +115,7 @@ If an agent is using this skill continuously, follow [agent-usage-best-practices
 - Use snapshots only for meaningful transitions, with an explicit kind and reason
 - Prefer workspace-relative paths and repo names over machine-specific absolute paths
 - Validate strictly before ending the session only when strict template conformance matters; the default validator mode only checks resume usability
+- Treat an overlength HANDOFF as a compaction prompt, not a validation failure; keep current state and unresolved work while preserving worthwhile before-state in a snapshot, Git, or an existing repository history document
 
 ## Recommended Commands
 

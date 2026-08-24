@@ -6,6 +6,7 @@ import importlib.util
 import io
 import json
 from pathlib import Path
+import shutil
 import tarfile
 from types import SimpleNamespace
 import tempfile
@@ -356,7 +357,7 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
         self.assertTrue(any("references sibling skill completion-loop" in error for error in errors))
 
     def test_standalone_packages_allow_only_guarded_optional_handoffs(self):
-        for name in checker.OPTIONAL_HANDOFFS:
+        for name in checker.STANDALONE_REFERENCE_RULES:
             with self.subTest(name=name):
                 errors = []
                 with redirect_stdout(io.StringIO()):
@@ -365,6 +366,47 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
                         errors,
                     )
                 self.assertEqual(errors, [])
+
+    def test_durable_history_routes_reject_hard_or_out_of_section_dependencies(self):
+        fixtures = (
+            (
+                "handoff-memory",
+                "SKILL.md",
+                "Offer at most one recommendation:",
+                "Invoke $project-chronicle before continuing. "
+                "Offer at most one recommendation:",
+                "standalone reference section contains mandatory sequencing",
+            ),
+            (
+                "project-chronicle",
+                "SKILL.md",
+                "",
+                "\n## Required handoff workflow\n\n"
+                "Install and invoke $handoff-memory before continuing.\n",
+                "references sibling skill handoff-memory",
+            ),
+        )
+        for name, relative_path, needle, replacement, expected in fixtures:
+            with self.subTest(name=name):
+                with tempfile.TemporaryDirectory(dir=REPO_ROOT / "skills") as temp_dir:
+                    skill_dir = Path(temp_dir) / name
+                    shutil.copytree(REPO_ROOT / "skills" / name, skill_dir)
+                    target = skill_dir / relative_path
+                    original = target.read_text(encoding="utf-8")
+                    updated = (
+                        original.replace(needle, replacement, 1)
+                        if needle
+                        else original + replacement
+                    )
+                    self.assertNotEqual(original, updated)
+                    target.write_text(
+                        updated,
+                        encoding="utf-8",
+                    )
+                    errors = []
+                    with redirect_stdout(io.StringIO()):
+                        checker.validate_standalone_package(skill_dir, errors)
+                self.assertTrue(any(expected in error for error in errors), errors)
 
     def test_optional_handoff_rejects_missing_availability_guard(self):
         original = (REPO_ROOT / "skills" / "spec-interview" / "SKILL.md").read_text(
@@ -381,7 +423,9 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
             errors = []
             with redirect_stdout(io.StringIO()):
                 checker.validate_standalone_package(skill_dir, errors)
-        self.assertTrue(any("optional handoff lacks guardrail" in error for error in errors))
+        self.assertTrue(
+            any("standalone reference section lacks guardrail" in error for error in errors)
+        )
 
     def test_optional_handoff_rejects_mandatory_or_out_of_section_reference(self):
         original = (REPO_ROOT / "skills" / "spec-interview" / "SKILL.md").read_text(

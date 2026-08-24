@@ -19,7 +19,7 @@ Do not produce a commit-by-commit transcript. Record every chronicle run in a li
 - Record repository-relative paths and resolvable commit, tag, PR, issue, release, or document anchors.
 - Never invent rationale to make the history appear complete.
 - Preserve detailed history separately from current operational state and next-action documents.
-- Complete Bootstrap, Record, and Read or audit modes from Git and repository documents even when no HANDOFF or `handoff-memory` package exists.
+- Complete Bootstrap, Record, and Read or audit modes from Git and repository documents even when no HANDOFF exists.
 - Keep shared mutable history inside the target repository or workspace, not in agent-specific configuration folders.
 - Do not expose secrets, raw credentials, private keys, or confidential logs.
 

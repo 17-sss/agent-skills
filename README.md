@@ -265,7 +265,7 @@ The source snapshot, native capability mapping, update cadence, and forward-test
 The two maintenance scripts have distinct responsibilities.
 
 - `skills/milestone-runner/scripts/goal_state.py`: manages durable repository state for `milestone-runner` only.
-- `scripts/check-native-workflow-skills.py`: validates the structure, independence, metadata, native capability contracts, TUI grouping, and source drift of the six managed workflow packages.
+- `scripts/check-native-workflow-skills.py`: validates the structure, independence, metadata, native capability contracts, TUI grouping, and source drift of the six managed workflow packages, plus the guarded sibling-reference boundaries declared by `handoff-memory` and `project-chronicle`.
 
 ### Workflow checker modes
 

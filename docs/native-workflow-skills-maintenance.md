@@ -105,7 +105,7 @@ python3 scripts/check-native-workflow-skills.py --check-upstream --check-codex-d
 
 ### Checker CLI contract
 
-The default invocation is offline. It checks frontmatter, package-local links, executable helper bits, metadata and `agents/openai.yaml`, banned runtime dependencies, hard cross-skill dependencies, the strict optional-handoff allowlist and availability guardrails, the exclusive `.agent-workflows/` state owner, the root catalog, and retired unprefixed directories. It also runs `skill-creator`'s `quick_validate.py` when that validator and a Python interpreter with PyYAML are available.
+The default invocation is offline. It checks frontmatter, package-local links, executable helper bits, metadata and `agents/openai.yaml`, banned runtime dependencies, hard cross-skill dependencies, the strict optional-handoff allowlist and availability guardrails, the guarded sibling-reference sections registered for `handoff-memory` and `project-chronicle`, the exclusive `.agent-workflows/` state owner, the root catalog, and retired unprefixed directories. It also runs `skill-creator`'s `quick_validate.py` when that validator and a Python interpreter with PyYAML are available.
 
 Use the flags according to the evidence required:
 

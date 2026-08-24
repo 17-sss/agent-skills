@@ -265,7 +265,7 @@ Use $review-gate as the final pre-PR gate for this high-risk change. Keep the wo
 두 스크립트의 역할은 다음과 같습니다.
 
 - `skills/milestone-runner/scripts/goal_state.py`: `milestone-runner` 하나의 durable repository state만 관리합니다.
-- `scripts/check-native-workflow-skills.py`: 관리 대상 6개 패키지의 구조, 독립성, metadata, native capability, TUI 그룹과 source drift를 검사합니다.
+- `scripts/check-native-workflow-skills.py`: 관리 대상 6개 패키지의 구조, 독립성, metadata, native capability, TUI 그룹과 source drift를 검사하고, `handoff-memory`와 `project-chronicle`에 선언된 sibling-reference 경계도 함께 검증합니다.
 
 ### Workflow checker modes
 

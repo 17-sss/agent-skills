@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate managed workflow skills and optionally check upstream drift."""
+"""Validate workflow skills, guarded sibling references, and optional upstream drift."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+from typing import NamedTuple
 from urllib.request import urlopen
 from urllib.parse import urlparse
 
@@ -34,17 +35,6 @@ CODEX_SKILL_NAMES = (
     "review-gate",
 )
 OPTIONAL_HANDOFF_HEADING = "## Offer an optional next workflow"
-OPTIONAL_HANDOFFS = {
-    "spec-interview": (
-        "reviewed-plan",
-        "completion-loop",
-        "milestone-runner",
-    ),
-    "reviewed-plan": (
-        "completion-loop",
-        "milestone-runner",
-    ),
-}
 OPTIONAL_HANDOFF_MARKERS = (
     "Keep this package complete on its own.",
     "Do not invoke or activate another skill.",
@@ -92,6 +82,92 @@ OTHER_SKILL_NAMES = (
     "github-pr-review",
     "github-pr-publish",
     "commit-helper",
+)
+
+
+class StandaloneReferenceSection(NamedTuple):
+    relative_path: str
+    heading: str
+    targets: tuple[str, ...]
+    markers: tuple[str, ...]
+
+
+STANDALONE_REFERENCE_RULES = {
+    "spec-interview": (
+        StandaloneReferenceSection(
+            "SKILL.md",
+            OPTIONAL_HANDOFF_HEADING,
+            ("reviewed-plan", "completion-loop", "milestone-runner"),
+            (
+                *OPTIONAL_HANDOFF_MARKERS,
+                *OPTIONAL_HANDOFF_READINESS_MARKERS["spec-interview"],
+            ),
+        ),
+    ),
+    "reviewed-plan": (
+        StandaloneReferenceSection(
+            "SKILL.md",
+            OPTIONAL_HANDOFF_HEADING,
+            ("completion-loop", "milestone-runner"),
+            (
+                *OPTIONAL_HANDOFF_MARKERS,
+                *OPTIONAL_HANDOFF_READINESS_MARKERS["reviewed-plan"],
+            ),
+        ),
+    ),
+    "handoff-memory": (
+        StandaloneReferenceSection(
+            "SKILL.md",
+            "## Offer an Optional Durable-History Follow-Up",
+            ("project-chronicle",),
+            (
+                "Keep this package complete on its own.",
+                "current task's available-skill inventory",
+                "Do not inspect installation directories",
+                "do not install a missing skill",
+                "Offer at most one recommendation",
+                "the user explicitly chooses and invokes",
+            ),
+        ),
+        StandaloneReferenceSection(
+            "README.md",
+            "## Optional Durable-History Follow-Up",
+            ("project-chronicle",),
+            (
+                "completes handoff creation, compaction, validation, and resume work without another skill",
+                "explicitly available in the current task",
+                "separate user-selected follow-up",
+                "never infer its availability",
+            ),
+        ),
+        StandaloneReferenceSection(
+            "references/agent-usage-best-practices.md",
+            "### Optional Durable-History Routing",
+            ("project-chronicle",),
+            (
+                "Complete the HANDOFF compaction first.",
+                "does not depend on a separate history workflow",
+                "available-skill inventory",
+                "omit the suggestion",
+            ),
+        ),
+    ),
+    "project-chronicle": (
+        StandaloneReferenceSection(
+            "SKILL.md",
+            "## Keep history distinct from handoff state",
+            ("handoff-memory",),
+            (
+                "data boundary, not a package dependency",
+                "its absence does not block any mode",
+                "Do not import, invoke, install, or require `handoff-memory`",
+                "unless the user separately requests that operational work",
+            ),
+        ),
+    ),
+}
+STANDALONE_SKILL_NAMES = tuple(
+    dict.fromkeys((*MANAGED_SKILL_NAMES, *STANDALONE_REFERENCE_RULES))
 )
 STATE_DIRECTORY = ".agent-workflows"
 SOURCE_MANIFEST = REPO_ROOT / "docs" / "native-workflow-sources.json"
@@ -202,75 +278,74 @@ def validate_runtime_independence(skill_dir: Path, errors: list[str]) -> None:
                 fail(f"{path.relative_to(REPO_ROOT)} contains banned {label}", errors)
 
 
+def standalone_section_span(text: str, heading: str) -> tuple[int, int] | None:
+    matches = list(re.finditer(rf"(?m)^{re.escape(heading)}\s*$", text))
+    if len(matches) != 1:
+        return None
+    match = matches[0]
+    level = len(heading) - len(heading.lstrip("#"))
+    next_heading = re.search(
+        rf"(?m)^#{{1,{level}}}\s+",
+        text[match.end() :],
+    )
+    end = match.end() + next_heading.start() if next_heading else len(text)
+    return match.start(), end
+
+
+def sibling_reference_pattern(name: str) -> re.Pattern[str]:
+    return re.compile(
+        rf"(?<![a-z0-9-])\$?{re.escape(name)}(?![a-z0-9-])",
+        re.IGNORECASE,
+    )
+
+
 def validate_standalone_package(skill_dir: Path, errors: list[str]) -> None:
-    """Reject sibling dependencies while allowing guarded, optional handoffs."""
+    """Reject sibling dependencies outside explicitly guarded reference sections."""
     if not skill_dir.is_dir():
         return
-    skill_file = skill_dir / "SKILL.md"
-    skill_text = ""
-    if skill_file.is_file() and not skill_file.is_symlink():
+    allowed_references: list[tuple[Path, int, int, tuple[str, ...]]] = []
+    for rule in STANDALONE_REFERENCE_RULES.get(skill_dir.name, ()):
+        path = skill_dir / rule.relative_path
         try:
-            skill_text = skill_file.read_text(encoding="utf-8")
+            text = path.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
-            pass
-
-    handoff_span: tuple[int, int] | None = None
-    expected_handoffs = OPTIONAL_HANDOFFS.get(skill_dir.name)
-    heading_matches = list(
-        re.finditer(
-            rf"(?m)^{re.escape(OPTIONAL_HANDOFF_HEADING)}\s*$",
-            skill_text,
-        )
-    )
-    if expected_handoffs is None:
-        if heading_matches:
             fail(
-                f"{skill_file.relative_to(REPO_ROOT)} declares an optional handoff section "
-                "outside the strict allowlist",
+                f"{path.relative_to(REPO_ROOT)} is required for standalone reference validation",
                 errors,
             )
-    elif len(heading_matches) != 1:
-        fail(
-            f"{skill_file.relative_to(REPO_ROOT)} must contain exactly one "
-            f"{OPTIONAL_HANDOFF_HEADING!r} section",
-            errors,
-        )
-    else:
-        start = heading_matches[0].start()
-        next_heading = re.search(r"(?m)^##\s+", skill_text[heading_matches[0].end() :])
-        end = (
-            heading_matches[0].end() + next_heading.start()
-            if next_heading
-            else len(skill_text)
-        )
-        handoff_span = (start, end)
-        handoff_text = skill_text[start:end]
-        required_markers = (
-            *OPTIONAL_HANDOFF_MARKERS,
-            *OPTIONAL_HANDOFF_READINESS_MARKERS[skill_dir.name],
-        )
-        for marker in required_markers:
-            if marker not in handoff_text:
+            continue
+        span = standalone_section_span(text, rule.heading)
+        if span is None:
+            fail(
+                f"{path.relative_to(REPO_ROOT)} must contain exactly one {rule.heading!r} section",
+                errors,
+            )
+            continue
+        start, end = span
+        section_text = text[start:end]
+        allowed_references.append((path, start, end, rule.targets))
+        for marker in rule.markers:
+            if marker not in section_text:
                 fail(
-                    f"{skill_file.relative_to(REPO_ROOT)} optional handoff lacks guardrail "
+                    f"{path.relative_to(REPO_ROOT)} standalone reference section lacks guardrail "
                     f"{marker!r}",
                     errors,
                 )
-        for downstream in expected_handoffs:
-            if f"`${downstream}`" not in handoff_text:
+        for target in rule.targets:
+            if not sibling_reference_pattern(target).search(section_text):
                 fail(
-                    f"{skill_file.relative_to(REPO_ROOT)} optional handoff does not document "
-                    f"allowed route {downstream}",
+                    f"{path.relative_to(REPO_ROOT)} standalone reference section does not document "
+                    f"allowed route {target}",
                     errors,
                 )
         for label, pattern in HARD_HANDOFF_PATTERNS.items():
-            if pattern.search(handoff_text):
+            if pattern.search(section_text):
                 fail(
-                    f"{skill_file.relative_to(REPO_ROOT)} optional handoff contains {label}",
+                    f"{path.relative_to(REPO_ROOT)} standalone reference section contains {label}",
                     errors,
                 )
 
-    other_names = [name for name in MANAGED_SKILL_NAMES if name != skill_dir.name]
+    other_names = [name for name in STANDALONE_SKILL_NAMES if name != skill_dir.name]
     for path in sorted(skill_dir.rglob("*")):
         if not path.is_file() or path.is_symlink():
             continue
@@ -279,17 +354,13 @@ def validate_standalone_package(skill_dir: Path, errors: list[str]) -> None:
         except (OSError, UnicodeDecodeError):
             continue
         for other_name in other_names:
-            pattern = re.compile(
-                rf"(?<![a-z0-9-])\$?{re.escape(other_name)}(?![a-z0-9-])",
-                re.IGNORECASE,
-            )
+            pattern = sibling_reference_pattern(other_name)
             for match in pattern.finditer(text):
-                allowed_optional_reference = (
-                    path == skill_file
-                    and handoff_span is not None
-                    and expected_handoffs is not None
-                    and other_name in expected_handoffs
-                    and handoff_span[0] <= match.start() < handoff_span[1]
+                allowed_optional_reference = any(
+                    path == allowed_path
+                    and other_name in targets
+                    and start <= match.start() < end
+                    for allowed_path, start, end, targets in allowed_references
                 )
                 if not allowed_optional_reference:
                     fail(
@@ -978,6 +1049,11 @@ def main() -> int:
         validate_state_contract(skill_dir, errors)
         validate_links(skill_dir, errors)
         validate_catalog_files(skill_dir, errors)
+
+    for name in STANDALONE_REFERENCE_RULES:
+        if name in MANAGED_SKILL_NAMES:
+            continue
+        validate_standalone_package(REPO_ROOT / "skills" / name, errors)
 
     validate_root_catalog(errors)
     validate_tui_group_manifest(errors)

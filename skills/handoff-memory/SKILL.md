@@ -98,6 +98,14 @@ Read [agent-usage-best-practices.md](references/agent-usage-best-practices.md) f
 
 Use [handoff-template.md](references/handoff-template.md) when creating or substantially restructuring a document.
 
+## Offer an Optional Durable-History Follow-Up
+
+Keep this package complete on its own. Finish handoff creation, refresh, compaction, validation, and resume work with this package's own scripts, snapshots, repository documents, and Git evidence. Do not require, import, invoke, or install another skill to make a HANDOFF usable.
+
+Consider a separate durable-history workflow only after the canonical HANDOFF is resume-usable and the material removed during compaction explains lasting project evolution, rationale, or consequences rather than current operational state. An existing repository-owned history document may be linked from `Quick Reference`, but do not update that history unless the user also requested history work.
+
+Offer at most one recommendation: `$project-chronicle`, and only when its exact name appears in the current task's available-skill inventory and the current agent satisfies its advertised runtime requirements. Do not inspect installation directories, catalog files, or the downstream package to infer availability, and do not install a missing skill. If the inventory is unavailable, runtime compatibility is unclear, the HANDOFF is not yet resume-usable, or the removed material does not warrant durable history, omit the recommendation. Availability is not authorization: unless the user already requested both workflows, the user explicitly chooses and invokes the follow-up in a later turn.
+
 ## Optional Snapshots
 
 Create a snapshot only for a meaningful transition such as a risky migration, deploy boundary, major context transfer, debugging checkpoint, or substantial handoff rewrite. Always provide both `--snapshot-kind` and `--snapshot-reason`:

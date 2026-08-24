@@ -87,6 +87,16 @@ The validator's recommended HANDOFF maximum is an advisory, not a validity gate.
 - Move older completed detail only to an existing repository-owned history document when that document already owns long-term history; otherwise rely on the snapshot and Git rather than creating a new history system implicitly.
 - Re-run validation after compaction. Do not truncate mechanically to satisfy the line count.
 
+### Optional Durable-History Routing
+
+Complete the HANDOFF compaction first. This package does not depend on a separate history workflow.
+
+- Treat details about project evolution, lasting rationale, alternatives, and consequences as durable-history candidates. Routine completed steps and repeated validation output usually need only Git or a meaningful snapshot.
+- Link an existing canonical repository history from `Quick Reference` when it helps continuation, but do not edit that history unless the user requested history maintenance.
+- Suggest `$project-chronicle` only when the canonical HANDOFF is resume-usable, durable-history candidates remain, and the exact skill is advertised in the current task's available-skill inventory with compatible runtime requirements.
+- Do not search installation paths, inspect the downstream package, install it, or invoke it automatically. If availability or readiness is unclear, omit the suggestion.
+- When the user explicitly requests both workflows, keep current operational state in the HANDOFF, durable evolution in the history documents, and validate each artifact with its owning workflow.
+
 ## End-of-Session Flow
 
 1. Refresh the canonical document metadata and structure.

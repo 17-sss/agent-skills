@@ -19,6 +19,7 @@ Do not produce a commit-by-commit transcript. Record every chronicle run in a li
 - Record repository-relative paths and resolvable commit, tag, PR, issue, release, or document anchors.
 - Never invent rationale to make the history appear complete.
 - Preserve detailed history separately from current operational state and next-action documents.
+- Complete Bootstrap, Record, and Read or audit modes from Git and repository documents even when no HANDOFF or `handoff-memory` package exists.
 - Keep shared mutable history inside the target repository or workspace, not in agent-specific configuration folders.
 - Do not expose secrets, raw credentials, private keys, or confidential logs.
 
@@ -113,6 +114,8 @@ Project history answers: what exists, where it came from, why it changed, what a
 Operational handoff material answers: what is true now, what is in progress, what is risky, and what should happen next.
 
 Link between them when useful, but do not copy a long historical recap into a handoff or turn the chronicle into a next-action queue. An existing ADR or canonical technical document owns its detailed contract; the chronicle should summarize historical significance and link to it instead of duplicating it.
+
+Treat HANDOFF interoperability as a data boundary, not a package dependency. A current HANDOFF or archived snapshot is optional time-bounded evidence; its absence does not block any mode. Do not import, invoke, install, or require `handoff-memory`, and do not create or refresh a HANDOFF unless the user separately requests that operational work. When the user explicitly requests both workflows, keep the artifacts separate, link them where useful, and validate each with its owning package.
 
 ## Validate before reporting completion
 

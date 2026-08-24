@@ -41,5 +41,6 @@ This package defines the `handoff-memory` skill.
 - Keep `references/snapshot-strategy.md` aligned with snapshot kinds and script flags
 - Keep detailed workspace, resume, snapshot, template, and installation guidance in the routed reference files instead of duplicating it in `SKILL.md`
 - Most sessions should still update only the canonical handoff document
+- Keep durable-history routing optional: no sibling imports, required installation, automatic invocation, or validator dependency
 - Preserve the difference between workspace-wide and workstream-specific documents
 - Do not reintroduce global machine-local storage as the default behavior

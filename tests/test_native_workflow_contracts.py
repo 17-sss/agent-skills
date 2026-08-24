@@ -79,6 +79,27 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("`last_active_workstream`", workspace)
         self.assertIn("## When Not to Create a Snapshot", snapshots)
 
+    def test_handoff_memory_offers_chronicle_only_as_a_standalone_follow_up(self):
+        skill = read("skills/handoff-memory/SKILL.md")
+        usage = read("skills/handoff-memory/references/agent-usage-best-practices.md")
+        metadata = read("skills/handoff-memory/metadata.json")
+        scripts = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in sorted((SKILLS / "handoff-memory" / "scripts").glob("*.py"))
+        )
+
+        self.assertIn("## Offer an Optional Durable-History Follow-Up", skill)
+        self.assertIn("Keep this package complete on its own", skill)
+        self.assertIn("current task's available-skill inventory", skill)
+        self.assertIn("Do not inspect installation directories", skill)
+        self.assertIn("do not install a missing skill", skill)
+        self.assertIn("Offer at most one recommendation", skill)
+        self.assertIn("the user explicitly chooses and invokes", skill)
+        self.assertIn("`$project-chronicle`", skill)
+        self.assertIn("Complete the HANDOFF compaction first", usage)
+        self.assertNotIn("project-chronicle", scripts)
+        self.assertNotIn("project-chronicle", json.loads(metadata)["references"])
+
     def test_spec_interview_is_one_question_read_only_and_drift_aware(self):
         text = read("skills/spec-interview/SKILL.md")
         self.assertIn("single highest-leverage unresolved question", text)

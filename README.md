@@ -119,6 +119,7 @@ Create, validate, refresh, and resume shared HANDOFF documents for one repositor
 - Default to `docs/HANDOFF.md` for a repository and `_memory/HANDOFF.md` for a workspace.
 - Preserve completed state as timestamped snapshots when useful.
 - Keep mutable project memory in Git-trackable project locations instead of agent-specific configuration folders.
+- Complete HANDOFF maintenance independently; offer `$project-chronicle` only as an availability-gated, user-selected follow-up when compacted material warrants durable history.
 
 Usage example:
 
@@ -133,6 +134,7 @@ Reconstruct and maintain long-term project history from Git, repository document
 - Bootstrap an existing project by grouping evidence into meaningful periods and workstreams instead of copying commit chronology.
 - Add one lightweight log record on every chronicle run while updating the timeline and detailed entries only when the durable story changes.
 - Separate verified facts, supported inference, and unknown history, and keep historical background distinct from current HANDOFF state.
+- Treat existing HANDOFF files as optional time-bounded evidence and never require `handoff-memory` to reconstruct or maintain history.
 
 Usage example:
 

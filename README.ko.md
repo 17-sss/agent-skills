@@ -119,6 +119,7 @@ Use $visual-match to match the attached checkout screenshot at desktop and mobil
 - 저장소는 `docs/HANDOFF.md`, 워크스페이스는 `_memory/HANDOFF.md`를 기본값으로 사용합니다.
 - 완료된 상태는 필요할 때 timestamp snapshot으로 보존합니다.
 - 변경 가능한 프로젝트 기억을 에이전트 개인 설정 폴더가 아니라 Git으로 추적 가능한 위치에 둡니다.
+- HANDOFF 관리는 독립적으로 완결하고, 압축한 내용에 장기 이력이 필요할 때만 `$project-chronicle`을 가용성 확인 및 사용자 선택 기반 후속 작업으로 제안합니다.
 
 사용 예시:
 
@@ -133,6 +134,7 @@ Git, 저장소 문서, 현재 코드와 필요한 경우의 짧은 사용자 확
 - 기존 프로젝트의 근거를 커밋 나열이 아니라 의미 있는 기간과 workstream으로 통합합니다.
 - chronicle 실행마다 가벼운 log 기록을 남기고, 장기 서사가 바뀔 때만 timeline과 상세 entry를 갱신합니다.
 - 검증된 사실, 근거 있는 추정과 미확인 역사를 구분하고 현재 HANDOFF 상태와 역사적 배경을 분리합니다.
+- 기존 HANDOFF는 선택적인 시점별 근거로만 사용하며, 역사를 복원하거나 유지하기 위해 `handoff-memory`를 요구하지 않습니다.
 
 사용 예시:
 

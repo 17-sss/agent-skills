@@ -1,9 +1,9 @@
 {
   "name": "project-chronicle",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "organization": "17-sss",
   "date": "August 2026",
-  "abstract": "Cross-agent workflow for reconstructing and continuously maintaining a layered, evidence-backed project history from Git, repository documents, current code, and focused human clarification. Records every chronicle run while consolidating meaningful changes into durable periods, workstreams, and detailed historical entries for future humans and AI.",
+  "abstract": "Cross-agent workflow for independently reconstructing and maintaining layered, evidence-backed project history from Git, repository documents, current code, and focused human clarification. Records every chronicle run while consolidating meaningful changes into durable periods and workstreams, and treats HANDOFF files as optional time-bounded evidence rather than a package dependency.",
   "references": [
     "https://github.com/mattpocock/skills/tree/main/skills/engineering/grill-with-docs",
     "https://github.com/mattpocock/skills/tree/main/skills/engineering/domain-modeling"

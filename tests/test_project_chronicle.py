@@ -439,10 +439,22 @@ class ProjectChronicleContractTest(unittest.TestCase):
         recording = (SKILL_ROOT / "references" / "recording-rules.md").read_text(
             encoding="utf-8"
         )
+        metadata = json.loads(
+            (SKILL_ROOT / "metadata.json").read_text(encoding="utf-8")
+        )
+        scripts = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in sorted((SKILL_ROOT / "scripts").glob("*.py"))
+        )
 
         self.assertIn("Every Bootstrap or Record run must add one dated `LOG.md` record", skill)
         self.assertIn("Keep history distinct from handoff state", skill)
+        self.assertIn("data boundary, not a package dependency", skill)
+        self.assertIn("its absence does not block any mode", skill)
+        self.assertIn("Do not import, invoke, install, or require `handoff-memory`", skill)
         self.assertIn("Update the current period", recording)
+        self.assertNotIn("handoff-memory", scripts)
+        self.assertNotIn("handoff-memory", metadata["references"])
         self.assertNotIn("create_goal", skill)
         self.assertNotIn("update_goal", skill)
         self.assertTrue(os.access(COLLECTOR, os.X_OK))

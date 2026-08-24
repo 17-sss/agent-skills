@@ -102,6 +102,10 @@ The skill itself can be installed globally or per-project. The shared HANDOFF da
 
 The primary memory files should stay inside the repository or workspace root they describe so they can be reviewed and synchronized with Git when appropriate. Installation location and data location are separate concerns.
 
+## Optional Durable-History Follow-Up
+
+This package completes handoff creation, compaction, validation, and resume work without another skill. When compaction surfaces lasting project evolution or rationale, link an existing repository-owned history document when one already exists. If `$project-chronicle` is explicitly available in the current task, it may be offered as a separate user-selected follow-up; never infer its availability from installation paths, install it, or invoke it automatically.
+
 ## Best Practices
 
 If an agent is using this skill continuously, follow [agent-usage-best-practices.md](references/agent-usage-best-practices.md). The short version:
@@ -116,6 +120,7 @@ If an agent is using this skill continuously, follow [agent-usage-best-practices
 - Prefer workspace-relative paths and repo names over machine-specific absolute paths
 - Validate strictly before ending the session only when strict template conformance matters; the default validator mode only checks resume usability
 - Treat an overlength HANDOFF as a compaction prompt, not a validation failure; keep current state and unresolved work while preserving worthwhile before-state in a snapshot, Git, or an existing repository history document
+- Keep durable-history routing optional and availability-gated; HANDOFF maintenance must still finish when no history workflow is available
 
 ## Recommended Commands
 

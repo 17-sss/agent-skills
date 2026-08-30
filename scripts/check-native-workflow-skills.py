@@ -28,6 +28,10 @@ MANAGED_SKILL_NAMES = (
     "review-gate",
     "milestone-runner",
 )
+LOCAL_VALIDATED_SKILL_NAMES = (
+    *MANAGED_SKILL_NAMES,
+    "godot-dev-loop",
+)
 CODEX_SKILL_NAMES = (
     "reviewed-plan",
     "completion-loop",
@@ -75,6 +79,7 @@ HARD_HANDOFF_PATTERNS = {
 }
 OTHER_SKILL_NAMES = (
     "design-loop",
+    "godot-dev-loop",
     "spec-interview",
     "visual-match",
     "handoff-memory",
@@ -167,7 +172,7 @@ STANDALONE_REFERENCE_RULES = {
     ),
 }
 STANDALONE_SKILL_NAMES = tuple(
-    dict.fromkeys((*MANAGED_SKILL_NAMES, *STANDALONE_REFERENCE_RULES))
+    dict.fromkeys((*LOCAL_VALIDATED_SKILL_NAMES, *STANDALONE_REFERENCE_RULES))
 )
 STATE_DIRECTORY = ".agent-workflows"
 SOURCE_MANIFEST = REPO_ROOT / "docs" / "native-workflow-sources.json"
@@ -176,6 +181,7 @@ KOREAN_README = REPO_ROOT / "README.ko.md"
 TUI_GROUP_MANIFEST = REPO_ROOT / ".claude-plugin" / "marketplace.json"
 ALLOWED_REFERENCE_HOSTS = {
     "developers.openai.com",
+    "docs.godotengine.org",
     "github.com",
     "learn.chatgpt.com",
     "playwright.dev",
@@ -616,7 +622,7 @@ def validate_root_catalog(errors: list[str]) -> None:
             fail(f"{path.relative_to(REPO_ROOT)} is missing: {exc}", errors)
 
     for path, readme in catalogs.items():
-        for name in MANAGED_SKILL_NAMES:
+        for name in LOCAL_VALIDATED_SKILL_NAMES:
             if f"### {name}" not in readme:
                 fail(f"{path.name} lacks catalog heading for {name}", errors)
             if f"${name}" not in readme:
@@ -790,7 +796,7 @@ def run_skill_validator(
     if python_executable != sys.executable:
         print(f"INFO quick_validate uses {python_executable}")
 
-    for name in MANAGED_SKILL_NAMES:
+    for name in LOCAL_VALIDATED_SKILL_NAMES:
         skill_dir = REPO_ROOT / "skills" / name
         try:
             result = subprocess.run(
@@ -1040,7 +1046,7 @@ def main() -> int:
 
     errors: list[str] = []
     manifest = load_manifest(errors)
-    for name in MANAGED_SKILL_NAMES:
+    for name in LOCAL_VALIDATED_SKILL_NAMES:
         skill_dir = REPO_ROOT / "skills" / name
         validate_frontmatter(skill_dir, errors)
         validate_runtime_independence(skill_dir, errors)
@@ -1051,7 +1057,7 @@ def main() -> int:
         validate_catalog_files(skill_dir, errors)
 
     for name in STANDALONE_REFERENCE_RULES:
-        if name in MANAGED_SKILL_NAMES:
+        if name in LOCAL_VALIDATED_SKILL_NAMES:
             continue
         validate_standalone_package(REPO_ROOT / "skills" / name, errors)
 
@@ -1073,7 +1079,7 @@ def main() -> int:
         print(f"\n{len(errors)} validation error(s)")
         return 1
     if validator_ran:
-        print("\nAll managed workflow skill checks passed, including quick_validate.")
+        print("\nAll locally validated workflow skill checks passed, including quick_validate.")
     else:
         print("\nRepository checks passed; quick_validate was skipped.")
     return 0

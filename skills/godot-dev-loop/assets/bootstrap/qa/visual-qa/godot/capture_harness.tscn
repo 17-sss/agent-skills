@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://qa/visual-qa/godot/capture_harness.gd" id="1_capture"]
+
+[node name="GodotDevLoopCapture" type="Node"]
+script = ExtResource("1_capture")
+
+[node name="StateRoot" type="Node" parent="."]

@@ -49,6 +49,7 @@ Start a new agent task after installation so the refreshed skill discovery resul
 | Category | Skill | Use it when |
 | --- | --- | --- |
 | Shared | [`design-loop`](skills/design-loop/SKILL.md) | Iteratively improving a UI against real rendered evidence |
+| Shared | [`godot-dev-loop`](skills/godot-dev-loop/SKILL.md) | Refining a Godot game through durable state, rendered captures, and fresh agent iterations |
 | Shared | [`spec-interview`](skills/spec-interview/SKILL.md) | Resolving ambiguous requirements one material question at a time |
 | Shared | [`visual-match`](skills/visual-match/SKILL.md) | Matching an implementation to an approved image or URL |
 | Shared | [`handoff-memory`](skills/handoff-memory/SKILL.md) | Creating or resuming a repository or workspace HANDOFF |
@@ -78,6 +79,22 @@ Usage example:
 
 ```text
 Use $design-loop to polish the checkout screen. Preserve behavior, inspect desktop and mobile renders, test the primary flow, and iterate on major visual issues.
+```
+
+### godot-dev-loop
+
+Build and refine Godot 4.x playable slices through deterministic state entry, real-window PNG capture, native image inspection, repository-owned handoff state, and intentionally fresh agent processes.
+
+- Establish a concise three-question game brief and execution-ready `docs/DESIGN.md` before autonomous implementation.
+- Bootstrap `DESIGN`, `STATUS`, and human-owned `feedback/INBOX` state plus an isolated Godot capture harness without changing the real main scene.
+- Require one explicit import pass, a non-headless rendered capture, and actual inspection of the new PNG before visual success.
+- Run one coherent improvement per disposable process and stop safely for DESIGN completion, blockers, optional iteration limits, or repeated runner failure.
+- Use the generated Bash loop on macOS, Linux, or compatible Unix-like environments; Claude Code and Codex adapters are optional conveniences, and custom executable adapters remain supported.
+
+Usage example:
+
+```text
+Use $godot-dev-loop to bootstrap this Godot 4 project, establish the game brief and stop criteria, prove real-window capture with an inspected PNG, and prepare bounded fresh-agent iterations. Do not launch the autonomous loop until visual QA is ready.
 ```
 
 ### spec-interview
@@ -254,7 +271,7 @@ Use $review-gate as the final pre-PR gate for this high-risk change. Keep the wo
 - Installing one skill must be sufficient for its core workflow to run.
 - Optional workflow handoffs are recommendations only. A skill may name only a downstream workflow advertised in the current task's available-skill inventory; when that inventory or the best-fit skill is unavailable, it makes no suggestion.
 - Shared skills follow their own invocation policy; specify `$skill-name` for reproducible explicit invocation.
-- The four Codex-dependent workflows, plus the high-control shared `spec-interview` and `visual-match` workflows, set `allow_implicit_invocation: false` and must be invoked explicitly.
+- The four Codex-dependent workflows, plus the high-control shared `spec-interview`, `visual-match`, and `godot-dev-loop` workflows, set `allow_implicit_invocation: false` and must be invoked explicitly.
 - When an optional plugin or tool is unavailable, prefer repository-native tools and safe fallbacks.
 - Invoking a skill does not grant approval for external publishing, pushes, environment installation, or destructive actions.
 
@@ -265,7 +282,7 @@ The source snapshot, native capability mapping, update cadence, and forward-test
 The two maintenance scripts have distinct responsibilities.
 
 - `skills/milestone-runner/scripts/goal_state.py`: manages durable repository state for `milestone-runner` only.
-- `scripts/check-native-workflow-skills.py`: validates the structure, independence, metadata, native capability contracts, TUI grouping, and source drift of the six managed workflow packages, plus the guarded sibling-reference boundaries declared by `handoff-memory` and `project-chronicle`.
+- `scripts/check-native-workflow-skills.py`: validates the structure, independence, metadata, native capability contracts, and TUI grouping of the six managed workflow packages plus the locally maintained `godot-dev-loop`; source drift remains scoped to the six managed packages, and guarded sibling-reference boundaries are also checked for `handoff-memory` and `project-chronicle`.
 
 ### Workflow checker modes
 

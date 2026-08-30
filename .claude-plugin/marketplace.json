@@ -16,6 +16,7 @@
       "source": "./",
       "skills": [
         "./skills/design-loop",
+        "./skills/godot-dev-loop",
         "./skills/spec-interview",
         "./skills/visual-match",
         "./skills/handoff-memory",

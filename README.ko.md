@@ -49,6 +49,7 @@ npx skills add https://github.com/17-sss/agent-skills --skill design-loop
 | 분류 | 스킬 | 이런 때 사용합니다 |
 | --- | --- | --- |
 | 공통 | [`design-loop`](skills/design-loop/SKILL.md) | UI를 실제 렌더 결과로 반복 개선할 때 |
+| 공통 | [`godot-dev-loop`](skills/godot-dev-loop/SKILL.md) | Godot 게임을 durable state, 렌더 캡처와 fresh agent iteration으로 다듬을 때 |
 | 공통 | [`spec-interview`](skills/spec-interview/SKILL.md) | 구현 전에 모호한 요구사항을 한 질문씩 명확히 할 때 |
 | 공통 | [`visual-match`](skills/visual-match/SKILL.md) | 승인된 이미지나 URL과 구현 화면을 엄격히 맞출 때 |
 | 공통 | [`handoff-memory`](skills/handoff-memory/SKILL.md) | 저장소나 워크스페이스의 HANDOFF를 만들고 이어갈 때 |
@@ -78,6 +79,22 @@ UI 구현을 `inspect → implement → render → review → interact → fix �
 
 ```text
 Use $design-loop to polish the checkout screen. Preserve behavior, inspect desktop and mobile renders, test the primary flow, and iterate on major visual issues.
+```
+
+### godot-dev-loop
+
+Godot 4.x playable slice를 deterministic state entry, 실제 창을 통한 PNG 캡처, native image inspection, 저장소 소유 handoff state와 의도적으로 fresh한 agent process로 구현하고 다듬습니다.
+
+- 자율 구현 전에 세 가지 핵심 질문으로 짧은 game brief와 실행 가능한 `docs/DESIGN.md`를 확정합니다.
+- 실제 main scene을 바꾸지 않고 `DESIGN`, `STATUS`, 사용자 소유 `feedback/INBOX`와 격리된 Godot capture harness를 bootstrap합니다.
+- 한 번의 명시적 import, non-headless 렌더 캡처와 새 PNG의 실제 검토가 모두 끝나야 visual success로 인정합니다.
+- disposable process마다 하나의 coherent improvement만 처리하고 DESIGN 완료, blocker, 선택적 iteration 한도 또는 반복 runner failure에서 안전하게 멈춥니다.
+- 생성된 Bash loop는 macOS, Linux와 호환 Unix-like 환경용입니다. Claude Code와 Codex adapter는 선택적 편의 기능이며 custom executable adapter도 지원합니다.
+
+사용 예시:
+
+```text
+Use $godot-dev-loop to bootstrap this Godot 4 project, establish the game brief and stop criteria, prove real-window capture with an inspected PNG, and prepare bounded fresh-agent iterations. Do not launch the autonomous loop until visual QA is ready.
 ```
 
 ### spec-interview
@@ -254,7 +271,7 @@ Use $review-gate as the final pre-PR gate for this high-risk change. Keep the wo
 - 스킬 하나만 설치해도 해당 핵심 워크플로가 동작해야 합니다.
 - 선택적 workflow handoff는 추천일 뿐입니다. 현재 작업의 available-skill inventory에 표시된 downstream workflow만 언급하며, inventory 또는 최적의 스킬을 사용할 수 없으면 아무것도 제안하지 않습니다.
 - 공통 스킬은 각자의 invocation policy를 따르며, 명확한 재현을 원하면 예시처럼 `$skill-name`을 직접 지정합니다.
-- Codex 특화 4개와 제어가 중요한 공통 `spec-interview`, `visual-match`는 `allow_implicit_invocation: false`이며 명시적으로 호출합니다.
+- Codex 특화 4개와 제어가 중요한 공통 `spec-interview`, `visual-match`, `godot-dev-loop`는 `allow_implicit_invocation: false`이며 명시적으로 호출합니다.
 - optional plugin이나 도구가 없으면 저장소 기본 도구와 안전한 fallback을 우선합니다.
 - 외부 게시, push, 환경 설치와 destructive action은 스킬 호출만으로 승인된 것으로 보지 않습니다.
 
@@ -265,7 +282,7 @@ Use $review-gate as the final pre-PR gate for this high-risk change. Keep the wo
 두 스크립트의 역할은 다음과 같습니다.
 
 - `skills/milestone-runner/scripts/goal_state.py`: `milestone-runner` 하나의 durable repository state만 관리합니다.
-- `scripts/check-native-workflow-skills.py`: 관리 대상 6개 패키지의 구조, 독립성, metadata, native capability, TUI 그룹과 source drift를 검사하고, `handoff-memory`와 `project-chronicle`에 선언된 sibling-reference 경계도 함께 검증합니다.
+- `scripts/check-native-workflow-skills.py`: 관리 대상 6개 패키지와 로컬 유지보수 대상 `godot-dev-loop`의 구조, 독립성, metadata, native capability와 TUI 그룹을 검사합니다. source drift는 기존 관리 대상 6개에만 적용하며, `handoff-memory`와 `project-chronicle`에 선언된 sibling-reference 경계도 함께 검증합니다.
 
 ### Workflow checker modes
 

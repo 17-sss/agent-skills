@@ -357,6 +357,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
     def test_catalog_groups_every_skill_and_provides_copyable_usage(self):
         common = (
             "design-loop",
+            "godot-dev-loop",
             "spec-interview",
             "visual-match",
             "handoff-memory",
@@ -407,6 +408,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
         ]
         common = {
             "design-loop",
+            "godot-dev-loop",
             "spec-interview",
             "visual-match",
             "handoff-memory",
@@ -431,7 +433,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
         for name in codex_group:
             ui = read(f"skills/{name}/agents/openai.yaml")
             self.assertIn('display_name: "Codex · ', ui)
-        for name in {"spec-interview", "visual-match", "project-chronicle"}:
+        for name in {"spec-interview", "visual-match", "godot-dev-loop", "project-chronicle"}:
             ui = read(f"skills/{name}/agents/openai.yaml")
             metadata = read(f"skills/{name}/metadata.json")
             self.assertNotIn('display_name: "Codex · ', ui)

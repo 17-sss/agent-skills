@@ -66,9 +66,22 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
             },
         )
         self.assertEqual(
+            set(checker.LOCAL_VALIDATED_SKILL_NAMES),
+            {
+                "spec-interview",
+                "reviewed-plan",
+                "completion-loop",
+                "visual-match",
+                "review-gate",
+                "milestone-runner",
+                "godot-dev-loop",
+            },
+        )
+        self.assertEqual(
             set(checker.OTHER_SKILL_NAMES),
             {
                 "design-loop",
+                "godot-dev-loop",
                 "spec-interview",
                 "visual-match",
                 "handoff-memory",
@@ -79,6 +92,7 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
             },
         )
         self.assertIn("playwright.dev", checker.ALLOWED_REFERENCE_HOSTS)
+        self.assertIn("docs.godotengine.org", checker.ALLOWED_REFERENCE_HOSTS)
         errors = []
         self.assertIsNotNone(checker.load_manifest(errors))
         self.assertEqual(errors, [])

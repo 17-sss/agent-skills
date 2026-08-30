@@ -1,6 +1,6 @@
 # Skill classification and installation
 
-Reviewed: 2026-07-23
+Reviewed: 2026-08-30
 
 Classify a skill by the minimum runtime surface required to satisfy its own completion contract. Origin, inspiration, OpenAI UI metadata, and optional acceleration do not make a skill Codex-only.
 
@@ -16,6 +16,7 @@ Classify a skill by the minimum runtime surface required to satisfy its own comp
 | Codex | `milestone-runner` | Reconciles durable milestones with native Codex Goal tools and the completed goal object |
 | Codex | `review-gate` | Requires two independent native Codex review lanes with tool-enforced isolation |
 | Other | `design-loop` | Uses rendered UI evidence and adapts to available browser, screenshot, and image capabilities |
+| Other | `godot-dev-loop` | Uses repository files, Bash, Git, Godot 4.x real-window capture, image inspection, and fresh non-interactive runner processes without requiring one agent's native workflow tools |
 | Other | `spec-interview` | The interview, read-only inspection, and specification work without an agent-exclusive command; delegation is optional |
 | Other | `visual-match` | Uses equivalent screenshots, browser automation, image evidence, and a package-local standard-library scorer |
 | Other | `handoff-memory` | Uses Git-trackable documents and filesystem operations |
@@ -62,7 +63,7 @@ Re-audit a package when its success gate, required tool, delegation model, or sa
 - `.claude-plugin/marketplace.json`
 - `README.md` and `README.ko.md`
 - this dependency matrix
-- `CODEX_SKILL_NAMES` and `OTHER_SKILL_NAMES` in `scripts/check-native-workflow-skills.py`
+- `CODEX_SKILL_NAMES`, `OTHER_SKILL_NAMES`, and applicable local validation inventories in `scripts/check-native-workflow-skills.py`
 - grouping and standalone contract tests
 
 Run the offline acceptance checks after every change:

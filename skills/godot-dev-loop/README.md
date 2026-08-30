@@ -4,6 +4,12 @@
 
 It is designed for playable-game work that may run for many iterations while each agent process remains disposable. It is not a generic infinite prompt loop and does not depend on another skill.
 
+## Verification status
+
+As of 2026-08-30, the package structure, non-destructive bootstrap behavior, generated Bash syntax and control flow, deterministic state resolution, and fresh-runner safeguards pass the repository's offline tests and validators.
+
+The real-window Godot 4 smoke test remains capability-gated and has not been completed in the current development environment, which has neither a Godot executable nor a graphical display session. Do not treat the visual path as fully verified until a graphical machine runs `GAME_START=smoke ./scripts/game-capture.sh`, confirms the import and normal-window capture process exits successfully, and an image-capable agent opens and inspects the resulting PNG.
+
 ## What it installs into a game project
 
 - `docs/DESIGN.md`, `docs/STATUS.md`, and `docs/feedback/INBOX.md`

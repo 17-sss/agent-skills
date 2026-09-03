@@ -1,9 +1,11 @@
 ---
 name: godot-dev-loop
-description: Bootstrap and run durable, fresh-agent game-development iterations for Godot 4.x projects using a concise game brief, deterministic scene entry, real-window PNG capture, native image inspection, and bounded STOP/BLOCKED handoffs. Use for long-running playable-game work that must survive disposable agent sessions and verify rendered evidence; do not use for non-Godot engines or code-only game review.
+description: Experimental workflow to bootstrap and run durable, fresh-agent game-development iterations for Godot 4.x projects using a concise game brief, deterministic scene entry, real-window PNG capture, native image inspection, and bounded STOP/BLOCKED handoffs. Use for long-running playable-game work that must survive disposable agent sessions and verify rendered evidence; do not use for non-Godot engines or code-only game review.
 ---
 
 # Godot Development Loop
+
+> **Experimental:** This workflow is still being validated, and its behavior and interfaces may change.
 
 Build and refine a playable game through this evidence chain:
 

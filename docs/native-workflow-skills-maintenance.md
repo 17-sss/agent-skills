@@ -92,7 +92,7 @@ Run this after a meaningful Codex release, an upstream workflow change, or a Pro
    - keep every skill installable independently
    - keep optional handoffs recommendation-only and allowlisted; never infer installed skills from the filesystem or catalog
 
-5. Update only the affected `SKILL.md`, scripts, referenced contract, `agents/openai.yaml`, `metadata.json`, root catalog entry, source fingerprint, and checker inventory. If the minimum runtime changes, also update `CODEX_SKILL_NAMES`, `OTHER_SKILL_NAMES`, [skill-classification.md](skill-classification.md), and TUI grouping tests.
+5. Update only the affected `SKILL.md`, scripts, referenced contract, `agents/openai.yaml`, `metadata.json`, root catalog entry, source fingerprint, and checker inventory. If the minimum runtime changes, also update `CODEX_SKILL_NAMES`, `CROSS_AGENT_SKILL_NAMES`, [skill-classification.md](skill-classification.md), and TUI grouping tests. Keep `TUI_SKILL_GROUPS` aligned with the catalog when purpose grouping or experimental status changes.
 
 6. Run structural validation, banned-dependency checks, official Codex-manual evidence checks, and the isolated forward-test matrix. Inspect the final diff after all validators run.
 

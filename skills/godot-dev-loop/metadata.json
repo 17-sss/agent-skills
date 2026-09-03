@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "organization": "17-sss",
   "date": "August 2026",
-  "abstract": "Cross-agent Godot 4.x game-development workflow that establishes a concise human brief, stores current truth in repository files, bootstraps deterministic named-state entry and real-window PNG capture, requires native image inspection, and runs bounded improvements through disposable fresh non-interactive agent processes with STOP and BLOCKED safeguards.",
+  "abstract": "Experimental cross-agent Godot 4.x game-development workflow that establishes a concise human brief, stores current truth in repository files, bootstraps deterministic named-state entry and real-window PNG capture, requires native image inspection, and runs bounded improvements through disposable fresh non-interactive agent processes with STOP and BLOCKED safeguards. The workflow is still being validated, and its behavior and interfaces may change.",
   "references": [
     "https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html",
     "https://docs.godotengine.org/en/stable/classes/class_renderingserver.html",

@@ -8,8 +8,9 @@ This repository is a catalog of reusable agent skills. The repository root is no
 - Each skill should be self-contained and installable on its own
 - Root documentation should describe the catalog, not duplicate skill internals
 - `README.md` is the default English catalog and `README.ko.md` is its Korean counterpart; keep their skill inventory, grouping, usage examples, and maintenance commands aligned
-- `.claude-plugin/marketplace.json` is compatibility metadata used by the `skills` CLI to group the four Codex-dependent workflows under `Codex` and the nine cross-agent skills under `Other`
-- Keep the grouping manifest aligned with the runtime-dependency classification without introducing Claude Code runtime dependencies into the skills
+- `.claude-plugin/marketplace.json` is compatibility metadata used by the `skills` CLI to group skills under `Codex`, `Planning`, `Design`, `Git Workflow`, `Project Memory`, and `Experimental`
+- Keep the four Codex-dependent workflows under `Codex`; the nine cross-agent skills are grouped by purpose, with `godot-dev-loop` under `Experimental` to make its maturity visible
+- Keep display grouping and runtime compatibility distinct without introducing Claude Code runtime dependencies into the skills; experimental skills must identify their status in their description, UI metadata, and catalog documentation
 
 ## Creating a New Skill
 

@@ -77,7 +77,7 @@ HARD_HANDOFF_PATTERNS = {
         r"(?i)\b(?:cannot|can't) continue without\b"
     ),
 }
-OTHER_SKILL_NAMES = (
+CROSS_AGENT_SKILL_NAMES = (
     "design-loop",
     "godot-dev-loop",
     "spec-interview",
@@ -88,6 +88,14 @@ OTHER_SKILL_NAMES = (
     "github-pr-publish",
     "commit-helper",
 )
+TUI_SKILL_GROUPS = {
+    "codex": CODEX_SKILL_NAMES,
+    "design": ("design-loop", "visual-match"),
+    "experimental": ("godot-dev-loop",),
+    "git-workflow": ("commit-helper", "github-pr-review", "github-pr-publish"),
+    "planning": ("spec-interview",),
+    "project-memory": ("handoff-memory", "project-chronicle"),
+}
 
 
 class StandaloneReferenceSection(NamedTuple):
@@ -660,13 +668,14 @@ def validate_tui_group_manifest(errors: list[str]) -> None:
         return
 
     expected_groups = {
-        "codex": {f"./skills/{name}" for name in CODEX_SKILL_NAMES},
-        "other": {f"./skills/{name}" for name in OTHER_SKILL_NAMES},
+        group: {f"./skills/{name}" for name in names}
+        for group, names in TUI_SKILL_GROUPS.items()
     }
     groups = {item.get("name"): item for item in plugins}
     if set(groups) != set(expected_groups) or len(groups) != len(plugins):
         fail(
-            f"{TUI_GROUP_MANIFEST.relative_to(REPO_ROOT)} groups must be exactly codex and other",
+            f"{TUI_GROUP_MANIFEST.relative_to(REPO_ROOT)} groups must be exactly "
+            f"{', '.join(expected_groups)}",
             errors,
         )
         return
@@ -715,7 +724,7 @@ def validate_tui_group_manifest(errors: list[str]) -> None:
             display_name = display_match.group(1) if display_match else ""
             if group_name == "codex" and not display_name.startswith("Codex · "):
                 fail(f"{relative_path} is Codex-grouped but lacks a Codex display prefix", errors)
-            if group_name == "other" and display_name.startswith("Codex · "):
+            if group_name != "codex" and display_name.startswith("Codex · "):
                 fail(f"{relative_path} is cross-agent but retains a Codex display prefix", errors)
 
 

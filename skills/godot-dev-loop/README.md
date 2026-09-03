@@ -1,5 +1,7 @@
 # Godot Development Loop
 
+> **Experimental:** This workflow is still being validated, and its behavior and interfaces may change. It appears under `Experimental` in the skills CLI catalog.
+
 `godot-dev-loop` is a standalone, cross-agent workflow for Godot 4.x projects. It combines a concise human game brief, repository-owned state, deterministic scene entry, real-window PNG capture, image inspection, and fresh non-interactive agent processes.
 
 It is designed for playable-game work that may run for many iterations while each agent process remains disposable. It is not a generic infinite prompt loop and does not depend on another skill.

@@ -16,12 +16,20 @@ Open the interactive catalog and choose the skills to install.
 npx skills add https://github.com/17-sss/agent-skills
 ```
 
-The selection screen is divided into two runtime-compatibility groups.
+The selection screen separates Codex-dependent workflows from shared skills grouped by purpose or experimental status.
 
 - `Codex`: explicitly invoked workflows that use native Codex Plan, Goal, Review, and subagent contracts
-- `Other`: shared skills that work with Codex and other compatible agents
+- `Planning`: requirements interviews and specification preparation
+- `Design`: interface implementation, refinement, and reference matching
+- `Git Workflow`: commits, pull request publication, and PR review
+- `Project Memory`: current handoffs and long-term project history
+- `Experimental`: skills still being validated, currently `godot-dev-loop`; behavior and interfaces may change
+
+All groups except `Codex` contain shared skills that work with Codex and other compatible agents. `Experimental` describes maturity, not an agent requirement.
 
 The `skills` CLI currently reads the explicit skill lists in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) as TUI grouping metadata. The group changes only how skills are presented; it does not select an install directory or add a Claude Code runtime dependency. See [Skill classification and installation](docs/skill-classification.md) for the audited dependency matrix.
+
+`npx skills list --global` reads group names saved at installation time. After updated grouping is published, re-add the affected installed skills from the repository to refresh those names; a catalog edit alone does not update existing installations.
 
 Choose the target agent independently with `--agent`. For Codex, the current CLI installs project skills under `.agents/skills/` and global skills under `~/.codex/skills/`:
 
@@ -46,21 +54,21 @@ Start a new agent task after installation so the refreshed skill discovery resul
 
 ## At a Glance
 
-| Category | Skill | Use it when |
-| --- | --- | --- |
-| Shared | [`design-loop`](skills/design-loop/SKILL.md) | Iteratively improving a UI against real rendered evidence |
-| Shared | [`godot-dev-loop`](skills/godot-dev-loop/SKILL.md) | Refining a Godot game through durable state, rendered captures, and fresh agent iterations |
-| Shared | [`spec-interview`](skills/spec-interview/SKILL.md) | Resolving ambiguous requirements one material question at a time |
-| Shared | [`visual-match`](skills/visual-match/SKILL.md) | Matching an implementation to an approved image or URL |
-| Shared | [`handoff-memory`](skills/handoff-memory/SKILL.md) | Creating or resuming a repository or workspace HANDOFF |
-| Shared | [`project-chronicle`](skills/project-chronicle/SKILL.md) | Reconstructing and maintaining durable project history from repository evidence |
-| Shared | [`github-pr-review`](skills/github-pr-review/SKILL.md) | Reviewing a PR with `gh` and GitHub APIs and optionally posting the review |
-| Shared | [`github-pr-publish`](skills/github-pr-publish/SKILL.md) | Safely pushing the current branch and publishing a pull request |
-| Shared | [`commit-helper`](skills/commit-helper/SKILL.md) | Creating a commit that matches repository rules and staged changes |
-| Codex-native | [`reviewed-plan`](skills/reviewed-plan/SKILL.md) | Producing an implementation plan reviewed by Planner, Architect, and Critic |
-| Codex-native | [`completion-loop`](skills/completion-loop/SKILL.md) | Driving a clear Goal to evidence-backed completion |
-| Codex-native | [`milestone-runner`](skills/milestone-runner/SKILL.md) | Executing large work as resumable, sequential milestones |
-| Codex-native | [`review-gate`](skills/review-gate/SKILL.md) | Running a strict two-lane gate before a high-risk change is published or merged |
+| Group | Runtime | Skill | Best for |
+| --- | --- | --- | --- |
+| Design | Shared | [`design-loop`](skills/design-loop/SKILL.md) | Iteratively improving a UI against real rendered evidence |
+| Experimental | Shared | [`godot-dev-loop`](skills/godot-dev-loop/SKILL.md) | Refining a Godot game through durable state, rendered captures, and fresh agent iterations |
+| Planning | Shared | [`spec-interview`](skills/spec-interview/SKILL.md) | Resolving ambiguous requirements one material question at a time |
+| Design | Shared | [`visual-match`](skills/visual-match/SKILL.md) | Matching an implementation to an approved image or URL |
+| Project Memory | Shared | [`handoff-memory`](skills/handoff-memory/SKILL.md) | Creating or resuming a repository or workspace HANDOFF |
+| Project Memory | Shared | [`project-chronicle`](skills/project-chronicle/SKILL.md) | Reconstructing and maintaining durable project history from repository evidence |
+| Git Workflow | Shared | [`github-pr-review`](skills/github-pr-review/SKILL.md) | Reviewing a PR with `gh` and GitHub APIs and optionally posting the review |
+| Git Workflow | Shared | [`github-pr-publish`](skills/github-pr-publish/SKILL.md) | Safely pushing the current branch and publishing a pull request |
+| Git Workflow | Shared | [`commit-helper`](skills/commit-helper/SKILL.md) | Creating a commit that matches repository rules and staged changes |
+| Codex | Codex-native | [`reviewed-plan`](skills/reviewed-plan/SKILL.md) | Producing an implementation plan reviewed by Planner, Architect, and Critic |
+| Codex | Codex-native | [`completion-loop`](skills/completion-loop/SKILL.md) | Driving a clear Goal to evidence-backed completion |
+| Codex | Codex-native | [`milestone-runner`](skills/milestone-runner/SKILL.md) | Executing large work as resumable, sequential milestones |
+| Codex | Codex-native | [`review-gate`](skills/review-gate/SKILL.md) | Running a strict two-lane gate before a high-risk change is published or merged |
 
 ## Shared Skills
 
@@ -82,6 +90,8 @@ Use $design-loop to polish the checkout screen. Preserve behavior, inspect deskt
 ```
 
 ### godot-dev-loop
+
+> **Experimental:** This workflow is still being validated, and its behavior and interfaces may change.
 
 Build and refine Godot 4.x playable slices through deterministic state entry, real-window PNG capture, native image inspection, repository-owned handoff state, and intentionally fresh agent processes.
 
@@ -307,7 +317,7 @@ Automated validation cannot prove every runtime behavior. After changing a compl
 ```text
 agent-skills/
 ├── .claude-plugin/
-│   └── marketplace.json  # Codex/Other TUI grouping metadata for the skills CLI
+│   └── marketplace.json  # purpose, runtime, and experimental display groups for the skills CLI
 ├── skills/                # one independently installable skill per directory
 ├── scripts/               # maintenance checks for package contracts and source drift
 ├── tests/                 # package and workflow contract regression tests

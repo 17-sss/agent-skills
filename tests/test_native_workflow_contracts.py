@@ -398,7 +398,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("## 공통 스킬", korean)
         self.assertIn("[English](README.md)", korean)
 
-    def test_skills_tui_groups_by_runtime_dependency(self):
+    def test_skills_tui_groups_by_purpose_and_status_preserve_runtime_dependency(self):
         manifest = json.loads(read(".claude-plugin/marketplace.json"))
         codex_native = [
             "reviewed-plan",
@@ -419,12 +419,32 @@ class NativeWorkflowContractTest(unittest.TestCase):
         }
 
         groups = {plugin["name"]: plugin for plugin in manifest["plugins"]}
-        self.assertEqual(set(groups), {"codex", "other"})
+        expected_groups = {
+            "codex": set(codex_native),
+            "design": {"design-loop", "visual-match"},
+            "experimental": {"godot-dev-loop"},
+            "git-workflow": {"commit-helper", "github-pr-review", "github-pr-publish"},
+            "planning": {"spec-interview"},
+            "project-memory": {"handoff-memory", "project-chronicle"},
+        }
+        self.assertEqual(len(groups), len(manifest["plugins"]))
+        self.assertEqual(
+            {name: {Path(path).name for path in group["skills"]} for name, group in groups.items()},
+            expected_groups,
+        )
+        grouped_names = [Path(path).name for group in groups.values() for path in group["skills"]]
+        self.assertEqual(len(grouped_names), len(set(grouped_names)))
+        self.assertEqual(set(grouped_names), {path.parent.name for path in SKILLS.glob("*/SKILL.md")})
         codex_group = {Path(path).name for path in groups["codex"]["skills"]}
-        other_group = {Path(path).name for path in groups["other"]["skills"]}
+        cross_agent_group = {
+            Path(path).name
+            for name, group in groups.items()
+            if name != "codex"
+            for path in group["skills"]
+        }
         self.assertEqual(codex_group, set(codex_native))
-        self.assertEqual(other_group, common)
-        self.assertTrue(codex_group.isdisjoint(other_group))
+        self.assertEqual(cross_agent_group, common)
+        self.assertTrue(codex_group.isdisjoint(cross_agent_group))
         for group in groups.values():
             self.assertEqual(group["source"], "./")
             for path in group["skills"]:
@@ -437,12 +457,13 @@ class NativeWorkflowContractTest(unittest.TestCase):
             ui = read(f"skills/{name}/agents/openai.yaml")
             metadata = read(f"skills/{name}/metadata.json")
             self.assertNotIn('display_name: "Codex · ', ui)
-            self.assertIn("Cross-agent", metadata)
+            self.assertIn("cross-agent", metadata.lower())
 
         for readme_path in ("README.md", "README.ko.md"):
             readme = read(readme_path)
-            self.assertIn("`Codex`:", readme)
-            self.assertIn("`Other`:", readme)
+            for group_name in expected_groups:
+                title = group_name.replace("-", " ").title()
+                self.assertIn(f"`{title}`:", readme)
 
     def test_all_six_managed_workflows_are_explicit_and_runtime_independent(self):
         banned = (".omx", "tmux", "ask_codex", "ultrawork", "omx state")

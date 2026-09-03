@@ -78,7 +78,7 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
             },
         )
         self.assertEqual(
-            set(checker.OTHER_SKILL_NAMES),
+            set(checker.CROSS_AGENT_SKILL_NAMES),
             {
                 "design-loop",
                 "godot-dev-loop",
@@ -111,45 +111,39 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
         self.assertEqual(errors, [])
 
     def test_tui_group_manifest_rejects_cross_agent_skills_in_codex(self):
+        manifest = json.loads(checker.TUI_GROUP_MANIFEST.read_text(encoding="utf-8"))
+        codex_group = next(group for group in manifest["plugins"] if group["name"] == "codex")
+        codex_group["skills"].append("./skills/spec-interview")
         with tempfile.TemporaryDirectory(dir=REPO_ROOT) as temp_dir:
             manifest_path = Path(temp_dir) / "marketplace.json"
-            manifest_path.write_text(
-                json.dumps(
-                    {
-                        "plugins": [
-                            {
-                                "name": "codex",
-                                "source": "./",
-                                "skills": [
-                                    *[
-                                        f"./skills/{name}"
-                                        for name in checker.CODEX_SKILL_NAMES
-                                    ],
-                                    "./skills/spec-interview",
-                                ],
-                            },
-                            {
-                                "name": "other",
-                                "source": "./",
-                                "skills": [
-                                    f"./skills/{name}"
-                                    for name in checker.OTHER_SKILL_NAMES
-                                ],
-                            },
-                        ]
-                    }
-                ),
-                encoding="utf-8",
-            )
-            original = checker.TUI_GROUP_MANIFEST
-            checker.TUI_GROUP_MANIFEST = manifest_path
-            try:
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            with mock.patch.object(checker, "TUI_GROUP_MANIFEST", manifest_path):
                 errors = []
                 with redirect_stdout(io.StringIO()):
                     checker.validate_tui_group_manifest(errors)
-            finally:
-                checker.TUI_GROUP_MANIFEST = original
         self.assertTrue(any("TUI group codex must exactly match" in error for error in errors))
+
+    def test_cross_agent_groups_reject_codex_display_prefix(self):
+        original_read_text = Path.read_text
+        for group_name, names in checker.TUI_SKILL_GROUPS.items():
+            if group_name == "codex":
+                continue
+            with self.subTest(group=group_name):
+                skill_path = REPO_ROOT / "skills" / names[0] / "agents" / "openai.yaml"
+
+                def read_with_wrong_prefix(path, *args, **kwargs):
+                    content = original_read_text(path, *args, **kwargs)
+                    if path == skill_path:
+                        return content.replace('  display_name: "', '  display_name: "Codex · ')
+                    return content
+
+                errors = []
+                with mock.patch.object(Path, "read_text", read_with_wrong_prefix):
+                    with redirect_stdout(io.StringIO()):
+                        checker.validate_tui_group_manifest(errors)
+                self.assertTrue(
+                    any("is cross-agent but retains a Codex display prefix" in error for error in errors)
+                )
 
     def test_upstream_archive_matching_uses_content_fingerprints(self):
         payload = b"---\nname: source-skill\ndescription: fixture\n---\n"

@@ -12,18 +12,42 @@
       ]
     },
     {
-      "name": "other",
+      "name": "design",
       "source": "./",
       "skills": [
         "./skills/design-loop",
-        "./skills/godot-dev-loop",
-        "./skills/spec-interview",
-        "./skills/visual-match",
-        "./skills/handoff-memory",
-        "./skills/project-chronicle",
+        "./skills/visual-match"
+      ]
+    },
+    {
+      "name": "experimental",
+      "source": "./",
+      "skills": [
+        "./skills/godot-dev-loop"
+      ]
+    },
+    {
+      "name": "git-workflow",
+      "source": "./",
+      "skills": [
+        "./skills/commit-helper",
         "./skills/github-pr-review",
-        "./skills/github-pr-publish",
-        "./skills/commit-helper"
+        "./skills/github-pr-publish"
+      ]
+    },
+    {
+      "name": "planning",
+      "source": "./",
+      "skills": [
+        "./skills/spec-interview"
+      ]
+    },
+    {
+      "name": "project-memory",
+      "source": "./",
+      "skills": [
+        "./skills/handoff-memory",
+        "./skills/project-chronicle"
       ]
     }
   ]

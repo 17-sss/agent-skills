@@ -16,12 +16,20 @@
 npx skills add https://github.com/17-sss/agent-skills
 ```
 
-선택 화면은 runtime 호환성에 따라 두 그룹으로 표시됩니다.
+선택 화면은 Codex 의존 워크플로와 공통 스킬을 구분하고, 공통 스킬은 용도나 실험적 상태에 따라 표시합니다.
 
 - `Codex`: Codex의 native Plan, Goal, Review와 subagent 계약을 사용하는 명시 호출형 워크플로
-- `Other`: Codex를 포함한 여러 호환 에이전트에서 사용할 수 있는 공통 스킬
+- `Planning`: 요구사항 인터뷰와 명세 준비
+- `Design`: UI 구현·개선과 기준 화면 재현
+- `Git Workflow`: 커밋, PR 생성과 PR 리뷰
+- `Project Memory`: 현재 작업 인수인계와 장기 프로젝트 이력
+- `Experimental`: 아직 검증 중인 실험적 스킬로, 현재는 `godot-dev-loop`가 해당하며 동작과 인터페이스가 바뀔 수 있음
+
+`Codex`를 제외한 그룹은 Codex를 포함한 여러 호환 에이전트에서 사용할 수 있는 공통 스킬입니다. `Experimental`은 성숙도 표시이며 특정 에이전트 의존성을 뜻하지 않습니다.
 
 `skills` CLI는 현재 [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)의 명시적인 스킬 목록을 TUI 그룹 정보로 읽습니다. 그룹은 선택 화면 표시만 바꾸며 설치 디렉터리를 결정하거나 개별 스킬에 Claude Code runtime 의존성을 추가하지 않습니다. 검토한 의존성 표는 [스킬 분류와 설치](docs/skill-classification.md)에 있습니다.
+
+`npx skills list --global`은 설치 당시 저장한 그룹명을 읽습니다. 변경된 분류가 저장소에 공개된 뒤 해당 스킬을 다시 추가하면 그룹명이 갱신됩니다. 카탈로그 수정만으로 기존 설치 목록이 바뀌지는 않습니다.
 
 설치 대상 에이전트는 `--agent`로 별도 선택합니다. 현재 CLI에서 Codex의 프로젝트 스킬은 `.agents/skills/`, 전역 스킬은 `~/.codex/skills/`에 설치됩니다.
 
@@ -46,21 +54,21 @@ npx skills add https://github.com/17-sss/agent-skills --skill design-loop
 
 ## 한눈에 보기
 
-| 분류 | 스킬 | 이런 때 사용합니다 |
-| --- | --- | --- |
-| 공통 | [`design-loop`](skills/design-loop/SKILL.md) | UI를 실제 렌더 결과로 반복 개선할 때 |
-| 공통 | [`godot-dev-loop`](skills/godot-dev-loop/SKILL.md) | Godot 게임을 durable state, 렌더 캡처와 fresh agent iteration으로 다듬을 때 |
-| 공통 | [`spec-interview`](skills/spec-interview/SKILL.md) | 구현 전에 모호한 요구사항을 한 질문씩 명확히 할 때 |
-| 공통 | [`visual-match`](skills/visual-match/SKILL.md) | 승인된 이미지나 URL과 구현 화면을 엄격히 맞출 때 |
-| 공통 | [`handoff-memory`](skills/handoff-memory/SKILL.md) | 저장소나 워크스페이스의 HANDOFF를 만들고 이어갈 때 |
-| 공통 | [`project-chronicle`](skills/project-chronicle/SKILL.md) | 저장소 근거에서 장기 프로젝트 역사를 복원하고 계속 기록할 때 |
-| 공통 | [`github-pr-review`](skills/github-pr-review/SKILL.md) | `gh`와 GitHub API로 PR을 검토하고 리뷰를 게시할 때 |
-| 공통 | [`github-pr-publish`](skills/github-pr-publish/SKILL.md) | 현재 브랜치를 안전하게 push하고 PR로 공개할 때 |
-| 공통 | [`commit-helper`](skills/commit-helper/SKILL.md) | 저장소 규칙과 staged diff에 맞는 커밋을 만들 때 |
-| Codex 특화 | [`reviewed-plan`](skills/reviewed-plan/SKILL.md) | Planner, Architect, Critic을 거친 구현 계획이 필요할 때 |
-| Codex 특화 | [`completion-loop`](skills/completion-loop/SKILL.md) | 명확한 Goal을 검증 가능한 완료까지 밀어붙일 때 |
-| Codex 특화 | [`milestone-runner`](skills/milestone-runner/SKILL.md) | 큰 작업을 재시작 가능한 순차 milestone로 실행할 때 |
-| Codex 특화 | [`review-gate`](skills/review-gate/SKILL.md) | 고위험 변경을 공개하거나 병합하기 전에 엄격한 두-lane gate를 실행할 때 |
+| 그룹 | 호환성 | 스킬 | 이런 때 사용합니다 |
+| --- | --- | --- | --- |
+| Design | 공통 | [`design-loop`](skills/design-loop/SKILL.md) | UI를 실제 렌더 결과로 반복 개선할 때 |
+| Experimental | 공통 | [`godot-dev-loop`](skills/godot-dev-loop/SKILL.md) | Godot 게임을 durable state, 렌더 캡처와 fresh agent iteration으로 다듬을 때 |
+| Planning | 공통 | [`spec-interview`](skills/spec-interview/SKILL.md) | 구현 전에 모호한 요구사항을 한 질문씩 명확히 할 때 |
+| Design | 공통 | [`visual-match`](skills/visual-match/SKILL.md) | 승인된 이미지나 URL과 구현 화면을 엄격히 맞출 때 |
+| Project Memory | 공통 | [`handoff-memory`](skills/handoff-memory/SKILL.md) | 저장소나 워크스페이스의 HANDOFF를 만들고 이어갈 때 |
+| Project Memory | 공통 | [`project-chronicle`](skills/project-chronicle/SKILL.md) | 저장소 근거에서 장기 프로젝트 역사를 복원하고 계속 기록할 때 |
+| Git Workflow | 공통 | [`github-pr-review`](skills/github-pr-review/SKILL.md) | `gh`와 GitHub API로 PR을 검토하고 리뷰를 게시할 때 |
+| Git Workflow | 공통 | [`github-pr-publish`](skills/github-pr-publish/SKILL.md) | 현재 브랜치를 안전하게 push하고 PR로 공개할 때 |
+| Git Workflow | 공통 | [`commit-helper`](skills/commit-helper/SKILL.md) | 저장소 규칙과 staged diff에 맞는 커밋을 만들 때 |
+| Codex | Codex 특화 | [`reviewed-plan`](skills/reviewed-plan/SKILL.md) | Planner, Architect, Critic을 거친 구현 계획이 필요할 때 |
+| Codex | Codex 특화 | [`completion-loop`](skills/completion-loop/SKILL.md) | 명확한 Goal을 검증 가능한 완료까지 밀어붙일 때 |
+| Codex | Codex 특화 | [`milestone-runner`](skills/milestone-runner/SKILL.md) | 큰 작업을 재시작 가능한 순차 milestone로 실행할 때 |
+| Codex | Codex 특화 | [`review-gate`](skills/review-gate/SKILL.md) | 고위험 변경을 공개하거나 병합하기 전에 엄격한 두-lane gate를 실행할 때 |
 
 ## 공통 스킬
 
@@ -82,6 +90,8 @@ Use $design-loop to polish the checkout screen. Preserve behavior, inspect deskt
 ```
 
 ### godot-dev-loop
+
+> **Experimental · 실험적 스킬:** 아직 검증 중인 워크플로이며 동작과 인터페이스가 바뀔 수 있습니다.
 
 Godot 4.x playable slice를 deterministic state entry, 실제 창을 통한 PNG 캡처, native image inspection, 저장소 소유 handoff state와 의도적으로 fresh한 agent process로 구현하고 다듬습니다.
 
@@ -307,7 +317,7 @@ python3 scripts/check-native-workflow-skills.py --check-upstream --check-codex-d
 ```text
 agent-skills/
 ├── .claude-plugin/
-│   └── marketplace.json  # skills CLI의 Codex/Other TUI 그룹 metadata
+│   └── marketplace.json  # skills CLI의 용도, runtime, 실험적 상태 표시 그룹
 ├── skills/          # 하나의 디렉터리마다 독립 설치 가능한 스킬 하나
 ├── scripts/         # 여러 패키지 계약과 source drift를 검사하는 유지보수 도구
 ├── tests/           # package와 workflow contract 회귀 테스트

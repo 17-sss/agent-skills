@@ -1,6 +1,6 @@
 interface:
-  display_name: "Godot Development Loop"
-  short_description: "Build Godot games through fresh visual QA loops"
+  display_name: "Godot Development Loop (Experimental)"
+  short_description: "Experimental Godot loop with real-window visual QA"
   default_prompt: "Use $godot-dev-loop to establish this Godot game's brief and durable state, prove real-window PNG capture and image inspection, then run bounded fresh-agent iterations until STOP or BLOCKED."
 policy:
   allow_implicit_invocation: false

@@ -67,6 +67,11 @@ def read_png(path: Path) -> tuple[int, int, list[tuple[int, int, int]]]:
             header = struct.unpack(">IIBBBBB", chunk_data)
         elif chunk_type == b"IDAT":
             compressed.extend(chunk_data)
+        elif chunk_type == b"tRNS":
+            raise PngInputError(
+                f"{path}: tRNS transparency is unsupported; use an explicit "
+                "grayscale-alpha or RGBA PNG, or another deterministic metric"
+            )
         elif chunk_type == b"IEND":
             saw_end = True
             break

@@ -58,6 +58,8 @@ The package also includes a dependency-free PNG comparator for secondary localiz
 - ranked grid hotspots
 - an optional heatmap
 
+Grayscale-alpha and RGBA inputs must use explicit alpha channels. PNGs carrying transparency through a `tRNS` chunk are rejected with a clear input error because silently discarding that chunk can make transparent and opaque inputs appear identical. Use an explicit grayscale-alpha or RGBA capture, or record another already available deterministic metric instead.
+
 The default tolerance is `16`. Keep the method and tolerance visible beside `pixel_similarity_percent`; the number is neither the semantic score nor a pass gate. For an unsupported image format, use an existing repository metric or report the pixel score and method as `null`. Do not add a package, plugin, lockfile entry, or system dependency solely to calculate it.
 
 ## Capture discipline

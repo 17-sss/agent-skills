@@ -223,6 +223,7 @@ ALLOWED_REFERENCE_HOSTS = {
     "github.com",
     "learn.chatgpt.com",
     "playwright.dev",
+    "www.w3.org",
 }
 REQUIRED_CODEX_CAPABILITIES = {
     "Plan mode and /plan",

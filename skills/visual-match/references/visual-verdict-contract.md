@@ -52,12 +52,12 @@ Write one evidence file per iteration:
       "category_match": true,
       "component_scores": {
         "layout_geometry": 84,
-        "typography": 92,
-        "color_surface": 96,
-        "spacing_shape": 86,
-        "assets_content": 95,
-        "responsive_states": 94,
-        "interaction_states": 93
+        "typography": 100,
+        "color_surface": 100,
+        "spacing_shape": 100,
+        "assets_content": 100,
+        "responsive_states": 100,
+        "interaction_states": 100
       },
       "differences": [
         {
@@ -100,13 +100,13 @@ The scorer returns the measured loop contract:
 
 ```json
 {
-  "score": 87,
+  "score": 95,
   "verdict": "revise",
   "category_match": true,
   "differences": ["[desktop-default][major][layout_geometry][D1] ..."],
   "suggestions": ["[desktop-default][D1] ..."],
   "reasoning": "desktop-default: ...",
-  "visual_similarity_percent": 87,
+  "visual_similarity_percent": 95,
   "visual_pass_candidate": false
 }
 ```

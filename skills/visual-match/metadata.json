@@ -1,6 +1,6 @@
 {
   "name": "visual-match",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "organization": "17-sss",
   "date": "July 2026",
   "abstract": "Cross-agent visual-reference implementation workflow that compares equivalent renders from global landmarks to repeated grouping and local polish, requires native paired-image review before each coherent repair batch, validates semantic verdict progress, confirms the first pass with a fresh raw-pair audit, and uses dependency-free PNG hotspots only as secondary localization evidence.",
@@ -8,6 +8,7 @@
     "https://learn.chatgpt.com/docs/browser",
     "https://learn.chatgpt.com/docs/image-inputs",
     "https://learn.chatgpt.com/docs/image-generation",
-    "https://playwright.dev/docs/browsers"
+    "https://playwright.dev/docs/browsers",
+    "https://www.w3.org/TR/png-3/#11tRNS"
   ]
 }

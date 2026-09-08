@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
+import re
 import unittest
 
 
@@ -76,6 +78,29 @@ def payload(iteration: int, *targets: dict[str, object]) -> dict[str, object]:
 
 
 class VisualMatchScoreTest(unittest.TestCase):
+    def test_documented_evidence_example_is_valid_scorer_input(self):
+        contract = (
+            REPO_ROOT
+            / "skills"
+            / "visual-match"
+            / "references"
+            / "visual-verdict-contract.md"
+        ).read_text(encoding="utf-8")
+        example_match = re.search(
+            r"## Evidence schema.*?```json\n(.*?)\n```",
+            contract,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(example_match)
+        report = scorer.calculate_report(
+            json.loads(example_match.group(1)),
+            90,
+        )
+
+        self.assertEqual(report["score"], 95)
+        self.assertEqual(report["verdict"], "revise")
+        self.assertFalse(report["visual_pass_candidate"])
+
     def test_lowest_paired_image_target_controls_the_report(self):
         mobile_differences = [
             difference("D1", priority="minor", category="layout_geometry"),

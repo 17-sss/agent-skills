@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import importlib.util
+import binascii
 from pathlib import Path
+import struct
 import tempfile
 import unittest
+import zlib
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -31,6 +34,29 @@ class VisualMatchPngCompareTest(unittest.TestCase):
     ) -> Path:
         path = self.root / name
         comparator.write_rgb_png(path, width, height, pixels)
+        return path
+
+    def write_rgb_with_trns(self, name: str, pixel: tuple[int, int, int]) -> Path:
+        def chunk(chunk_type: bytes, payload: bytes) -> bytes:
+            checksum = binascii.crc32(chunk_type + payload) & 0xFFFFFFFF
+            return (
+                struct.pack(">I", len(payload))
+                + chunk_type
+                + payload
+                + struct.pack(">I", checksum)
+            )
+
+        path = self.root / name
+        header = struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0)
+        transparent_sample = struct.pack(">HHH", *pixel)
+        scanline = b"\x00" + bytes(pixel)
+        path.write_bytes(
+            comparator.PNG_SIGNATURE
+            + chunk(b"IHDR", header)
+            + chunk(b"tRNS", transparent_sample)
+            + chunk(b"IDAT", zlib.compress(scanline))
+            + chunk(b"IEND", b"")
+        )
         return path
 
     def test_identical_images_are_fully_similar(self):
@@ -111,6 +137,21 @@ class VisualMatchPngCompareTest(unittest.TestCase):
                 candidate,
                 grid_columns=3,
                 grid_rows=2,
+            )
+
+    def test_trns_transparency_is_rejected_instead_of_ignored(self):
+        transparent = self.write_rgb_with_trns("transparent.png", (12, 34, 56))
+        opaque = self.write_image("opaque.png", 1, 1, [(12, 34, 56)])
+
+        with self.assertRaisesRegex(
+            comparator.PngInputError,
+            "tRNS transparency is unsupported",
+        ):
+            comparator.compare(
+                transparent,
+                opaque,
+                grid_columns=1,
+                grid_rows=1,
             )
 
 

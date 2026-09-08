@@ -181,7 +181,7 @@ safe_ref=${safe_ref//[^A-Za-z0-9._-]/-}
 prepare_output_dir "github-pr-review" "$safe_ref" "$timestamp"
 
 auth_file="$OUTPUT_DIR/auth.txt"
-if gh auth status --hostname github.com >/dev/null 2>&1; then
+if gh auth status --active --hostname github.com >/dev/null 2>&1; then
   account=$(gh api user --jq .login 2>/dev/null || true)
   if [[ -n "$account" ]]; then
     printf 'authenticated_account=%s\n' "$account" > "$auth_file"
@@ -195,7 +195,7 @@ else
   warn "GitHub CLI is not authenticated. Public PR reads may work, but posting reviews and private repos require 'gh auth login'."
 fi
 
-view_fields="number,title,body,state,isDraft,author,labels,baseRefName,headRefName,additions,deletions,changedFiles,files,commits,reviews,reviewRequests,reviewDecision,statusCheckRollup,url"
+view_fields="number,title,body,state,isDraft,author,labels,baseRefName,headRefName,headRefOid,additions,deletions,changedFiles,files,commits,reviews,reviewRequests,reviewDecision,statusCheckRollup,url"
 
 run_capture "PR metadata JSON" "$OUTPUT_DIR/pr-view.json" "$OUTPUT_DIR/pr-view.err" \
   gh pr view "${pr_args[@]}" --json "$view_fields"

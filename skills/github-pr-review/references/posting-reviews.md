@@ -13,7 +13,8 @@ gh pr review <pr> --comment --body-file review.md
 The bundled helper wraps this path:
 
 ```bash
-skills/github-pr-review/scripts/post_review.sh <pr> review.md
+skills/github-pr-review/scripts/post_review.sh <pr> review.md \
+  --commit-sha <reviewed-headRefOid>
 ```
 
 Only use these events when the user explicitly requests them:
@@ -24,6 +25,8 @@ gh pr review <pr> --request-changes --body-file review.md
 ```
 
 Summary reviews must follow the PR Scope Rule in `SKILL.md`. Do not use a summary review to publish findings anchored outside the PR diff or to bypass inline diff-line requirements. Keep a finding internal or omit it when no reliable diff anchor exists.
+
+Record the PR `headRefOid` used for review and pass it as `--commit-sha`. The helper re-reads the current head immediately before posting and stops if it has moved. Do not reuse a draft against a different head without refreshing the diff and findings.
 
 ## Verify Inline Line Mapping
 
@@ -66,6 +69,7 @@ Create a task-scoped temporary JSON payload. Use a sanitized repository slug and
 ```json
 {
   "event": "COMMENT",
+  "commit_id": "<reviewed-headRefOid>",
   "body": "Reviewed the diff and left inline comments.",
   "comments": [
     {
@@ -85,6 +89,8 @@ Create a task-scoped temporary JSON payload. Use a sanitized repository slug and
 ```
 
 Post the payload:
+
+Before the POST, query `headRefOid` again and require it to equal `commit_id`. This catches known drift before mutation, while `commit_id` binds GitHub's review request to the reviewed revision.
 
 ```bash
 gh api repos/OWNER/REPO/pulls/NUMBER/reviews \

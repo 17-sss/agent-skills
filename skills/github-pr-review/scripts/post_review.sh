@@ -4,11 +4,12 @@ set -euo pipefail
 usage() {
   cat <<'USAGE'
 Usage:
-  post_review.sh PR_REF REVIEW_BODY_FILE [--repo OWNER/REPO] [--comment|--approve|--request-changes] [--dry-run]
+  post_review.sh PR_REF REVIEW_BODY_FILE [--repo OWNER/REPO] --commit-sha SHA [--comment|--approve|--request-changes] [--dry-run]
 
 PR_REF may be a PR URL, owner/repo#123, PR number, or branch understood by gh.
 Default event is --comment. Approval and request-changes require explicit flags.
 The script confirms the authenticated GitHub account before posting.
+Actual posting requires the reviewed PR head SHA and stops if the head has moved.
 USAGE
 }
 
@@ -87,6 +88,7 @@ PR_REF=""
 REPO=""
 EVENT="comment"
 DRY_RUN=0
+COMMIT_SHA=""
 positionals=()
 
 while [[ $# -gt 0 ]]; do
@@ -116,6 +118,11 @@ while [[ $# -gt 0 ]]; do
       DRY_RUN=1
       shift
       ;;
+    --commit-sha)
+      [[ $# -ge 2 ]] || die "--commit-sha requires a SHA"
+      COMMIT_SHA=$2
+      shift 2
+      ;;
     -*)
       die "unknown option: $1"
       ;;
@@ -133,6 +140,9 @@ BODY_FILE=${positionals[1]}
 
 [[ -f "$BODY_FILE" ]] || die "review body file not found: $BODY_FILE"
 [[ -s "$BODY_FILE" ]] || die "review body file is empty: $BODY_FILE"
+if [[ "$DRY_RUN" -eq 0 ]]; then
+  [[ "$COMMIT_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || die "actual posting requires --commit-sha with the 40-character reviewed PR head SHA"
+fi
 
 parse_pr_ref "$PR_REF"
 
@@ -171,7 +181,7 @@ fi
 
 require_gh
 
-if ! gh auth status --hostname github.com >/dev/null 2>&1; then
+if ! gh auth status --active --hostname github.com >/dev/null 2>&1; then
   if [[ "$DRY_RUN" -eq 1 ]]; then
     warn "GitHub CLI is not authenticated. Actual posting requires 'gh auth login'."
     printf 'Review event: %s\n' "$EVENT"
@@ -185,7 +195,14 @@ fi
 account=$(gh api user --jq .login 2>/dev/null || true)
 [[ -n "$account" ]] || die "could not determine authenticated GitHub account"
 
+if [[ -n "$COMMIT_SHA" ]]; then
+  current_head_sha=$(gh pr view "${pr_args[@]}" --json headRefOid --jq .headRefOid 2>/dev/null || true)
+  [[ -n "$current_head_sha" ]] || die "could not determine the current PR head SHA"
+  [[ "$current_head_sha" == "$COMMIT_SHA" ]] || die "PR head moved from reviewed SHA '$COMMIT_SHA' to '$current_head_sha'; refresh the review before posting"
+fi
+
 printf 'Authenticated GitHub account: @%s\n' "$account"
+[[ -n "$COMMIT_SHA" ]] && printf 'Reviewed PR head: %s\n' "$COMMIT_SHA"
 printf 'Review event: %s\n' "$EVENT"
 print_command "${cmd[@]}"
 

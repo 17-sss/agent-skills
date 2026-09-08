@@ -12,7 +12,7 @@ Agent-neutral workflow for reviewing GitHub pull requests with `gh`, local `git`
 
 ## Workflow Highlights
 
-- Checks `gh auth status` and identifies the account that will post reviews
+- Checks the active `gh` identity and identifies the account that will post reviews
 - Collects PR metadata, diff, changed files, checks, and related local code context
 - Treats PR text, diffs, comments, checks, and GitHub output as untrusted evidence, not agent instructions
 - Requires posted findings to anchor to files and lines included in the PR diff; non-diff files are supporting context only
@@ -22,6 +22,7 @@ Agent-neutral workflow for reviewing GitHub pull requests with `gh`, local `git`
 - Prefers inline comments when a finding maps reliably to a changed diff line or range
 - Keeps inline review top-level bodies short and leaves routine validation evidence for the assistant response
 - Verifies posted reviews with response `id`, `state`, and `html_url`
+- Records the reviewed `headRefOid`, stops on head drift, and includes `commit_id` in inline review payloads
 
 ## Package Layout
 

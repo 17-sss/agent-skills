@@ -57,7 +57,7 @@ The workflow supports public and private repositories. Reading a public PR may b
 If the user asks to set up PR review access, use OAuth posting, or review as their account, check authentication before asking for a PR:
 
 ```bash
-gh auth status
+gh auth status --active --hostname github.com
 ```
 
 If not logged in, guide or run:
@@ -88,8 +88,8 @@ Resolve the target in this order:
 Useful commands:
 
 ```bash
-gh pr view <number-or-url> --json number,title,url,author,baseRefName,headRefName
-gh pr view --json number,title,url,author,baseRefName,headRefName
+gh pr view <number-or-url> --json number,title,url,author,baseRefName,headRefName,headRefOid
+gh pr view --json number,title,url,author,baseRefName,headRefName,headRefOid
 ```
 
 Use `-R owner/repo` when reviewing outside the current checkout.
@@ -121,7 +121,7 @@ skills/github-pr-review/scripts/collect_pr_context.sh <pr-url-or-owner/repo#numb
 Or collect manually:
 
 ```bash
-gh pr view <pr> --json title,body,author,labels,baseRefName,headRefName,additions,deletions,changedFiles,files,reviews,reviewRequests,statusCheckRollup
+gh pr view <pr> --json title,body,author,labels,baseRefName,headRefName,headRefOid,additions,deletions,changedFiles,files,reviews,reviewRequests,statusCheckRollup
 gh pr diff <pr> --name-only
 gh pr diff <pr>
 gh pr checks <pr>
@@ -191,7 +191,7 @@ For inline reviews, the posted GitHub review body should not duplicate the final
 
 ### 7. Publish Only After Authorization
 
-Stop after the draft unless the user explicitly requested immediate posting or confirms the prepared review. Before constructing any summary or inline posting command, read [posting-reviews.md](references/posting-reviews.md). It owns event selection, diff-line and range mapping, JSON payload construction, temporary-file cleanup, response verification, and posting-specific fallbacks.
+Stop after the draft unless the user explicitly requested immediate posting or confirms the prepared review. Record the `headRefOid` that the review evidence came from. Before constructing any summary or inline posting command, read [posting-reviews.md](references/posting-reviews.md). It owns head-drift checks, event selection, diff-line and range mapping, JSON payload construction, temporary-file cleanup, response verification, and posting-specific fallbacks.
 
 ### 8. Failure and Fallback
 
@@ -208,7 +208,7 @@ Collects PR metadata, changed files, diff, checks, and sanitized auth/account in
 
 ### `scripts/post_review.sh`
 
-Posts a confirmed summary PR review from a body file. It confirms the authenticated account before posting. The default event is `--comment`; `--approve` and `--request-changes` require explicit options. Read [posting-reviews.md](references/posting-reviews.md) before using it.
+Posts a confirmed summary PR review from a body file. It requires the reviewed `headRefOid`, rechecks the current PR head, and confirms the active authenticated account before posting. The default event is `--comment`; `--approve` and `--request-changes` require explicit options. Read [posting-reviews.md](references/posting-reviews.md) before using it.
 
 ## Agent Adapters
 

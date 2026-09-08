@@ -1,11 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 redaction_sentinel='redaction-test-value'
+if [[ -n "${FAKE_GH_LOG:-}" ]]; then
+  printf 'gh' >>"$FAKE_GH_LOG"
+  printf ' %q' "$@" >>"$FAKE_GH_LOG"
+  printf '\n' >>"$FAKE_GH_LOG"
+fi
 cmd=${1:-}
 shift || true
 case "$cmd" in
   auth)
-    [[ "${1:-}" == "status" ]] && exit 0
+    if [[ "${1:-}" == "status" ]]; then
+      if [[ "${FAKE_INACTIVE_AUTH_FAIL:-0}" == "1" && "$*" != *"--active"* ]]; then
+        exit 1
+      fi
+      exit 0
+    fi
     ;;
   api)
     if [[ "${1:-}" == "user" ]]; then
@@ -18,10 +28,15 @@ case "$cmd" in
     shift || true
     case "$sub" in
       review)
+        [[ "${FAKE_REVIEW_SUCCEED:-0}" == "1" ]] && exit 0
         printf 'HTTP 403 Authorization: token=%s\n' "$redaction_sentinel" >&2
         exit 1
-        ;;
+      ;;
       view)
+        if [[ "$*" == *"--jq .headRefOid"* ]]; then
+          printf '%s\n' "${FAKE_HEAD_SHA:-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}"
+          exit 0
+        fi
         printf 'HTTP 404 Authorization: token=%s url=https://x-access-token:%s@github.com/OWNER/REPO.git\n' "$redaction_sentinel" "$redaction_sentinel" >&2
         exit 1
         ;;

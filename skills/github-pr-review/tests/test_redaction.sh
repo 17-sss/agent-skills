@@ -8,6 +8,9 @@ trap 'rm -rf "$TEST_TMP"' EXIT
 
 export PATH="$SCRIPT_DIR/fake-bin:$PATH"
 export FAKE_SECRET_TOKEN='redaction-env-should-not-leak'
+export FAKE_GH_LOG="$TEST_TMP/gh.log"
+: >"$FAKE_GH_LOG"
+reviewed_sha=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
 assert_not_contains() {
   local file=$1 pattern=$2
@@ -48,7 +51,7 @@ printf 'review body\n' > "$body"
 
 post_out="$TEST_TMP/post.out"
 post_err="$TEST_TMP/post.err"
-if bash "$SKILL_DIR/scripts/post_review.sh" OWNER/REPO#1 "$body" >"$post_out" 2>"$post_err"; then
+if bash "$SKILL_DIR/scripts/post_review.sh" OWNER/REPO#1 "$body" --commit-sha "$reviewed_sha" >"$post_out" 2>"$post_err"; then
   printf 'not ok - post_review should fail under fake gh\n' >&2
   exit 1
 fi
@@ -75,5 +78,32 @@ printf 'ok 2 - collect_pr_context redacts saved gh stderr\n'
 
 assert_private_tree "$collect_dir"
 printf 'ok 3 - collect_pr_context keeps output permissions private\n'
+
+: >"$FAKE_GH_LOG"
+export FAKE_INACTIVE_AUTH_FAIL=1
+export FAKE_REVIEW_SUCCEED=1
+active_out="$TEST_TMP/active.out"
+active_err="$TEST_TMP/active.err"
+bash "$SKILL_DIR/scripts/post_review.sh" OWNER/REPO#1 "$body" --commit-sha "$reviewed_sha" >"$active_out" 2>"$active_err"
+assert_contains "$FAKE_GH_LOG" 'auth status --active --hostname github.com'
+assert_contains "$FAKE_GH_LOG" 'pr view 1 --repo OWNER/REPO --json headRefOid --jq .headRefOid'
+assert_contains "$FAKE_GH_LOG" 'pr review 1 --repo OWNER/REPO --comment'
+printf 'ok 4 - posting uses the active identity and verifies the reviewed head\n'
+
+: >"$FAKE_GH_LOG"
+export FAKE_HEAD_SHA=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+drift_out="$TEST_TMP/drift.out"
+drift_err="$TEST_TMP/drift.err"
+if bash "$SKILL_DIR/scripts/post_review.sh" OWNER/REPO#1 "$body" --commit-sha "$reviewed_sha" >"$drift_out" 2>"$drift_err"; then
+  printf 'not ok - post_review should stop after PR head drift\n' >&2
+  exit 1
+fi
+assert_contains "$drift_err" 'PR head moved from reviewed SHA'
+if grep -F 'pr review' "$FAKE_GH_LOG" >/dev/null; then
+  printf 'not ok - post_review mutated GitHub after detecting head drift\n' >&2
+  cat "$FAKE_GH_LOG" >&2
+  exit 1
+fi
+printf 'ok 5 - posting stops when the PR head moves\n'
 
 printf 'All github-pr-review redaction tests passed\n'

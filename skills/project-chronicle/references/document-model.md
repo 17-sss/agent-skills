@@ -73,7 +73,7 @@ Group related work into explicit periods:
 - **Context:** What problem or phase drove the work.
 - **Evolution:** The meaningful change across the period.
 - **Outcome:** What became possible or stable.
-- **Evidence:** `abc1234`, `docs/architecture.md`, [detailed entry](entries/2026-06-density-workflow.md).
+- **Evidence:** `abc1234`, `docs/architecture.md`, `entries/2026-06-density-workflow.md`.
 ```
 
 Prefer one coherent period over several near-identical daily entries. Split a period when its goal, architecture, ownership, or outcome materially changes.
@@ -93,7 +93,7 @@ Keep the machine-readable anchor and one lightweight record per Bootstrap or Rec
 - Period: 2026-07-21 ~ 2026-08-03
 - Summary: Added a detailed history entry and extended the authentication workstream period.
 - Evidence: `0123456789abcdef0123456789abcdef01234567`, `src/auth/`, `docs/adr/0007-auth-boundary.md`
-- Detailed entry: [Authentication boundary redesign](entries/2026-08-auth-boundary-redesign.md)
+- Detailed entry: `entries/2026-08-auth-boundary-redesign.md`
 - Uncommitted evidence: none
 ```
 

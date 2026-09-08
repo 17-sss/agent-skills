@@ -92,7 +92,7 @@ Run this after a meaningful Codex release, an upstream workflow change, or a Pro
    - keep every skill installable independently
    - keep optional handoffs recommendation-only and allowlisted; never infer installed skills from the filesystem or catalog
 
-5. Update only the affected `SKILL.md`, scripts, referenced contract, `agents/openai.yaml`, `metadata.json`, root catalog entry, source fingerprint, and checker inventory. If the minimum runtime changes, also update `CODEX_SKILL_NAMES`, `CROSS_AGENT_SKILL_NAMES`, [skill-classification.md](skill-classification.md), and TUI grouping tests. Keep `TUI_SKILL_GROUPS` aligned with the catalog when purpose grouping or experimental status changes.
+5. Update only the affected `SKILL.md`, scripts, referenced contract, `agents/openai.yaml`, `metadata.json`, root catalog entry, source fingerprint, and checker inventory. Keep `INSTALLABLE_SKILL_NAMES` aligned with every directory containing a `SKILL.md`; keep `NATIVE_WORKFLOW_SKILL_NAMES` limited to packages that need the additional native-workflow independence and state checks. If the minimum runtime changes, also update `CODEX_SKILL_NAMES`, `CROSS_AGENT_SKILL_NAMES`, [skill-classification.md](skill-classification.md), and TUI grouping tests. Keep `TUI_SKILL_GROUPS` aligned with the catalog when purpose grouping or experimental status changes.
 
 6. Run structural validation, banned-dependency checks, official Codex-manual evidence checks, and the isolated forward-test matrix. Inspect the final diff after all validators run.
 
@@ -105,7 +105,7 @@ python3 scripts/check-native-workflow-skills.py --check-upstream --check-codex-d
 
 ### Checker CLI contract
 
-The default invocation is offline. It checks frontmatter, package-local links, executable helper bits, metadata and `agents/openai.yaml`, banned runtime dependencies, hard cross-skill dependencies, the strict optional-handoff allowlist and availability guardrails, the guarded sibling-reference sections registered for `handoff-memory` and `project-chronicle`, the exclusive `.agent-workflows/` state owner, the root catalog, and retired unprefixed directories. It also runs `skill-creator`'s `quick_validate.py` when that validator and a Python interpreter with PyYAML are available.
+The default invocation is offline. For all 13 installable skills it checks inventory coverage, frontmatter, package-local links, executable helper bits, metadata and `agents/openai.yaml`, root catalog coverage, and TUI grouping, then runs `skill-creator`'s `quick_validate.py` when that validator and a Python interpreter with PyYAML are available. For the seven native-workflow packages it additionally checks banned runtime dependencies, hard cross-skill dependencies, the strict optional-handoff allowlist and availability guardrails, and the exclusive `.agent-workflows/` state owner. It also checks the guarded sibling-reference sections registered for `handoff-memory` and `project-chronicle`, plus retired unprefixed directories. Empty metadata reference lists are valid; every listed reference must be primary capability documentation or a standard from an allowlisted official host.
 
 Use the flags according to the evidence required:
 

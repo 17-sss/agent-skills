@@ -90,13 +90,13 @@ The skill itself can be installed globally or per-project. The shared HANDOFF da
 ### Codex
 
 - Global install: `$CODEX_HOME/skills/handoff-memory` or `~/.codex/skills/handoff-memory`
-- Project-local install: `<repo>/.codex/skills/handoff-memory`
+- Project-local install: `<repo>/.agents/skills/handoff-memory`
 
 ### Other Agents
 
 - Claude Code: keep agent-specific instructions in `CLAUDE.md` or `.claude/`, but point them at the shared repo-local HANDOFF
 - Windsurf: keep rules in `.windsurf/rules/`, but point them at the shared repo-local HANDOFF
-- Generic fallback: if no standard install path exists, `.agents/skills/handoff-memory` is an acceptable neutral install location
+- Generic fallback: if no agent-specific standard path exists, `.agents/skills/handoff-memory` is the neutral install location
 
 ## Shared Data Rule
 

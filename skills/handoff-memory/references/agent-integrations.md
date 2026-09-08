@@ -17,7 +17,7 @@ Keep the shared HANDOFF data inside the repository even when the skill itself is
 ## Codex
 
 - Global install: `$CODEX_HOME/skills/handoff-memory` or `~/.codex/skills/handoff-memory`
-- Project-local install: `<repo>/.codex/skills/handoff-memory`
+- Project-local install: `<repo>/.agents/skills/handoff-memory`
 - Agent-specific files such as `<repo>/.codex/README.md` or `<repo>/AGENTS.md` can point the agent at `docs/HANDOFF.md`
 
 ## Claude Code
@@ -33,5 +33,5 @@ Keep the shared HANDOFF data inside the repository even when the skill itself is
 ## Generic Fallback
 
 - If another agent supports repo-local skills or rules, install there
-- If no standard location exists, `.agents/skills/handoff-memory` is an acceptable neutral fallback for installation
+- If no agent-specific standard location exists, `.agents/skills/handoff-memory` is the neutral fallback for installation
 - The installation location does not change the shared HANDOFF file location

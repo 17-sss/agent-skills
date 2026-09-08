@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import ast
 import json
 import unittest
 
@@ -436,6 +437,54 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("`.agents/skills/<skill-name>`", classification)
         self.assertIn("`~/.codex/skills/<skill-name>`", classification)
         self.assertIn("`CODEX_SKILL_NAMES`", classification)
+
+    def test_checker_common_inventory_covers_every_installable_skill(self):
+        checker_text = read("scripts/check-native-workflow-skills.py")
+        checker_tree = ast.parse(checker_text)
+        installable = None
+        for node in checker_tree.body:
+            if (
+                isinstance(node, ast.Assign)
+                and len(node.targets) == 1
+                and isinstance(node.targets[0], ast.Name)
+                and node.targets[0].id == "INSTALLABLE_SKILL_NAMES"
+            ):
+                installable = ast.literal_eval(node.value)
+                break
+
+        discovered = tuple(
+            sorted(path.parent.name for path in SKILLS.glob("*/SKILL.md"))
+        )
+        self.assertEqual(tuple(sorted(installable or ())), discovered)
+        self.assertIn("for name in INSTALLABLE_SKILL_NAMES:", checker_text)
+        self.assertIn("for name in NATIVE_WORKFLOW_SKILL_NAMES:", checker_text)
+        self.assertIn("tuple(lines[4:]) not in ((), optional_policy)", checker_text)
+        self.assertIn("Empty metadata reference lists are valid", read("docs/native-workflow-skills-maintenance.md"))
+
+        for name in discovered:
+            metadata = json.loads(read(f"skills/{name}/metadata.json"))
+            for reference in metadata["references"]:
+                self.assertTrue(reference.startswith("https://"), (name, reference))
+        self.assertEqual(json.loads(read("skills/handoff-memory/metadata.json"))["references"], [])
+        self.assertEqual(json.loads(read("skills/project-chronicle/metadata.json"))["references"], [])
+
+    def test_agent_adapter_examples_follow_current_capability_boundaries(self):
+        handoff_skill = read("skills/handoff-memory/SKILL.md")
+        handoff_readme = read("skills/handoff-memory/README.md")
+        handoff_adapters = read("skills/handoff-memory/references/agent-integrations.md")
+        review_skill = read("skills/github-pr-review/SKILL.md")
+        review_readme = read("skills/github-pr-review/README.md")
+        review_adapters = read("skills/github-pr-review/references/agent-adapters.md")
+
+        self.assertIn("global and neutral project-local install locations", handoff_skill)
+        for text in (handoff_readme, handoff_adapters):
+            self.assertIn("<repo>/.agents/skills/handoff-memory", text)
+            self.assertNotIn("<repo>/.codex/skills/handoff-memory", text)
+        self.assertIn("capability-conditional network notes", review_skill)
+        self.assertIn("Capability-conditional", review_readme)
+        self.assertIn("active shell tool schema exposes it", review_adapters)
+        self.assertIn("current approval policy permits it", review_adapters)
+        self.assertIn("do not pass an unsupported argument", review_adapters)
 
     def test_catalog_groups_every_skill_and_provides_copyable_usage(self):
         common = (

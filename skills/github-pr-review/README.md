@@ -30,7 +30,7 @@ Agent-neutral workflow for reviewing GitHub pull requests with `gh`, local `git`
 - `scripts/collect_pr_context.sh` - Collect PR metadata, diff, checks, and sanitized account context
 - `scripts/post_review.sh` - Post a confirmed summary review with `gh pr review`
 - `references/posting-reviews.md` - Loaded only for confirmed summary or inline posting, line mapping, payload construction, and verification
-- `references/agent-adapters.md` - Short notes for Codex, Claude Code, Cursor, and generic agents
+- `references/agent-adapters.md` - Capability-conditional installation and network notes for Codex, Claude Code, Cursor, and generic agents
 - `agents/openai.yaml` - Codex Skills UI metadata only
 
 Use `SKILL.md` as the source of truth for behavior.

@@ -307,7 +307,7 @@ Use $review-gate as the final pre-PR gate for this high-risk change. Keep the wo
 두 스크립트의 역할은 다음과 같습니다.
 
 - `skills/milestone-runner/scripts/goal_state.py`: `milestone-runner` 하나의 durable repository state만 관리합니다.
-- `scripts/check-native-workflow-skills.py`: 관리 대상 6개 패키지와 로컬 유지보수 대상 `godot-dev-loop`의 구조, 독립성, metadata, native capability와 TUI 그룹을 검사합니다. source drift는 기존 관리 대상 6개에만 적용하며, `handoff-memory`와 `project-chronicle`에 선언된 sibling-reference 경계도 함께 검증합니다.
+- `scripts/check-native-workflow-skills.py`: 설치 가능한 13개 스킬 전체에 공통 구조, metadata, link, catalog, `quick_validate` 검사를 적용하고, 관리 대상 6개 패키지와 `godot-dev-loop`에는 native-workflow 독립성·state 계약을 추가로 검사합니다. source drift는 기존 관리 대상 6개에만 적용하며, `handoff-memory`와 `project-chronicle`에 선언된 sibling-reference 경계도 함께 검증합니다.
 
 ### Workflow checker modes
 

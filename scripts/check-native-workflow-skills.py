@@ -28,9 +28,24 @@ MANAGED_SKILL_NAMES = (
     "review-gate",
     "milestone-runner",
 )
-LOCAL_VALIDATED_SKILL_NAMES = (
+NATIVE_WORKFLOW_SKILL_NAMES = (
     *MANAGED_SKILL_NAMES,
     "godot-dev-loop",
+)
+INSTALLABLE_SKILL_NAMES = (
+    "commit-helper",
+    "completion-loop",
+    "design-loop",
+    "github-pr-publish",
+    "github-pr-review",
+    "godot-dev-loop",
+    "handoff-memory",
+    "milestone-runner",
+    "project-chronicle",
+    "review-gate",
+    "reviewed-plan",
+    "spec-interview",
+    "visual-match",
 )
 CODEX_SKILL_NAMES = (
     "reviewed-plan",
@@ -118,6 +133,19 @@ STANDALONE_REFERENCE_RULES = {
             ),
         ),
     ),
+    "visual-match": (
+        StandaloneReferenceSection(
+            "references/capability-routing.md",
+            "## Reference type",
+            ("design-loop",),
+            (
+                "Product Design workflows are optional accelerators",
+                "current task's available-skill inventory",
+                "without mentioning or installing the missing skill",
+                "Do not inspect skill directories",
+            ),
+        ),
+    ),
     "reviewed-plan": (
         StandaloneReferenceSection(
             "SKILL.md",
@@ -180,17 +208,18 @@ STANDALONE_REFERENCE_RULES = {
         ),
     ),
 }
-STANDALONE_SKILL_NAMES = tuple(
-    dict.fromkeys((*LOCAL_VALIDATED_SKILL_NAMES, *STANDALONE_REFERENCE_RULES))
-)
+STANDALONE_SKILL_NAMES = INSTALLABLE_SKILL_NAMES
 STATE_DIRECTORY = ".agent-workflows"
 SOURCE_MANIFEST = REPO_ROOT / "docs" / "native-workflow-sources.json"
 ROOT_README = REPO_ROOT / "README.md"
 KOREAN_README = REPO_ROOT / "README.ko.md"
 TUI_GROUP_MANIFEST = REPO_ROOT / ".claude-plugin" / "marketplace.json"
 ALLOWED_REFERENCE_HOSTS = {
+    "cli.github.com",
     "developers.openai.com",
+    "docs.github.com",
     "docs.godotengine.org",
+    "git-scm.com",
     "github.com",
     "learn.chatgpt.com",
     "playwright.dev",
@@ -554,8 +583,6 @@ def validate_catalog_files(skill_dir: Path, errors: list[str]) -> None:
             fail(f"{metadata_path.relative_to(REPO_ROOT)} version must be semantic", errors)
         references = metadata.get("references")
         if isinstance(references, list):
-            if not references:
-                fail(f"{metadata_path.relative_to(REPO_ROOT)} references cannot be empty", errors)
             for reference in references:
                 if not isinstance(reference, str):
                     fail(f"{metadata_path.relative_to(REPO_ROOT)} has a non-string reference", errors)
@@ -575,18 +602,20 @@ def validate_catalog_files(skill_dir: Path, errors: list[str]) -> None:
         return
 
     lines = openai_text.splitlines()
-    expected_prefixes = (
+    interface_prefixes = (
         "interface:",
         "  display_name: ",
         "  short_description: ",
         "  default_prompt: ",
+    )
+    optional_policy = (
         "policy:",
         "  allow_implicit_invocation: false",
     )
-    if len(lines) != len(expected_prefixes):
+    if tuple(lines[4:]) not in ((), optional_policy):
         fail(f"{openai_path.relative_to(REPO_ROOT)} has an unexpected YAML shape", errors)
         return
-    for line, prefix in zip(lines, expected_prefixes):
+    for line, prefix in zip(lines[:4], interface_prefixes):
         if line == prefix or (
             prefix.endswith(" ") and line.startswith(prefix)
         ):
@@ -631,7 +660,7 @@ def validate_root_catalog(errors: list[str]) -> None:
             fail(f"{path.relative_to(REPO_ROOT)} is missing: {exc}", errors)
 
     for path, readme in catalogs.items():
-        for name in LOCAL_VALIDATED_SKILL_NAMES:
+        for name in INSTALLABLE_SKILL_NAMES:
             if f"### {name}" not in readme:
                 fail(f"{path.name} lacks catalog heading for {name}", errors)
             if f"${name}" not in readme:
@@ -707,6 +736,14 @@ def validate_tui_group_manifest(errors: list[str]) -> None:
         skill_dir = REPO_ROOT / relative_path.removeprefix("./")
         if not (skill_dir / "SKILL.md").is_file():
             fail(f"{relative_path} does not point to an installable skill", errors)
+
+    grouped_names = {Path(path).name for path in all_grouped_paths}
+    if grouped_names != set(INSTALLABLE_SKILL_NAMES):
+        fail(
+            "TUI groups must cover every installable skill exactly once: "
+            f"{sorted(INSTALLABLE_SKILL_NAMES)}",
+            errors,
+        )
 
     for group_name, group in groups.items():
         for relative_path in group.get("skills", []):
@@ -806,7 +843,7 @@ def run_skill_validator(
     if python_executable != sys.executable:
         print(f"INFO quick_validate uses {python_executable}")
 
-    for name in LOCAL_VALIDATED_SKILL_NAMES:
+    for name in INSTALLABLE_SKILL_NAMES:
         skill_dir = REPO_ROOT / "skills" / name
         try:
             result = subprocess.run(
@@ -1056,18 +1093,31 @@ def main() -> int:
 
     errors: list[str] = []
     manifest = load_manifest(errors)
-    for name in LOCAL_VALIDATED_SKILL_NAMES:
+    discovered_skill_names = {
+        path.parent.name for path in (REPO_ROOT / "skills").glob("*/SKILL.md")
+    }
+    if discovered_skill_names != set(INSTALLABLE_SKILL_NAMES):
+        fail(
+            "installable skill inventory mismatch: expected "
+            f"{sorted(INSTALLABLE_SKILL_NAMES)}, found {sorted(discovered_skill_names)}",
+            errors,
+        )
+
+    for name in INSTALLABLE_SKILL_NAMES:
         skill_dir = REPO_ROOT / "skills" / name
         validate_frontmatter(skill_dir, errors)
-        validate_runtime_independence(skill_dir, errors)
-        validate_standalone_package(skill_dir, errors)
         validate_bundled_scripts(skill_dir, errors)
-        validate_state_contract(skill_dir, errors)
         validate_links(skill_dir, errors)
         validate_catalog_files(skill_dir, errors)
 
+    for name in NATIVE_WORKFLOW_SKILL_NAMES:
+        skill_dir = REPO_ROOT / "skills" / name
+        validate_runtime_independence(skill_dir, errors)
+        validate_standalone_package(skill_dir, errors)
+        validate_state_contract(skill_dir, errors)
+
     for name in STANDALONE_REFERENCE_RULES:
-        if name in LOCAL_VALIDATED_SKILL_NAMES:
+        if name in NATIVE_WORKFLOW_SKILL_NAMES:
             continue
         validate_standalone_package(REPO_ROOT / "skills" / name, errors)
 
@@ -1089,7 +1139,7 @@ def main() -> int:
         print(f"\n{len(errors)} validation error(s)")
         return 1
     if validator_ran:
-        print("\nAll locally validated workflow skill checks passed, including quick_validate.")
+        print("\nAll installable skill checks passed, including quick_validate.")
     else:
         print("\nRepository checks passed; quick_validate was skipped.")
     return 0

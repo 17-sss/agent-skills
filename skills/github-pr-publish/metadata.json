@@ -10,7 +10,6 @@
     "https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#create-a-pull-request",
     "https://cli.github.com/manual/gh_api",
     "https://cli.github.com/manual/gh_repo_view",
-    "https://git-scm.com/docs/git-push",
-    "../github-pr-review/SKILL.md"
+    "https://git-scm.com/docs/git-push"
   ]
 }

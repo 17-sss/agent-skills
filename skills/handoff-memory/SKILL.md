@@ -137,4 +137,4 @@ Read only the reference needed for the current task:
 - [workspace-memory-guide.md](references/workspace-memory-guide.md): workspace versus workstream selection, index fields, companion documents, and narrowed validation.
 - [handoff-template.md](references/handoff-template.md): expected sections and document intent.
 - [snapshot-strategy.md](references/snapshot-strategy.md): snapshot decisions, kinds, commands, and naming.
-- [agent-integrations.md](references/agent-integrations.md): install locations for Codex and other agents. Installation never changes the shared-data rule.
+- [agent-integrations.md](references/agent-integrations.md): global and neutral project-local install locations for Codex and other agents. Installation never changes the shared-data rule.

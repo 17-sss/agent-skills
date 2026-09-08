@@ -212,4 +212,4 @@ Posts a confirmed summary PR review from a body file. It requires the reviewed `
 
 ## Agent Adapters
 
-For Codex, Claude Code, Cursor, and generic agent placement notes, read `references/agent-adapters.md` only when installing or adapting the package to another agent environment.
+For Codex, Claude Code, Cursor, and generic agent placement or capability-conditional network notes, read `references/agent-adapters.md` only when installing or adapting the package to another agent environment.

@@ -6,7 +6,7 @@ This package is intentionally agent-neutral. The core workflow is `SKILL.md` plu
 
 Install under a discoverable skills directory such as `$CODEX_HOME/skills/github-pr-review`, `~/.codex/skills/github-pr-review`, or a project-local skill path. `agents/openai.yaml` is only UI metadata; it does not define the workflow.
 
-`gh` commands that contact GitHub may need sandbox/network escalation in Codex environments. If a required `gh` command fails with a likely sandbox or network error, rerun it through the environment's approval path, for example with `sandbox_permissions: "require_escalated"` on Codex shell tool calls, rather than switching to browser automation.
+`gh` commands that contact GitHub may need sandbox or network escalation in some Codex environments. Use an escalation argument only when the active shell tool schema exposes it and the current approval policy permits it. If both conditions hold and a required `gh` command fails with a likely sandbox or network error, rerun it through that environment's approval path, for example with `sandbox_permissions: "require_escalated"`. Otherwise do not pass an unsupported argument: report the blocked network boundary or use an already-authorized CLI/API route instead of switching to browser automation.
 
 Useful scoped approval prefixes:
 

@@ -65,7 +65,7 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
             },
         )
         self.assertEqual(
-            set(checker.LOCAL_VALIDATED_SKILL_NAMES),
+            set(checker.NATIVE_WORKFLOW_SKILL_NAMES),
             {
                 "spec-interview",
                 "reviewed-plan",
@@ -74,6 +74,24 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
                 "review-gate",
                 "milestone-runner",
                 "godot-dev-loop",
+            },
+        )
+        self.assertEqual(
+            set(checker.INSTALLABLE_SKILL_NAMES),
+            {
+                "commit-helper",
+                "completion-loop",
+                "design-loop",
+                "github-pr-publish",
+                "github-pr-review",
+                "godot-dev-loop",
+                "handoff-memory",
+                "milestone-runner",
+                "project-chronicle",
+                "review-gate",
+                "reviewed-plan",
+                "spec-interview",
+                "visual-match",
             },
         )
         self.assertEqual(
@@ -214,7 +232,7 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
             )
         self.assertTrue(any("Goal mode and /goal" in error for error in errors))
 
-    def test_catalog_rejects_implicit_invocation(self):
+    def test_catalog_accepts_omitted_optional_invocation_policy(self):
         with tempfile.TemporaryDirectory(dir=REPO_ROOT) as temp_dir:
             skill_dir = Path(temp_dir) / "codex-fixture"
             (skill_dir / "agents").mkdir(parents=True)
@@ -234,6 +252,35 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
                 '  display_name: "Codex Fixture"\n'
                 '  short_description: "Fixture description for validation"\n'
                 '  default_prompt: "Use $codex-fixture for this fixture."\n',
+                encoding="utf-8",
+            )
+            errors = []
+            with redirect_stdout(io.StringIO()):
+                checker.validate_catalog_files(skill_dir, errors)
+        self.assertEqual(errors, [])
+
+    def test_catalog_rejects_unsupported_invocation_policy_value(self):
+        with tempfile.TemporaryDirectory(dir=REPO_ROOT) as temp_dir:
+            skill_dir = Path(temp_dir) / "codex-fixture"
+            (skill_dir / "agents").mkdir(parents=True)
+            metadata = {
+                "name": "codex-fixture",
+                "version": "0.1.0",
+                "organization": "17-sss",
+                "date": "July 2026",
+                "abstract": "Fixture metadata for checker validation.",
+                "references": [],
+            }
+            (skill_dir / "metadata.json").write_text(
+                json.dumps(metadata), encoding="utf-8"
+            )
+            (skill_dir / "agents" / "openai.yaml").write_text(
+                "interface:\n"
+                '  display_name: "Codex Fixture"\n'
+                '  short_description: "Fixture description for validation"\n'
+                '  default_prompt: "Use $codex-fixture for this fixture."\n'
+                "policy:\n"
+                "  allow_implicit_invocation: true\n",
                 encoding="utf-8",
             )
             errors = []

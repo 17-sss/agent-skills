@@ -2,9 +2,17 @@
 
 This file records behavioral evidence that cannot be established by schema validation alone. Tests run only in disposable Git repositories under `/tmp`; no dependency installation, external write, user-configuration change, or production access is allowed.
 
+## 2026-09-08 staged audit follow-up and cross-agent attempt
+
+Status: partial. The confirmed helper defects and contract inconsistencies were repaired in independent source commits, and blind-input corpora now cover Spec Interview choice routing, Visual Match renderer refusal, Completion Loop HANDOFF authority, and the existing execution/evidence cases. Adding or statically validating a corpus is not a behavioral PASS.
+
+A Completion Loop Low-risk run was attempted with Claude Code 2.1.159 in a disposable unborn Git fixture. The CLI returned HTTP 401 because its OAuth access token had expired before the prompt executed. The fixture remained Git-clean and its three input hashes remained `886b1205e5c0151714fb086883cb8c66165ff1fbc04ba1717aeac81f2aa1242d`, `e4b457816531a99b7549d199d1d1ba5864e40a329a6eb0247434659cf3515e67`, and `662b510978ff18ae5e8ebffffee3d174274f077b2cde3cf1bd60f71f357cfe47`. This is authentication failure before workflow selection, not evidence that the package passed or failed on Claude Code. Cursor CLI was unavailable, so no Cursor trace was attempted.
+
+The completion-loop cross-agent execution path, Spec Interview native/fallback/free-form choices, Visual Match no-renderer approval and decline paths, Review Gate sensitive-packet isolation, and Reviewed Plan/Review Gate non-Codex reviewer isolation therefore remain pending. The Godot offline restart-log regression passes, but no Godot executable or graphical display was available for a real-window smoke test. No package was promoted from Experimental and no additional Codex-native package was reclassified from these pending results.
+
 ## 2026-09-08 Completion Loop approved execution and evidence reuse
 
-Status: PASS for 11 decision-only cases and one actual disposable bug-fix run. An independent evaluator received the package and only the `query`/`context` inputs from its 12-case validation corpus; expected triggers and outcomes were withheld. The evaluator also checked the final wording clarification allowing explicitly required repetitions. This pass establishes execution and verification decisions; it does not claim a live browser capture, real-device test, or performance benchmark.
+Status: PASS for 11 decision-only cases and one actual disposable bug-fix run from the 12-case corpus at that revision. An independent evaluator received the package and only the `query`/`context` inputs; expected triggers and outcomes were withheld. A later HANDOFF push-authority case is pending under the 2026-09-08 section above. The evaluator also checked the final wording clarification allowing explicitly required repetitions. This pass establishes execution and verification decisions; it does not claim a live browser capture, real-device test, or performance benchmark.
 
 | Cases | Observed result |
 | --- | --- |
@@ -81,4 +89,4 @@ Status: partial. Five workflow success paths and the Visual Match safety-blocker
 
 ## Release rule
 
-Treat any `PENDING`, stale contract evidence, `FAIL`, unexpected workspace write, missing independent gate, evidence-free success, or undocumented capability gap as not release-ready. `reviewed-plan`, `completion-loop`, and `milestone-runner` are eligible for release from this matrix. The revised `spec-interview` choice-presentation and `review-gate` sensitive-packet contracts need fresh traces. The `visual-match` browser-enabled repair path is release-ready from the 2026-07-31 evidence, while its no-renderer bootstrap path remains pending. Delete disposable fixtures and task-scoped captures after the evidence has been summarized here.
+Treat any `PENDING`, stale contract evidence, `FAIL`, unexpected workspace write, missing independent gate, evidence-free success, or undocumented capability gap as not release-ready for the affected capability or runtime. `reviewed-plan` and `milestone-runner` retain their previously verified Codex paths. Completion Loop retains its verified Codex path, while cross-agent Low-risk execution remains pending. The revised `spec-interview` choice-presentation and `review-gate` sensitive-packet contracts need fresh traces. The `visual-match` browser-enabled repair path is release-ready from the 2026-07-31 evidence, while its no-renderer bootstrap path remains pending. Godot real-window evidence remains pending. Delete disposable fixtures and task-scoped captures after the evidence has been summarized here.

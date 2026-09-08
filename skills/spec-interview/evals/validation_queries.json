@@ -1,0 +1,30 @@
+[
+  {
+    "id": "bounded-native-choice",
+    "query": "Use $spec-interview to clarify the ownership scope for this existing application's shared cache. Ask the next single decision now.",
+    "context": "Repository evidence leaves exactly three viable ownership scopes with known tradeoffs: per-user, per-team, or organization-wide. Native structured-choice input is available. Inspection is read-only and no implementation is authorized.",
+    "should_trigger": true,
+    "expected_behavior": "Ask exactly one native structured-choice question with 2 or 3 mutually exclusive impact-labeled options and preserve the custom-answer escape hatch. Wait after asking and make no repository change."
+  },
+  {
+    "id": "bounded-numbered-fallback",
+    "query": "Use $spec-interview to clarify the ownership scope for this existing application's shared cache. Ask the next single decision now.",
+    "context": "Repository evidence leaves exactly three viable ownership scopes with known tradeoffs: per-user, per-team, or organization-wide. Structured-choice tooling is unavailable. Inspection is read-only and no implementation is authorized.",
+    "should_trigger": true,
+    "expected_behavior": "Ask exactly one numbered plain-text question with the same mutually exclusive impact-labeled options and an explicit custom-answer path. Wait after asking and make no repository change."
+  },
+  {
+    "id": "open-ended-free-form",
+    "query": "Use $spec-interview to clarify the retention obligation for this audit feature. Ask the next single decision now.",
+    "context": "The repository contains no policy or domain evidence identifying the governing customer, regulator, retention duration, or deletion exception. The user must supply facts before a complete option set can be formed. Structured-choice tooling is available, but inspection is read-only and no implementation is authorized.",
+    "should_trigger": true,
+    "expected_behavior": "Ask one concise free-form question for the missing governing facts. Do not invent or force a closed option set, and make no repository change."
+  },
+  {
+    "id": "no-automatic-follow-up",
+    "query": "Use $spec-interview to finish the requirements summary, then stop and give me only the result.",
+    "context": "All material decisions are resolved and the current task advertises a compatible downstream execution route. The user has not selected or invoked that route and has not authorized implementation, commits, remote work, or durable handoff updates.",
+    "should_trigger": true,
+    "expected_behavior": "Return the execution-ready requirements and stop. At most mention one copyable optional route when the contract permits it; do not invoke it, implement, commit, push, or update durable project state."
+  }
+]

@@ -268,7 +268,7 @@ For every forward test, verify the trace as well as the final prose: question co
 
 Keep forward-test fixtures outside the repository. Do not install dependencies, touch user configuration, contact production systems, post external reviews, or leave browser sessions and temporary artifacts running. Record current results in [native-workflow-forward-test-report.md](native-workflow-forward-test-report.md).
 
-For Completion Loop, use [validation queries](../skills/completion-loop/evals/validation_queries.json) for trigger and decision cases. Give the evaluating agent only each `query` and `context`, the package, and required raw fixture artifacts; withhold `should_trigger` and `expected_behavior` until judging the trace. Exercise the small-fix case in a disposable repository. Decision-only browser/device cases check routing and honesty, not actual browser rendering or device success. Existing static contract tests protect guardrails but do not establish behavioral pass results.
+Use the package-local validation corpora for [Spec Interview](../skills/spec-interview/evals/validation_queries.json), [Completion Loop](../skills/completion-loop/evals/validation_queries.json), and [Visual Match](../skills/visual-match/evals/validation_queries.json). Give the evaluating agent only each `query` and `context`, the package, and required raw fixture artifacts; withhold `should_trigger` and `expected_behavior` until judging the trace. Exercise the Completion Loop small-fix and HANDOFF authority cases in disposable repositories. Decision-only browser/device cases check routing and honesty, not actual browser rendering or device success. Existing static contract tests protect guardrails but do not establish behavioral pass results.
 
 ## Installation
 

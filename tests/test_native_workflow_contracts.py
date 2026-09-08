@@ -286,7 +286,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
         )
         self.assertEqual(
             {case["id"] for case in cases if case["should_trigger"]},
-            {"approved-plan", "small-bug-fix", "docs-only", "shared-dependency", "browser-404", "three-visual-reviews", "required-device-missing", "handoff-unapproved"},
+            {"approved-plan", "small-bug-fix", "docs-only", "shared-dependency", "browser-404", "three-visual-reviews", "required-device-missing", "handoff-unapproved", "handoff-push-not-authorized"},
         )
         for case in cases:
             with self.subTest(case=case["id"]):
@@ -297,6 +297,40 @@ class NativeWorkflowContractTest(unittest.TestCase):
         example = "/goal Implement the approved plan within its scope and completion criteria. Use $completion-loop."
         for catalog in ("README.md", "README.ko.md"):
             self.assertIn(example, read(catalog))
+
+    def test_pending_forward_eval_corpora_keep_inputs_blind_and_boundaries_explicit(self):
+        expected_ids = {
+            "spec-interview": {
+                "bounded-native-choice",
+                "bounded-numbered-fallback",
+                "open-ended-free-form",
+                "no-automatic-follow-up",
+            },
+            "visual-match": {
+                "renderer-missing-approval-required",
+                "renderer-missing-install-declined",
+            },
+        }
+        for name, ids in expected_ids.items():
+            cases = json.loads(read(f"skills/{name}/evals/validation_queries.json"))
+            self.assertEqual({case["id"] for case in cases}, ids)
+            for case in cases:
+                with self.subTest(skill=name, case=case["id"]):
+                    self.assertEqual(
+                        set(case),
+                        {"id", "query", "context", "should_trigger", "expected_behavior"},
+                    )
+                    self.assertIs(type(case["should_trigger"]), bool)
+                    for field in ("id", "query", "context", "expected_behavior"):
+                        self.assertIsInstance(case[field], str)
+                        self.assertTrue(case[field].strip())
+
+        maintenance = read("docs/native-workflow-skills-maintenance.md")
+        report = read("docs/native-workflow-forward-test-report.md")
+        self.assertIn("Spec Interview](../skills/spec-interview/evals/validation_queries.json)", maintenance)
+        self.assertIn("Visual Match](../skills/visual-match/evals/validation_queries.json)", maintenance)
+        self.assertIn("authentication failure before workflow selection", report)
+        self.assertIn("cross-agent Low-risk execution remains pending", report)
 
     def test_visual_match_preflights_capture_and_cannot_pass_major_drift(self):
         skill = read("skills/visual-match/SKILL.md")

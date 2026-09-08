@@ -37,11 +37,16 @@ def write(path: Path, content: str) -> None:
   path.write_text(content, encoding='utf-8')
 
 
-def init_repo(name: str) -> Path:
+def init_unborn_repo(name: str) -> Path:
   repo = Path(tempfile.mkdtemp(prefix=f'{name}-', dir='/tmp'))
   git(repo, 'init')
   git(repo, 'config', 'user.name', 'Eval User')
   git(repo, 'config', 'user.email', 'eval@example.com')
+  return repo
+
+
+def init_repo(name: str) -> Path:
+  repo = init_unborn_repo(name)
   write(repo / 'README.md', '# temp\n')
   git(repo, 'add', 'README.md')
   git(repo, 'commit', '-m', 'Initial baseline')
@@ -521,6 +526,35 @@ def case_commit_helper_invocation_boundary() -> None:
   assert_true('commit-helper-only' in drafted['external_harness_policy'], 'payload should expose invocation boundary policy')
 
 
+def case_unborn_repository_first_commit() -> None:
+  repo = init_unborn_repo('commit-helper-unborn')
+  write(repo / 'README.md', '# first commit\n')
+  git(repo, 'add', 'README.md')
+
+  inspected = inspect(repo)
+  assert_equal(inspected['recent_subjects'], [], 'unborn repository should expose empty history')
+  assert_true(inspected['branch'] not in {'', 'HEAD'}, 'unborn repository should expose its symbolic branch')
+
+  drafted = draft(repo, '--summary', 'add initial project files', '--no-body')
+  assert_equal(drafted.returncode, 0, 'first commit draft should succeed')
+  assert_equal(git(repo, 'rev-list', '--count', '--all').strip(), '0', 'draft-only mode must not create the first commit')
+
+  committed = draft(repo, '--summary', 'add initial project files', '--no-body', '--commit')
+  assert_equal(committed.returncode, 0, 'explicit first commit should succeed')
+  assert_equal(git(repo, 'rev-list', '--count', 'HEAD').strip(), '1', 'explicit commit mode should create one commit')
+
+
+def case_corrupt_head_is_not_empty_history() -> None:
+  repo = init_unborn_repo('commit-helper-corrupt-head')
+  write(repo / 'README.md', '# corrupt head\n')
+  git(repo, 'add', 'README.md')
+  head_ref = git(repo, 'symbolic-ref', 'HEAD').strip()
+  write(repo / '.git' / head_ref, 'not-an-object-id\n')
+
+  completed = run('python3', str(INSPECT), str(repo))
+  assert_true(completed.returncode != 0, 'corrupt HEAD must not be treated as an unborn repository')
+
+
 CASES = [
     ('explicit_conventional_repo', case_explicit_conventional_repo),
     ('explicit_gitmoji_allowlist_repo', case_explicit_gitmoji_allowlist_repo),
@@ -541,6 +575,8 @@ CASES = [
     ('explicit_conventional_repo_with_natural_wording', case_explicit_conventional_repo_with_natural_wording),
     ('explicit_gitmoji_repo_with_natural_wording', case_explicit_gitmoji_repo_with_natural_wording),
     ('commit_helper_invocation_boundary', case_commit_helper_invocation_boundary),
+    ('unborn_repository_first_commit', case_unborn_repository_first_commit),
+    ('corrupt_head_is_not_empty_history', case_corrupt_head_is_not_empty_history),
 ]
 
 

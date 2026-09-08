@@ -527,6 +527,42 @@ def git_optional(repo: Path, *args: str) -> tuple[bool, str]:
   return completed.returncode == 0, completed.stdout
 
 
+def get_head_context(repo: Path) -> tuple[str, bool]:
+  symbolic = subprocess.run(
+      ['git', '-C', str(repo), 'symbolic-ref', '--quiet', 'HEAD'],
+      capture_output=True,
+      text=True,
+      check=False,
+  )
+  symbolic_ref = symbolic.stdout.strip()
+  if symbolic.returncode not in {0, 1}:
+    message = symbolic.stderr.strip() or symbolic.stdout.strip() or 'git symbolic-ref failed'
+    raise RuntimeError(message)
+
+  verified = subprocess.run(
+      ['git', '-C', str(repo), 'rev-parse', '--verify', '--quiet', 'HEAD^{commit}'],
+      capture_output=True,
+      text=True,
+      check=False,
+  )
+  if verified.returncode == 0:
+    branch = symbolic_ref.removeprefix('refs/heads/') if symbolic_ref else 'HEAD'
+    return branch, True
+
+  if symbolic.returncode == 0 and symbolic_ref.startswith('refs/heads/'):
+    referenced = subprocess.run(
+        ['git', '-C', str(repo), 'show-ref', '--verify', '--quiet', symbolic_ref],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if referenced.returncode == 1:
+      return symbolic_ref.removeprefix('refs/heads/'), False
+
+  message = verified.stderr.strip() or verified.stdout.strip() or 'HEAD does not resolve to a commit'
+  raise RuntimeError(message)
+
+
 def is_git_repository(repo: Path) -> bool:
   completed = subprocess.run(
       ['git', '-C', str(repo), 'rev-parse', '--git-dir'],
@@ -1801,7 +1837,8 @@ def inspect_repo(repo: Path, limit: int = 30) -> dict[str, object | None]:
   if not is_git_repository(repo):
     raise ValueError(f'Not a git repository: {repo}')
 
-  recent_messages = get_recent_messages(repo, limit)
+  branch, has_commits = get_head_context(repo)
+  recent_messages = get_recent_messages(repo, limit) if has_commits else []
   subjects = [message['subject'] for message in recent_messages if message.get('subject')]
   pattern_counts: dict[str, int] = {}
   scope_counts: dict[str, int] = {}
@@ -1871,7 +1908,7 @@ def inspect_repo(repo: Path, limit: int = 30) -> dict[str, object | None]:
   payload = {
       'repo': repo.name,
       'repo_path': str(repo),
-      'branch': git(repo, 'rev-parse', '--abbrev-ref', 'HEAD'),
+      'branch': branch,
       'commit_template_path': explicit_rules.get('commit_template_path'),
       'style_mode': selected_style['style_mode'],
       'selected_style_family': selected_style['selected_style_family'],

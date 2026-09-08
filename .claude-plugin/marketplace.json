@@ -6,9 +6,15 @@
       "source": "./",
       "skills": [
         "./skills/reviewed-plan",
-        "./skills/completion-loop",
         "./skills/milestone-runner",
         "./skills/review-gate"
+      ]
+    },
+    {
+      "name": "execution",
+      "source": "./",
+      "skills": [
+        "./skills/completion-loop"
       ]
     },
     {

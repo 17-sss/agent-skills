@@ -60,7 +60,6 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
             set(checker.CODEX_SKILL_NAMES),
             {
                 "reviewed-plan",
-                "completion-loop",
                 "milestone-runner",
                 "review-gate",
             },
@@ -83,6 +82,7 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
                 "design-loop",
                 "godot-dev-loop",
                 "spec-interview",
+                "completion-loop",
                 "visual-match",
                 "handoff-memory",
                 "project-chronicle",

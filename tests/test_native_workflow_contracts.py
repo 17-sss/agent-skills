@@ -438,6 +438,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
             "design-loop",
             "godot-dev-loop",
             "spec-interview",
+            "completion-loop",
             "visual-match",
             "handoff-memory",
             "project-chronicle",
@@ -447,7 +448,6 @@ class NativeWorkflowContractTest(unittest.TestCase):
         )
         codex_native = (
             "reviewed-plan",
-            "completion-loop",
             "milestone-runner",
             "review-gate",
         )
@@ -481,7 +481,6 @@ class NativeWorkflowContractTest(unittest.TestCase):
         manifest = json.loads(read(".claude-plugin/marketplace.json"))
         codex_native = [
             "reviewed-plan",
-            "completion-loop",
             "review-gate",
             "milestone-runner",
         ]
@@ -489,6 +488,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
             "design-loop",
             "godot-dev-loop",
             "spec-interview",
+            "completion-loop",
             "visual-match",
             "handoff-memory",
             "project-chronicle",
@@ -501,6 +501,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
         expected_groups = {
             "codex": set(codex_native),
             "design": {"design-loop", "visual-match"},
+            "execution": {"completion-loop"},
             "experimental": {"godot-dev-loop"},
             "git-workflow": {"commit-helper", "github-pr-review", "github-pr-publish"},
             "planning": {"spec-interview"},
@@ -532,7 +533,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
         for name in codex_group:
             ui = read(f"skills/{name}/agents/openai.yaml")
             self.assertIn('display_name: "Codex · ', ui)
-        for name in {"spec-interview", "visual-match", "godot-dev-loop", "project-chronicle"}:
+        for name in {"spec-interview", "completion-loop", "visual-match", "godot-dev-loop", "project-chronicle"}:
             ui = read(f"skills/{name}/agents/openai.yaml")
             metadata = read(f"skills/{name}/metadata.json")
             self.assertNotIn('display_name: "Codex · ', ui)

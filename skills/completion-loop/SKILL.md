@@ -5,6 +5,12 @@ description: Complete approved implementation or fixes within frozen scope using
 
 # Completion Loop
 
+## Runtime capability contract
+
+The core workflow is cross-agent: it needs repository inspection and editing, test execution, diff review, and honest evidence reporting rather than a particular agent brand. Goal or task-status tools are optional persistence adapters and must not change the completion criteria or authority boundary.
+
+Low-risk work may use the required self-review. When the selected risk tier requires independent review, the runtime must provide a fresh context with tool-enforced read-only access that cannot mutate the workspace or external systems. If that isolation is unavailable, keep the required review pending; do not replace it with same-context role-play or a prompt-only promise.
+
 ## Enter only for approved execution
 
 This is an execution skill for completing approved implementation or fixes. It fits after investigation and plan approval. A request to think, research, write only a plan, or explain usage remains in that phase even if it mentions this skill. Approval to write a plan is not approval to execute it.
@@ -21,7 +27,7 @@ Read [verification-contract.md](references/verification-contract.md) before star
 
 ## Freeze the completion contract
 
-1. Read the active Codex goal when Goal mode and goal tools are available.
+1. Read the active goal or task-status object when the current runtime provides one and goal tracking is active.
 2. Create a goal only when the user or system explicitly requested goal tracking and no active goal exists. Skill activation alone is not authorization to create one.
 3. Inspect applicable repository instructions, current implementation, tests, and working-tree status. Preserve unrelated user changes.
 4. Reference the approved plan where available and freeze this contract before editing; a small fix may use a compact block rather than a new plan document:
@@ -38,7 +44,7 @@ Read [verification-contract.md](references/verification-contract.md) before star
 5. Resolve ambiguity that could materially change the contract. When a field is not part of the request, record `none`, `not authorized`, or `not part of this task` instead of silently widening it.
 6. Freeze the contract once implementation begins. Do not automatically add newly suggested requirements, repositories, deployment paths, or external systems.
 
-If Goal mode is unavailable, keep the same frozen contract in the current task context and state that cross-turn automatic continuation is not guaranteed.
+If goal tracking is unavailable, keep the same frozen contract in the current task context and state that cross-turn automatic continuation is not guaranteed.
 
 ## Execute the evidence loop
 

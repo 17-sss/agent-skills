@@ -1,22 +1,22 @@
 # Skill classification and installation
 
-Runtime reviewed: 2026-08-30. Display groups updated: 2026-09-03.
+Runtime reviewed: 2026-09-08. Display groups updated: 2026-09-08.
 
 Classify a skill by the minimum runtime surface required to satisfy its own completion contract. Origin, inspiration, OpenAI UI metadata, and optional acceleration do not make a skill Codex-only.
 
 - `Codex`: the skill cannot honestly reach its success verdict without a Codex-specific Goal, review, sandboxed execution, or native subagent contract.
 - `Cross-agent`: the core workflow can complete with common files, shell commands, Git, GitHub APIs, browser automation, image input, or equivalent capabilities exposed by multiple agents.
 
-Keep runtime compatibility separate from display grouping. Codex-dependent workflows remain in `Codex`; cross-agent skills use `Planning`, `Design`, `Git Workflow`, and `Project Memory` groups. `Experimental` takes precedence over the purpose group for skills still being validated, currently the Godot game-development skill `godot-dev-loop`. It describes maturity, not a runtime restriction; behavior and interfaces may change.
+Keep runtime compatibility separate from display grouping. Codex-dependent workflows remain in `Codex`; cross-agent skills use `Planning`, `Execution`, `Design`, `Git Workflow`, and `Project Memory` groups. `Experimental` takes precedence over the purpose group for skills still being validated, currently the Godot game-development skill `godot-dev-loop`. It describes maturity, not a runtime restriction; behavior and interfaces may change.
 
 ## Audited inventory
 
 | Display group | Runtime | Skill | Minimum runtime reason |
 | --- | --- | --- | --- |
 | Codex | Codex | `reviewed-plan` | Requires fresh native Codex Architect and Critic reviewers behind enforced read-only isolation |
-| Codex | Codex | `completion-loop` | Requires an isolated read-only Codex review before implementation completion |
 | Codex | Codex | `milestone-runner` | Reconciles durable milestones with native Codex Goal tools and the completed goal object |
 | Codex | Codex | `review-gate` | Requires two independent native Codex review lanes with tool-enforced isolation |
+| Execution | Cross-agent | `completion-loop` | Uses common repository and verification capabilities; Goal tracking is optional and required independent review is capability-gated rather than Codex-specific |
 | Design | Cross-agent | `design-loop` | Uses rendered UI evidence and adapts to available browser, screenshot, and image capabilities |
 | Experimental | Cross-agent | `godot-dev-loop` | Uses repository files, Bash, Git, Godot 4.x real-window capture, image inspection, and fresh non-interactive runner processes without requiring one agent's native workflow tools |
 | Planning | Cross-agent | `spec-interview` | The interview, read-only inspection, and specification work without an agent-exclusive command; delegation is optional |

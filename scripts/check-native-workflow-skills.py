@@ -34,7 +34,6 @@ LOCAL_VALIDATED_SKILL_NAMES = (
 )
 CODEX_SKILL_NAMES = (
     "reviewed-plan",
-    "completion-loop",
     "milestone-runner",
     "review-gate",
 )
@@ -81,6 +80,7 @@ CROSS_AGENT_SKILL_NAMES = (
     "design-loop",
     "godot-dev-loop",
     "spec-interview",
+    "completion-loop",
     "visual-match",
     "handoff-memory",
     "project-chronicle",
@@ -91,6 +91,7 @@ CROSS_AGENT_SKILL_NAMES = (
 TUI_SKILL_GROUPS = {
     "codex": CODEX_SKILL_NAMES,
     "design": ("design-loop", "visual-match"),
+    "execution": ("completion-loop",),
     "experimental": ("godot-dev-loop",),
     "git-workflow": ("commit-helper", "github-pr-review", "github-pr-publish"),
     "planning": ("spec-interview",),

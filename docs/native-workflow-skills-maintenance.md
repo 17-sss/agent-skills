@@ -9,7 +9,7 @@ This repository maintains six namespaced, portable workflow skills:
 - `visual-match`
 - `review-gate`
 
-`reviewed-plan`, `completion-loop`, `milestone-runner`, and `review-gate` are Codex-dependent. `spec-interview` and `visual-match` are cross-agent workflows because their core contracts complete without a Codex-exclusive command. The authoritative classification and install-path rules are in [skill-classification.md](skill-classification.md).
+`reviewed-plan`, `milestone-runner`, and `review-gate` are Codex-dependent. `spec-interview`, `completion-loop`, and `visual-match` are cross-agent workflows because their core contracts complete without a Codex-exclusive command. The authoritative classification and install-path rules are in [skill-classification.md](skill-classification.md).
 
 The skills preserve user-facing workflow and quality gates without requiring an external orchestration runtime. Each package installs independently. Optional workflow handoffs are availability-gated recommendations, not runtime dependencies: they use only the current task's advertised skill inventory and never inspect, install, or invoke another package. Only `milestone-runner` needs durable workflow state, stored in the target repository under `.agent-workflows/`; the other five packages do not create a state directory.
 
@@ -21,7 +21,7 @@ The skills preserve user-facing workflow and quality gates without requiring an 
 | Stored interview state | Current task context; write a durable specification only when the user requests one |
 | Workflow chaining | Readiness-gated, user-selected recommendations limited to downstream skills advertised in the current task |
 | Consensus role routing | Native reviewers with explicit Planner, Architect, and Critic contracts plus enforced read-only sandboxing |
-| Persistent completion loop | Goal mode plus a requirement-to-evidence completion audit |
+| Persistent completion loop | Requirement-to-evidence completion audit with optional runtime goal persistence |
 | Durable multi-goal execution | One native aggregate goal plus ordered `.agent-workflows/goals/<slug>/` plan and ledger artifacts |
 | Automatic retry hooks | Explicit investigate, implement, verify, diagnose, and repair loop |
 | External architecture cross-check | Fresh native Codex reviewer running in an enforced read-only sandbox over captured requirements, diff, and logs |
@@ -164,7 +164,7 @@ Do not call the packages release-ready from the automated command alone. Run the
 - Classify only acceptance failures, current-change regressions, in-scope critical safety failures, and declared-deployment impossibility as blockers; keep other findings deferred.
 - Preserve one initial full-scope review, focused rereview after accepted blocker repairs, and one initial stable-candidate full verification. Later verification covers failed or invalidated evidence, including the full suite when shared-input changes or uncertain impact demand it; additional full review still requires a recorded core-architecture change.
 - Require a material-expansion checkpoint before adding repositories, cloud resources, deployment methods, operational services, or redesigned contracts.
-- When the risk tier requires independent review, use a separate native Codex execution explicitly sandboxed read-only. Keep the reviewer terminal and include filesystem identity as well as content in the frozen candidate packet.
+- When the risk tier requires independent review, use a fresh context with tool-enforced read-only isolation from workspace and external mutation. Keep the reviewer terminal and include filesystem identity as well as content in the frozen candidate packet; on Codex, a separately sandboxed native run is one adapter.
 - Track dirty input identity, shared dependencies, fixtures, build, renderer, host/environment, and baseline branch in the existing ledger; do not add parallel state tracking.
 - Follow the package's browser reference for representative versus final coverage, required review counts, stable served builds, bounded readiness, product timing, failure diagnosis, and actual task-resource release.
 - Record expensive-check estimates and diagnosis checkpoints; distinguish CPU/runtime cost from tokens and preserve raw artifacts without repeatedly loading them.
@@ -271,7 +271,7 @@ For Completion Loop, use [validation queries](../skills/completion-loop/evals/va
 
 ## Installation
 
-The six managed packages use short functional identifiers and remain explicit-only and independently installable. Only the four Codex-dependent packages use `Codex · …` OpenAI display names. Choose the target agent independently from the TUI classification:
+The six managed packages use short functional identifiers and remain explicit-only and independently installable. Only the three Codex-dependent packages use `Codex · …` OpenAI display names. Choose the target agent independently from the TUI classification:
 
 ```bash
 npx skills add https://github.com/17-sss/agent-skills --skill spec-interview
@@ -286,10 +286,10 @@ For Codex, project installs intentionally use `.agents/skills/`; global installs
 
 ## Known native differences
 
-- Without Goal mode, Codex Completion Loop can preserve the completion contract only inside the current task; it cannot promise cross-task automatic continuation.
+- Without a runtime goal or task-persistence adapter, Completion Loop can preserve the completion contract only inside the current task; it cannot promise cross-task automatic continuation.
 - Without Goal mode, Codex Milestone Runner can preserve repository-local plan and ledger artifacts but cannot promise automatic continuation. It also cannot clear or replace a conflicting active native goal. After a native goal is completed, `get_goal` may report no active goal, so preserve the successful `update_goal` completion result before querying again.
 - Plan mode is a semantic boundary, not a separate filesystem sandbox. Codex Reviewed Plan requires an effective read-only permission mode for independent gates and uses content fingerprints only as defense in depth.
-- Native subagents inherit the parent permission mode. A writable implementation turn therefore cannot claim an isolated review merely by prompting the child to stay read-only; Codex Completion Loop uses a separately sandboxed native Codex run or remains incomplete.
+- Native subagents may inherit the parent permission mode. A writable implementation turn therefore cannot claim an isolated review merely by prompting a child to stay read-only; Completion Loop requires a fresh tool-enforced read-only reviewer adapter or leaves the gate incomplete.
 - Browser, image, and design capabilities vary by agent surface and installed plugins. Visual Match falls back to repository-native automation, then offers a user-approved isolated Chromium renderer before reporting missing visual evidence.
 - Native `/review` is sufficient for an ordinary isolated review. Codex Review Gate deliberately spends more tokens on two independent lanes and returns `INCONCLUSIVE` if that evidence cannot be collected.
 - Generated-image approval naturally spans turns because image generation can end the generation turn.

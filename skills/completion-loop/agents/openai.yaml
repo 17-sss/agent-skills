@@ -1,5 +1,5 @@
 interface:
-  display_name: "Codex · Completion Loop"
+  display_name: "Completion Loop"
   short_description: "Finish approved changes with reusable evidence"
   default_prompt: "Use $completion-loop to implement the approved plan within its scope and completion criteria, reuse valid evidence, and complete required verification and review."
 policy:

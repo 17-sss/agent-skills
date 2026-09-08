@@ -20,6 +20,7 @@ npx skills add https://github.com/17-sss/agent-skills
 
 - `Codex`: Codex의 native Plan, Goal, Review와 subagent 계약을 사용하는 명시 호출형 워크플로
 - `Planning`: 요구사항 인터뷰와 명세 준비
+- `Execution`: 승인된 구현을 증거 중심으로 검증하고 역량 기반 독립 review를 적용하는 실행
 - `Design`: UI 구현·개선과 기준 화면 재현
 - `Git Workflow`: 커밋, PR 생성과 PR 리뷰
 - `Project Memory`: 현재 작업 인수인계와 장기 프로젝트 이력
@@ -59,6 +60,7 @@ npx skills add https://github.com/17-sss/agent-skills --skill design-loop
 | Design | 공통 | [`design-loop`](skills/design-loop/SKILL.md) | UI를 실제 렌더 결과로 반복 개선할 때 |
 | Experimental | 공통 | [`godot-dev-loop`](skills/godot-dev-loop/SKILL.md) | Godot 게임을 durable state, 렌더 캡처와 fresh agent iteration으로 다듬을 때 |
 | Planning | 공통 | [`spec-interview`](skills/spec-interview/SKILL.md) | 구현 전에 모호한 요구사항을 한 질문씩 명확히 할 때 |
+| Execution | 공통 | [`completion-loop`](skills/completion-loop/SKILL.md) | 승인된 구현을 유효한 검증 근거를 재사용하며 완료할 때 |
 | Design | 공통 | [`visual-match`](skills/visual-match/SKILL.md) | 승인된 이미지나 URL과 구현 화면을 엄격히 맞출 때 |
 | Project Memory | 공통 | [`handoff-memory`](skills/handoff-memory/SKILL.md) | 저장소나 워크스페이스의 HANDOFF를 만들고 이어갈 때 |
 | Project Memory | 공통 | [`project-chronicle`](skills/project-chronicle/SKILL.md) | 저장소 근거에서 장기 프로젝트 역사를 복원하고 계속 기록할 때 |
@@ -66,7 +68,6 @@ npx skills add https://github.com/17-sss/agent-skills --skill design-loop
 | Git Workflow | 공통 | [`github-pr-publish`](skills/github-pr-publish/SKILL.md) | 현재 브랜치를 안전하게 push하고 PR로 공개할 때 |
 | Git Workflow | 공통 | [`commit-helper`](skills/commit-helper/SKILL.md) | 저장소 규칙과 staged diff에 맞는 커밋을 만들 때 |
 | Codex | Codex 특화 | [`reviewed-plan`](skills/reviewed-plan/SKILL.md) | Planner, Architect, Critic을 거친 구현 계획이 필요할 때 |
-| Codex | Codex 특화 | [`completion-loop`](skills/completion-loop/SKILL.md) | 승인된 구현을 유효한 검증 근거를 재사용하며 완료할 때 |
 | Codex | Codex 특화 | [`milestone-runner`](skills/milestone-runner/SKILL.md) | 큰 작업을 재시작 가능한 순차 milestone로 실행할 때 |
 | Codex | Codex 특화 | [`review-gate`](skills/review-gate/SKILL.md) | 고위험 변경을 공개하거나 병합하기 전에 엄격한 두-lane gate를 실행할 때 |
 
@@ -211,9 +212,38 @@ Use $github-pr-publish to preflight the current branch and prepare a draft PR. S
 Use $commit-helper to inspect this repository's commit rules and staged changes, then create the local commit. Do not push.
 ```
 
+### completion-loop
+
+승인된 구현이나 명확하게 허가된 작은 수정을 고정된 범위 안에서 완료합니다. 승인된 계획을 재사용하며, 아이디어 상담·조사·계획만 작성하는 요청·사용법 질문은 구현으로 전환하지 않습니다.
+
+- 편집 전에 목표, 범위, non-goal, 배포 대상, acceptance criteria, 증거, 위험도와 승인된 시스템을 고정합니다.
+- 완료 계약 밖의 리뷰 관찰은 목표를 확장하지 않고 deferred로 분류합니다.
+- 코드·dirty 변경·의존성·fixture·빌드·환경을 기록해 유효한 근거를 재사용하고, 실패하거나 무효화된 검사만 재실행하며 영향이 불명확하면 검증을 확대합니다.
+- 기존 브라우저 runner와 개발 중 대표 사례를 재사용하되 필수 최종 조합, 시각 검토, 시간 조건과 자원 정리를 유지합니다.
+- 위험도별 독립 review를 유지합니다. runtime이 fresh하고 tool-enforced read-only인 reviewer를 제공하지 못하면 gate를 낮추지 않고 pending으로 보고합니다.
+- Goal이나 task-status 도구는 선택적인 지속성 adapter입니다. 호출만으로 목표 생성·모드 전환·커밋·원격 작업이 승인되지 않으며 HANDOFF·프로젝트 이력 갱신에는 별도 요청이 필요합니다.
+
+사용 예시:
+
+```text
+Use $completion-loop to implement the approved plan within its scope and completion criteria. Reuse valid evidence and complete required verification and independent review. Do not commit, push, or update HANDOFF or project history.
+```
+
+Codex에서는 핵심 계약을 바꾸지 않고 goal tracking을 명시적으로 선택할 수 있습니다:
+
+```text
+/goal Implement the approved plan within its scope and completion criteria. Use $completion-loop.
+```
+
+작은 수정은 별도 계획이나 목표 생성 요청 없이 시작할 수 있습니다:
+
+```text
+Use $completion-loop to fix the reproduced cache-key bug and verify it with the existing regression test. Keep public behavior unchanged.
+```
+
 ## Codex 특화 워크플로
 
-아래 4개 스킬은 완료 gate를 충족하기 위해 Codex Goal, 격리된 Codex 실행, native review 또는 subagent 계약을 직접 요구합니다. 모두 explicit-only이며 다른 카탈로그 스킬을 필수로 요구하지 않습니다.
+아래 3개 스킬은 완료 gate를 충족하기 위해 Codex Goal, 격리된 Codex 실행, native review 또는 subagent 계약을 직접 요구합니다. 모두 explicit-only이며 다른 카탈로그 스킬을 필수로 요구하지 않습니다.
 
 ### reviewed-plan
 
@@ -228,29 +258,6 @@ Use $commit-helper to inspect this repository's commit rules and staged changes,
 
 ```text
 /plan $reviewed-plan Plan a backward-compatible migration from local session state to server-managed sessions. Keep the workspace read-only and return the reviewed implementation handoff.
-```
-
-### completion-loop
-
-승인된 구현이나 명확하게 허가된 작은 수정을 고정된 범위 안에서 완료합니다. 승인된 계획을 재사용하며, 아이디어 상담·조사·계획만 작성하는 요청·사용법 질문은 구현으로 전환하지 않습니다.
-
-- 편집 전에 목표, 범위, non-goal, 배포 대상, acceptance criteria, 증거, 위험도와 승인된 시스템을 고정합니다.
-- 완료 계약 밖의 리뷰 관찰은 목표를 확장하지 않고 deferred로 분류합니다.
-- 코드·dirty 변경·의존성·fixture·빌드·환경을 기록해 유효한 근거를 재사용하고, 실패하거나 무효화된 검사만 재실행하며 영향이 불명확하면 검증을 확대합니다.
-- 기존 브라우저 runner와 개발 중 대표 사례를 재사용하되 필수 최종 조합, 시각 검토, 시간 조건과 자원 정리를 유지합니다.
-- 위험도별 필수 독립 검토를 유지하고 구현 완료·통합 검증 중·실기기 검증 대기를 구분합니다.
-- 호출만으로 목표 생성·모드 전환·커밋·원격 작업이 승인되지 않습니다. HANDOFF·프로젝트 이력 갱신에는 별도 요청이 필요합니다.
-
-사용 예시: 승인된 계획 실행(`/goal` 요청으로 목표 추적을 명시적으로 선택).
-
-```text
-/goal Implement the approved plan within its scope and completion criteria. Use $completion-loop. Reuse valid evidence and complete required verification and independent review. Do not commit, push, or update HANDOFF or project history.
-```
-
-작은 수정은 별도 계획이나 목표 생성 요청 없이 시작할 수 있습니다:
-
-```text
-Use $completion-loop to fix the reproduced cache-key bug and verify it with the existing regression test. Keep public behavior unchanged.
 ```
 
 ### milestone-runner
@@ -289,7 +296,7 @@ Use $review-gate as the final pre-PR gate for this high-risk change. Keep the wo
 - 스킬 하나만 설치해도 해당 핵심 워크플로가 동작해야 합니다.
 - 선택적 workflow handoff는 추천일 뿐입니다. 현재 작업의 available-skill inventory에 표시된 downstream workflow만 언급하며, inventory 또는 최적의 스킬을 사용할 수 없으면 아무것도 제안하지 않습니다.
 - 공통 스킬은 각자의 invocation policy를 따르며, 명확한 재현을 원하면 예시처럼 `$skill-name`을 직접 지정합니다.
-- Codex 특화 4개와 제어가 중요한 공통 `spec-interview`, `visual-match`, `godot-dev-loop`는 `allow_implicit_invocation: false`이며 명시적으로 호출합니다.
+- Codex 특화 3개와 제어가 중요한 공통 `spec-interview`, `completion-loop`, `visual-match`, `godot-dev-loop`는 `allow_implicit_invocation: false`이며 명시적으로 호출합니다.
 - optional plugin이나 도구가 없으면 저장소 기본 도구와 안전한 fallback을 우선합니다.
 - 외부 게시, push, 환경 설치와 destructive action은 스킬 호출만으로 승인된 것으로 보지 않습니다.
 

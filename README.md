@@ -20,6 +20,7 @@ The selection screen separates Codex-dependent workflows from shared skills grou
 
 - `Codex`: explicitly invoked workflows that use native Codex Plan, Goal, Review, and subagent contracts
 - `Planning`: requirements interviews and specification preparation
+- `Execution`: approved implementation with evidence-led verification and capability-gated independent review
 - `Design`: interface implementation, refinement, and reference matching
 - `Git Workflow`: commits, pull request publication, and PR review
 - `Project Memory`: current handoffs and long-term project history
@@ -59,6 +60,7 @@ Start a new agent task after installation so the refreshed skill discovery resul
 | Design | Shared | [`design-loop`](skills/design-loop/SKILL.md) | Iteratively improving a UI against real rendered evidence |
 | Experimental | Shared | [`godot-dev-loop`](skills/godot-dev-loop/SKILL.md) | Refining a Godot game through durable state, rendered captures, and fresh agent iterations |
 | Planning | Shared | [`spec-interview`](skills/spec-interview/SKILL.md) | Resolving ambiguous requirements one material question at a time |
+| Execution | Shared | [`completion-loop`](skills/completion-loop/SKILL.md) | Finishing approved implementation with reusable verification evidence |
 | Design | Shared | [`visual-match`](skills/visual-match/SKILL.md) | Matching an implementation to an approved image or URL |
 | Project Memory | Shared | [`handoff-memory`](skills/handoff-memory/SKILL.md) | Creating or resuming a repository or workspace HANDOFF |
 | Project Memory | Shared | [`project-chronicle`](skills/project-chronicle/SKILL.md) | Reconstructing and maintaining durable project history from repository evidence |
@@ -66,7 +68,6 @@ Start a new agent task after installation so the refreshed skill discovery resul
 | Git Workflow | Shared | [`github-pr-publish`](skills/github-pr-publish/SKILL.md) | Safely pushing the current branch and publishing a pull request |
 | Git Workflow | Shared | [`commit-helper`](skills/commit-helper/SKILL.md) | Creating a commit that matches repository rules and staged changes |
 | Codex | Codex-native | [`reviewed-plan`](skills/reviewed-plan/SKILL.md) | Producing an implementation plan reviewed by Planner, Architect, and Critic |
-| Codex | Codex-native | [`completion-loop`](skills/completion-loop/SKILL.md) | Finishing approved implementation with reusable verification evidence |
 | Codex | Codex-native | [`milestone-runner`](skills/milestone-runner/SKILL.md) | Executing large work as resumable, sequential milestones |
 | Codex | Codex-native | [`review-gate`](skills/review-gate/SKILL.md) | Running a strict two-lane gate before a high-risk change is published or merged |
 
@@ -211,9 +212,38 @@ Usage example:
 Use $commit-helper to inspect this repository's commit rules and staged changes, then create the local commit. Do not push.
 ```
 
+### completion-loop
+
+Complete approved implementation or clearly authorized small fixes within frozen scope. Reuse the approved plan; brainstorming, research, plan-only requests, and usage questions do not start implementation.
+
+- Freeze objective, scope, non-goals, deployment target, acceptance criteria, evidence, risk, and authorized systems before editing.
+- Treat out-of-contract review observations as deferred instead of silently expanding the goal.
+- Reuse valid evidence by tracking code, dirty changes, dependencies, fixtures, builds, and environment; rerun failed or invalidated checks and broaden coverage when impact is uncertain.
+- Reuse browser runners and representative development cases while preserving required final combinations, visual reviews, timing, and resource cleanup.
+- Keep risk-tiered independent review. When the runtime cannot provide a fresh tool-enforced read-only reviewer, report the required gate as pending rather than weakening it.
+- Treat Goal or task-status tools as optional persistence adapters. Invocation grants no goal creation, mode switch, commit, or remote authority; HANDOFF and project-history updates need a separate request.
+
+Usage example:
+
+```text
+Use $completion-loop to implement the approved plan within its scope and completion criteria. Reuse valid evidence and complete required verification and independent review. Do not commit, push, or update HANDOFF or project history.
+```
+
+On Codex, goal tracking can be selected explicitly without changing the core contract:
+
+```text
+/goal Implement the approved plan within its scope and completion criteria. Use $completion-loop.
+```
+
+A small fix can start without a separate plan or goal request:
+
+```text
+Use $completion-loop to fix the reproduced cache-key bug and verify it with the existing regression test. Keep public behavior unchanged.
+```
+
 ## Codex-native Workflows
 
-The following four skills require Codex Goal, isolated Codex execution, native review, or subagent contracts to satisfy their completion gates. They are explicit-only and do not require any other catalog skill.
+The following three skills require Codex Goal, isolated Codex execution, native review, or subagent contracts to satisfy their completion gates. They are explicit-only and do not require any other catalog skill.
 
 ### reviewed-plan
 
@@ -228,29 +258,6 @@ Usage example:
 
 ```text
 /plan $reviewed-plan Plan a backward-compatible migration from local session state to server-managed sessions. Keep the workspace read-only and return the reviewed implementation handoff.
-```
-
-### completion-loop
-
-Complete approved implementation or clearly authorized small fixes within frozen scope. Reuse the approved plan; brainstorming, research, plan-only requests, and usage questions do not start implementation.
-
-- Freeze objective, scope, non-goals, deployment target, acceptance criteria, evidence, risk, and authorized systems before editing.
-- Treat out-of-contract review observations as deferred instead of silently expanding the goal.
-- Reuse valid evidence by tracking code, dirty changes, dependencies, fixtures, builds, and environment; rerun failed or invalidated checks and broaden coverage when impact is uncertain.
-- Reuse browser runners and representative development cases while preserving required final combinations, visual reviews, timing, and resource cleanup.
-- Keep risk-tiered independent review and report implementation, integration verification, and pending real-device checks separately.
-- Invocation grants no goal creation, mode switch, commit, or remote authority. HANDOFF and project-history updates need a separate request.
-
-Usage example: execute the approved plan (the `/goal` request explicitly selects goal tracking).
-
-```text
-/goal Implement the approved plan within its scope and completion criteria. Use $completion-loop. Reuse valid evidence and complete required verification and independent review. Do not commit, push, or update HANDOFF or project history.
-```
-
-A small fix can start without a separate plan or goal request:
-
-```text
-Use $completion-loop to fix the reproduced cache-key bug and verify it with the existing regression test. Keep public behavior unchanged.
 ```
 
 ### milestone-runner
@@ -289,7 +296,7 @@ Use $review-gate as the final pre-PR gate for this high-risk change. Keep the wo
 - Installing one skill must be sufficient for its core workflow to run.
 - Optional workflow handoffs are recommendations only. A skill may name only a downstream workflow advertised in the current task's available-skill inventory; when that inventory or the best-fit skill is unavailable, it makes no suggestion.
 - Shared skills follow their own invocation policy; specify `$skill-name` for reproducible explicit invocation.
-- The four Codex-dependent workflows, plus the high-control shared `spec-interview`, `visual-match`, and `godot-dev-loop` workflows, set `allow_implicit_invocation: false` and must be invoked explicitly.
+- The three Codex-dependent workflows, plus the high-control shared `spec-interview`, `completion-loop`, `visual-match`, and `godot-dev-loop` workflows, set `allow_implicit_invocation: false` and must be invoked explicitly.
 - When an optional plugin or tool is unavailable, prefer repository-native tools and safe fallbacks.
 - Invoking a skill does not grant approval for external publishing, pushes, environment installation, or destructive actions.
 

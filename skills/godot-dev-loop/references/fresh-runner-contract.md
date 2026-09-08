@@ -43,6 +43,10 @@ Use `CLAUDE_BIN` or `CODEX_BIN` to select an explicit executable. Each adapter f
 
 The loop validates these as non-negative integers. A successful runner exit resets the consecutive-failure counter. A maximum-iteration stop is a safety pause, not proof that DESIGN criteria are met, so it does not create STOP.
 
+## Log retention
+
+Every loop invocation creates one collision-resistant `loop/logs/run-<UTC>-<pid>/` directory and writes `iteration-000001.log`, `iteration-000002.log`, and later outputs inside it. Restarting the loop starts a new run directory instead of reopening the prior invocation's numbered files. Keep these logs ignored and project-local; use them as diagnostic evidence, not as a replacement for `docs/STATUS.md` or a STOP/BLOCKED reason.
+
 ## Terminal behavior
 
 Before the first launch and after every exit, the loop checks:

@@ -110,7 +110,7 @@ GODOT_DEV_RUNNER=claude ./loop/loop.sh
 GODOT_DEV_RUNNER=./my-runner-adapter ./loop/loop.sh
 ```
 
-`loop/loop.sh` waits for each process to exit before starting the next one. It stops for `loop/STOP`, `loop/BLOCKED`, an optional iteration limit, or the consecutive runner-failure cutoff. Its portability target is Bash on macOS, Linux, and compatible Unix-like environments; it is not a native CMD or PowerShell script.
+`loop/loop.sh` waits for each process to exit before starting the next one. Every invocation writes to a new `loop/logs/run-<UTC>-<pid>/` directory so restarting the loop cannot overwrite an earlier run's iteration logs. It stops for `loop/STOP`, `loop/BLOCKED`, an optional iteration limit, or the consecutive runner-failure cutoff. Its portability target is Bash on macOS, Linux, and compatible Unix-like environments; it is not a native CMD or PowerShell script.
 
 The built-in adapters inherit the user's current permissions and configuration. They do not use permission-bypass flags, resume operations, continuation flags, or prior session identifiers. If non-interactive execution cannot proceed under the existing configuration, fail clearly and block instead of escalating permissions.
 

@@ -8,7 +8,7 @@ It is designed for playable-game work that may run for many iterations while eac
 
 ## Verification status
 
-As of 2026-08-30, the package structure, non-destructive bootstrap behavior, generated Bash syntax and control flow, deterministic state resolution, and fresh-runner safeguards pass the repository's offline tests and validators.
+As of 2026-09-08, the package structure, non-destructive bootstrap behavior, generated Bash syntax and control flow, deterministic state resolution, restart-safe per-run log preservation, and fresh-runner safeguards pass the repository's offline tests and validators.
 
 The real-window Godot 4 smoke test remains capability-gated and has not been completed in the current development environment, which has neither a Godot executable nor a graphical display session. Do not treat the visual path as fully verified until a graphical machine runs `GAME_START=smoke ./scripts/game-capture.sh`, confirms the import and normal-window capture process exits successfully, and an image-capable agent opens and inspects the resulting PNG.
 
@@ -54,6 +54,6 @@ GODOT_DEV_RUNNER=./path/to/custom-adapter ./loop/loop.sh
 
 The custom adapter receives exactly two arguments: the absolute project root and the absolute iteration-prompt path. It must start one fresh non-interactive agent process, wait for it, and return that process's exit status.
 
-The loop is Bash for macOS, Linux, and compatible Unix-like environments. `GODOT_DEV_MAX_ITERATIONS=0` means run until STOP or BLOCKED. `GODOT_DEV_MAX_RUNNER_FAILURES`, default `3`, prevents a failing runner from becoming a hot loop; `GODOT_DEV_ITERATION_DELAY_SECONDS`, default `2`, controls the delay.
+The loop is Bash for macOS, Linux, and compatible Unix-like environments. Each invocation preserves its output under a new `loop/logs/run-<UTC>-<pid>/` directory, with numbered iteration logs inside. `GODOT_DEV_MAX_ITERATIONS=0` means run until STOP or BLOCKED. `GODOT_DEV_MAX_RUNNER_FAILURES`, default `3`, prevents a failing runner from becoming a hot loop; `GODOT_DEV_ITERATION_DELAY_SECONDS`, default `2`, controls the delay.
 
 Read [SKILL.md](SKILL.md) for the executable workflow and the files under [references](references/project-state-contract.md) for the durable-state, Godot QA, and runner contracts.

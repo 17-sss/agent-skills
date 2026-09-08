@@ -472,6 +472,46 @@ fi
                 (project / "loop/BLOCKED").read_text(encoding="utf-8"),
             )
 
+    def test_loop_restart_preserves_each_runs_logs(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project = Path(temp_dir) / "restart-logs"
+            write_fixture_project(project)
+            result = bootstrap(project, *BRIEF_ARGS)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            adapter = project / "logging-adapter.sh"
+            write_executable(
+                adapter,
+                "#!/usr/bin/env bash\nprintf '%s\\n' \"$RUN_MARKER\"\n",
+            )
+            env = os.environ.copy()
+            env.update(
+                {
+                    "GODOT_DEV_RUNNER": str(adapter),
+                    "GODOT_DEV_MAX_ITERATIONS": "1",
+                    "GODOT_DEV_ITERATION_DELAY_SECONDS": "0",
+                }
+            )
+
+            for marker in ("first-run", "second-run"):
+                env["RUN_MARKER"] = marker
+                run = subprocess.run(
+                    ["bash", str(project / "loop/loop.sh")],
+                    cwd=project,
+                    env=env,
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                )
+                self.assertEqual(run.returncode, 0, run.stderr)
+
+            run_directories = sorted((project / "loop/logs").glob("run-*"))
+            self.assertEqual(len(run_directories), 2)
+            retained = {
+                (run_dir / "iteration-000001.log").read_text(encoding="utf-8").strip()
+                for run_dir in run_directories
+            }
+            self.assertEqual(retained, {"first-run", "second-run"})
+
     def test_built_in_runners_use_fresh_noninteractive_argv(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             project = Path(temp_dir) / "game"

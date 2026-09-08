@@ -94,6 +94,10 @@ if [[ ! -x "$ADAPTER" ]]; then
 fi
 
 mkdir -p "$LOG_DIR"
+run_timestamp="$(date -u '+%Y%m%dT%H%M%SZ')"
+run_log_dir="$LOG_DIR/run-$run_timestamp-$$"
+mkdir "$run_log_dir"
+printf 'godot-dev-loop: preserving this run under %s\n' "${run_log_dir#$PROJECT_ROOT/}"
 iteration=0
 consecutive_failures=0
 
@@ -106,7 +110,7 @@ while true; do
 
   iteration=$((iteration + 1))
   printf -v iteration_label '%06d' "$iteration"
-  log_file="$LOG_DIR/iteration-$iteration_label.log"
+  log_file="$run_log_dir/iteration-$iteration_label.log"
   printf 'godot-dev-loop: starting fresh iteration %s with %s\n' "$iteration" "$RUNNER"
 
   if "$ADAPTER" "$PROJECT_ROOT" "$PROMPT_FILE" 2>&1 | tee "$log_file"; then

@@ -146,6 +146,7 @@ Do not call the packages release-ready from the automated command alone. Run the
 - Keep the workspace read-only.
 - Preserve Planner, then Architect, then Critic ordering.
 - Ensure non-approval repeats the complete review sequence.
+- Stop pre-acceptance Architect review as `NOT APPROVED` when the same addressed finding repeats without new evidence or the next material revision needs an unavailable external decision.
 - Never report consensus without matching Architect and Critic approval.
 - Compare exact staged, unstaged, and untracked content across every delegated gate; `git status` text alone is insufficient.
 - Require an inherited or isolated effective read-only sandbox for Architect and Critic; otherwise return `NOT APPROVED`.

@@ -40,6 +40,7 @@ Never run Architect and Critic in parallel. Never treat planning artifacts or a 
 Limit the Critic-driven re-review loop to five iterations.
 
 - Architect `REVISE` passes before the first Architect `ACCEPT` do not consume a re-review iteration.
+- Pre-acceptance Architect review is still progress-bounded. Track the finding set and cited evidence for each plan revision. If Architect repeats the same blocking finding after the Planner addressed it, but supplies no new repository evidence, changed constraint, or unresolved user decision, stop with the best plan marked `NOT APPROVED` instead of revising wording indefinitely. Also stop when the next material revision requires an external decision or evidence that is unavailable.
 - The initial Architect `ACCEPT` → Critic verdict is the baseline review and does not consume a re-review iteration.
 - Each Critic `ITERATE` or `REJECT` starts one re-review iteration: Planner revision → Architect verdict → Critic verdict.
 - Architect `REVISE` passes within a started re-review remain part of that same iteration. Count the iteration as completed only after the subsequent Critic verdict.

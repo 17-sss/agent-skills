@@ -45,6 +45,7 @@ Return exactly one verdict:
 - `REVISE` — name the defects and required plan changes
 
 Architect acceptance is not final approval.
+For `REVISE`, cite the evidence or unresolved decision that makes each requested change material. Return all currently identifiable blocking findings in the pass. Repeating a previously addressed finding without new evidence, a changed constraint, or a required external decision is a stalled gate, not a reason for indefinite revision.
 
 ## Critic
 

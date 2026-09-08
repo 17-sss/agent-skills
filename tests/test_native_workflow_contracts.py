@@ -214,6 +214,85 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("Do not update it after every small repair", skill)
         self.assertIn("Do not narrate every internal review iteration", skill)
 
+    def test_completion_loop_requires_execution_authority_and_reuses_plans(self):
+        skill = read("skills/completion-loop/SKILL.md")
+        interface = read("skills/completion-loop/agents/openai.yaml")
+        self.assertIn("Approval to write a plan is not approval to execute it", skill)
+        self.assertIn("instead of replanning from scratch", skill)
+        self.assertIn("small fix needs no separate planning ceremony", skill)
+        self.assertIn("does not authorize goal creation, a mode switch, commits, or remote work", skill)
+        self.assertIn("do not request it again", skill)
+        self.assertIn("allow_implicit_invocation: false", interface)
+        self.assertIn("implement the approved plan", interface)
+
+    def test_completion_loop_invalidation_preserves_required_gates(self):
+        skill = read("skills/completion-loop/SKILL.md")
+        contract = read("skills/completion-loop/references/verification-contract.md")
+        for identity in ("dirty diff fingerprint", "shared dependency/lockfile", "fixture/seed", "build identity", "host/environment", "baseline branch identity"):
+            self.assertIn(identity, contract)
+        self.assertIn("do not count one cached result as multiple passes", contract)
+        self.assertIn("Impact cannot safely be narrowed | Rerun the whole required suite", contract)
+        self.assertIn("it is never evidence of completion", contract)
+        self.assertIn("Do not infer tokens from build duration or CPU load", contract)
+        self.assertIn("tool-enforced read-only execution", skill)
+        self.assertIn("Keep it terminal and prevent recursive delegation", skill)
+        self.assertIn("independent correctness plus architecture review", contract)
+        self.assertIn("remains missing evidence, never a pass", contract)
+        self.assertIn("only when the approved contract defines that split", contract)
+
+    def test_completion_loop_browser_contract_protects_observations_and_resources(self):
+        skill = read("skills/completion-loop/SKILL.md")
+        browser = read("skills/completion-loop/references/browser-verification.md")
+        self.assertIn("[browser-verification.md](references/browser-verification.md) only when", skill)
+        for guard in (
+            "Reuse the repository's runner",
+            "Do not automatically multiply",
+            "three actual reviews",
+            "Do not rebuild static output while",
+            "A listening port alone does not prove readiness",
+            "Readiness waits must not weaken product timing requirements",
+            "A browser `404` alone does not identify the class",
+            "Change an expectation only with independent evidence",
+            "owned processes and descendants exited",
+            "never kill shared or user-owned sessions",
+        ):
+            self.assertIn(guard, browser)
+
+    def test_completion_loop_handoff_timing_never_implies_authority(self):
+        skill = read("skills/completion-loop/SKILL.md")
+        contract = read("skills/completion-loop/references/verification-contract.md")
+        maintenance = read("docs/native-workflow-skills-maintenance.md")
+        self.assertIn("Update HANDOFF or project history only when separately requested by the user", skill)
+        self.assertIn("Only after a separate user request, refresh HANDOFF or project history", contract)
+        self.assertIn("HANDOFF and project-history updates require a separate user request", maintenance)
+        self.assertNotIn("Refresh a handoff only at a stable checkpoint", skill + contract)
+        for state in ("implementation complete", "integration verification in progress", "awaiting real-device verification"):
+            self.assertIn(state, skill)
+            self.assertIn(state, contract)
+
+    def test_completion_loop_eval_corpus_covers_entry_and_failure_boundaries(self):
+        # Corpus integrity only; behavior is judged from independent forward traces.
+        cases = json.loads(read("skills/completion-loop/evals/validation_queries.json"))
+        by_id = {case["id"]: case for case in cases}
+        self.assertEqual(len(by_id), len(cases))
+        self.assertEqual(
+            {case["id"] for case in cases if not case["should_trigger"]},
+            {"plan-only", "brainstorm", "research", "usage-question"},
+        )
+        self.assertEqual(
+            {case["id"] for case in cases if case["should_trigger"]},
+            {"approved-plan", "small-bug-fix", "docs-only", "shared-dependency", "browser-404", "three-visual-reviews", "required-device-missing", "handoff-unapproved"},
+        )
+        for case in cases:
+            with self.subTest(case=case["id"]):
+                self.assertIs(type(case["should_trigger"]), bool)
+                for field in ("query", "context", "expected_behavior"):
+                    self.assertIsInstance(case[field], str)
+                    self.assertTrue(case[field].strip())
+        example = "/goal Implement the approved plan within its scope and completion criteria. Use $completion-loop."
+        for catalog in ("README.md", "README.ko.md"):
+            self.assertIn(example, read(catalog))
+
     def test_visual_match_preflights_capture_and_cannot_pass_major_drift(self):
         skill = read("skills/visual-match/SKILL.md")
         routing = read("skills/visual-match/references/capability-routing.md")

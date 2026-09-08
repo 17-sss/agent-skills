@@ -1,9 +1,9 @@
 {
   "name": "completion-loop",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "organization": "17-sss",
-  "date": "July 2026",
-  "abstract": "Codex-native verified-completion loop that freezes scope and deployment boundaries, classifies out-of-contract findings as deferred, deduplicates risk-tiered evidence, and limits full review while preserving focused repair and evidence-based completion.",
+  "date": "September 2026",
+  "abstract": "Codex-native execution loop for approved implementation or clearly authorized small fixes. Reuses approved plans and input-aware evidence, bounds browser coverage and costly retries, preserves risk-tiered independent review, and reports pending verification without expanding scope or documentation authority.",
   "references": [
     "https://learn.chatgpt.com/docs/agent-configuration/subagents",
     "https://learn.chatgpt.com/docs/developer-commands"

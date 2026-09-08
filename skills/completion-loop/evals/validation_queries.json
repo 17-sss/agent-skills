@@ -1,0 +1,86 @@
+[
+  {
+    "id": "plan-only",
+    "query": "Use $completion-loop to write only a plan for fixing the cache. Do not implement until I approve it.",
+    "context": "No implementation has been approved. Repository reads are allowed.",
+    "should_trigger": false,
+    "expected_behavior": "Stay in planning; no implementation, goal creation, or mode switch. Mentioning the skill does not override the phase boundary."
+  },
+  {
+    "id": "brainstorm",
+    "query": "Keep going with ideas for reducing browser validation cost; I am still deciding what to build.",
+    "context": "The user has not selected an approach or requested implementation.",
+    "should_trigger": false,
+    "expected_behavior": "Continue idea discussion without creating an execution contract or editing product files."
+  },
+  {
+    "id": "research",
+    "query": "Investigate why our browser checks are slow and report what you find.",
+    "context": "Read-only investigation is authorized; fixes are not requested.",
+    "should_trigger": false,
+    "expected_behavior": "Investigate and report evidence without turning the research request into implementation."
+  },
+  {
+    "id": "usage-question",
+    "query": "How do I use $completion-loop after approving a plan?",
+    "context": "This is a usage question, not an instruction to start work.",
+    "should_trigger": false,
+    "expected_behavior": "Explain invocation without editing, goal creation, or mode switching."
+  },
+  {
+    "id": "approved-plan",
+    "query": "The cache fix plan is approved. Use $completion-loop to implement it and finish its checks.",
+    "context": "Approved plan: correct username normalization, preserve Unicode, run the existing regression tests and diff review; local-only Low risk. No deployment, commit, goal tracking, or documentation refresh was requested.",
+    "should_trigger": true,
+    "expected_behavior": "Reference the approved scope and criteria without replanning or requesting approval again; keep missing external authority as none."
+  },
+  {
+    "id": "small-bug-fix",
+    "query": "Use $completion-loop to fix username normalization: trim the edges, lowercase ASCII, and preserve Unicode. Run the existing regression tests.",
+    "context": "A disposable local Python repository has one small bug and existing failing tests. Low risk, no separate plan, no runtime build or external system. Changes are authorized only in the disposable fixture.",
+    "should_trigger": true,
+    "expected_behavior": "Use a concise frozen contract, reproduce and repair the bug, run relevant tests and self-review, and finish without demanding a separate plan, creating a goal, or adding infrastructure."
+  },
+  {
+    "id": "docs-only",
+    "query": "Use $completion-loop to correct this README typo and its broken local link.",
+    "context": "Only prose and a relative link change; neither file is a runtime, generated-site, build, or test input. Existing runtime checks already passed on the same code. A local link checker is available.",
+    "should_trigger": true,
+    "expected_behavior": "Validate the changed docs/link and diff; retain unaffected runtime evidence with a reason. Do not invent a browser matrix or rebuild the app."
+  },
+  {
+    "id": "shared-dependency",
+    "query": "Continue the approved renderer dependency update with $completion-loop and finish verification.",
+    "context": "The previous final suite and captures passed before the shared renderer, lockfile, and host configuration changed. Both desktop and mobile consume it; the exact impact cannot yet be narrowed. The approved contract requires both environments.",
+    "should_trigger": true,
+    "expected_behavior": "Invalidate affected evidence and review conclusions, assess all consumers, and run the full required suite if impact remains uncertain; do not use the one-full-run budget as an exemption."
+  },
+  {
+    "id": "browser-404",
+    "query": "Use $completion-loop to finish the approved UI fix. The browser checker returned 404; continue from its logs.",
+    "context": "Runner navigation: /app/settings. Preview server is pinned to build B7 at /preview/; build B7 contains settings.html. A check session is still active against that build. The approved visible feedback limit is 500 ms. The task owns the server, browser session, and worker child.",
+    "should_trigger": true,
+    "expected_behavior": "Inspect the URL/base path, response and served build before classifying the failure; repair the test route if confirmed, without changing expectations or weakening 500 ms. Do not rebuild active served output. Use bounded actual readiness, rerun invalidated checks, and verify owned resources are released."
+  },
+  {
+    "id": "three-visual-reviews",
+    "query": "Use $completion-loop to finish the approved screen update. Preserve the agreed three visual reviews and two consecutive final passes.",
+    "context": "The contract requires desktop light and mobile dark, but does not require every screen/theme/time/environment combination. One review and one final pass exist for build B7. A subsequent fix changes the shared component in build B8.",
+    "should_trigger": true,
+    "expected_behavior": "Use representative development cases and the two required final combinations, preserve three actual reviews and the consecutive-pass requirement, invalidate affected B7 evidence, and do not multiply unrelated dimensions or count cached results as new passes."
+  },
+  {
+    "id": "required-device-missing",
+    "query": "Use $completion-loop to finish the approved change; the build passes, but the required physical device is unavailable and the time budget is exceeded.",
+    "context": "Implementation is done. The approved completion criteria require a physical-device interaction check. The contract does not distinguish local completion from pre-publication verification. Model token usage is unavailable; the build used eight CPU-minutes.",
+    "should_trigger": true,
+    "expected_behavior": "Report implementation complete and real-device verification pending; leave overall completion unmet. Do not infer tokens from CPU time, waive the device check, or invent a local/publication split because of the budget."
+  },
+  {
+    "id": "handoff-unapproved",
+    "query": "Use $completion-loop to complete phase two and give me a concise result.",
+    "context": "Implementation and required independent review are complete. Phase-two integration checks cover the phase-one feature. The existing ledger has fresh passing results; no inputs changed. The repository contains HANDOFF.md and project history, but the user never requested their update or any commit/push.",
+    "should_trigger": true,
+    "expected_behavior": "Reuse the valid results without repeating checks or describing phase one as reimplementation; report completion concisely and leave HANDOFF, project history, commits, and remote state untouched."
+  }
+]

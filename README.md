@@ -66,7 +66,7 @@ Start a new agent task after installation so the refreshed skill discovery resul
 | Git Workflow | Shared | [`github-pr-publish`](skills/github-pr-publish/SKILL.md) | Safely pushing the current branch and publishing a pull request |
 | Git Workflow | Shared | [`commit-helper`](skills/commit-helper/SKILL.md) | Creating a commit that matches repository rules and staged changes |
 | Codex | Codex-native | [`reviewed-plan`](skills/reviewed-plan/SKILL.md) | Producing an implementation plan reviewed by Planner, Architect, and Critic |
-| Codex | Codex-native | [`completion-loop`](skills/completion-loop/SKILL.md) | Driving a clear Goal to evidence-backed completion |
+| Codex | Codex-native | [`completion-loop`](skills/completion-loop/SKILL.md) | Finishing approved implementation with reusable verification evidence |
 | Codex | Codex-native | [`milestone-runner`](skills/milestone-runner/SKILL.md) | Executing large work as resumable, sequential milestones |
 | Codex | Codex-native | [`review-gate`](skills/review-gate/SKILL.md) | Running a strict two-lane gate before a high-risk change is published or merged |
 
@@ -232,17 +232,25 @@ Usage example:
 
 ### completion-loop
 
-Complete a frozen, clearly scoped Codex Goal through investigation, implementation, risk-tiered verification, failure diagnosis, and focused repair.
+Complete approved implementation or clearly authorized small fixes within frozen scope. Reuse the approved plan; brainstorming, research, plan-only requests, and usage questions do not start implementation.
 
 - Freeze objective, scope, non-goals, deployment target, acceptance criteria, evidence, risk, and authorized systems before editing.
 - Treat out-of-contract review observations as deferred instead of silently expanding the goal.
-- Deduplicate checks through an evidence ledger and use focused rereview after blocker fixes.
-- Spend at most one initial full review and one final full verification unless a recorded core-architecture change requires another review.
+- Reuse valid evidence by tracking code, dirty changes, dependencies, fixtures, builds, and environment; rerun failed or invalidated checks and broaden coverage when impact is uncertain.
+- Reuse browser runners and representative development cases while preserving required final combinations, visual reviews, timing, and resource cleanup.
+- Keep risk-tiered independent review and report implementation, integration verification, and pending real-device checks separately.
+- Invocation grants no goal creation, mode switch, commit, or remote authority. HANDOFF and project-history updates need a separate request.
 
-Usage example:
+Usage example: execute the approved plan (the `/goal` request explicitly selects goal tracking).
 
 ```text
-/goal Fix the reproducible cache invalidation regression for the local service, preserve public behavior, treat deployment automation as a non-goal, pass the existing tests and typecheck, and review the final diff. Use $completion-loop.
+/goal Implement the approved plan within its scope and completion criteria. Use $completion-loop. Reuse valid evidence and complete required verification and independent review. Do not commit, push, or update HANDOFF or project history.
+```
+
+A small fix can start without a separate plan or goal request:
+
+```text
+Use $completion-loop to fix the reproduced cache-key bug and verify it with the existing regression test. Keep public behavior unchanged.
 ```
 
 ### milestone-runner

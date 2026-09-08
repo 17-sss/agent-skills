@@ -2,6 +2,28 @@
 
 This file records behavioral evidence that cannot be established by schema validation alone. Tests run only in disposable Git repositories under `/tmp`; no dependency installation, external write, user-configuration change, or production access is allowed.
 
+## 2026-09-08 Completion Loop approved execution and evidence reuse
+
+Status: PASS for 11 decision-only cases and one actual disposable bug-fix run. An independent evaluator received the package and only the `query`/`context` inputs from its 12-case validation corpus; expected triggers and outcomes were withheld. The evaluator also checked the final wording clarification allowing explicitly required repetitions. This pass establishes execution and verification decisions; it does not claim a live browser capture, real-device test, or performance benchmark.
+
+| Cases | Observed result |
+| --- | --- |
+| Plan-only, brainstorming, research, usage question | Stayed in the requested phase; no implementation, goal creation, or mode switch |
+| Approved plan | Reused approved scope and criteria without replanning or another approval ceremony |
+| Small bug fix | Used a concise Low-risk contract, reproduced two Unicode failures, changed only the implementation, and passed all four existing tests with self-review |
+| Documentation-only change | Selected local link/diff checks and retained unaffected runtime evidence |
+| Shared renderer/dependency/host change | Invalidated dependent evidence and selected the whole required suite when impact could not be narrowed |
+| Browser 404 | Diagnosed URL/base-path/build identity before repair; preserved the served build, original 500 ms timing, bounded readiness, and owned-resource cleanup requirements |
+| Three visual reviews, two consecutive passes | Preserved three actual review events, revalidated affected conclusions, and required two fresh consecutive final passes after the build change without multiplying unrelated dimensions |
+| Required device absent, budget exceeded | Reported implementation complete and device verification pending; did not infer tokens from CPU time, waive the check, or invent a local/publication split |
+| HANDOFF not requested | Reused valid results, treated earlier-phase integration as verification, and left HANDOFF/history and commit/remote state untouched |
+
+Actual execution used an unborn disposable Git repository with five untracked files. `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v` initially ran four tests and failed two Unicode assertions; after the bounded normalization fix it passed 4/4. The evaluator inspected an explicit before/after diff and canonical untracked-file identities instead of treating an empty Git diff as proof. No unchanged test rerun followed. The parent checked the resulting artifact and hashes; tests, README, HANDOFF, and HISTORY were unchanged.
+
+The implementation SHA-256 changed from `459b172e9862a7156058fc0d5da6b791e8af403f4592431505d43b30b02ccb36` to `982abc68d25cc6ec78ed4a4570f4ea7d801b6718a579e65fd8f4105d29b6daf9`. Initial bookkeeping failures (unavailable `python`, then unborn `HEAD`) were diagnosed and corrected without installing a runtime or creating a commit.
+
+Repository validation: all 111 existing and updated unittests passed, including five added Completion Loop contract/corpus tests. The offline workflow checker with `--require-validator` passed package links, metadata, independence, grouping, and `quick_validate` for all seven locally validated skills. Static assertions protect the written guardrails; the independent trace supplies the behavioral evidence. No browser infrastructure, other skill dependency, installation synchronization, commit, push, or project-history refresh was performed.
+
 ## 2026-07-31 Visual Match A/B and browser-enabled forward test
 
 Status: PASS for the browser-enabled visual repair path. An approved three-view reference set and an older runnable implementation from the same design family were captured with the same existing system Firefox harness. The target implementation source was withheld from every implementation and judging lane. No dependency, browser, plugin, runtime state, repository artifact, or user configuration was installed or changed by the test.

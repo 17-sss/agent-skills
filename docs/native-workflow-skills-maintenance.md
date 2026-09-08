@@ -155,16 +155,21 @@ Do not call the packages release-ready from the automated command alone. Run the
 
 ### completion-loop
 
+- Enter only for approved implementation or clearly authorized small fixes. Reuse the approved plan and keep plan-only, research, brainstorming, and usage requests in their requested phase.
 - Verify goal-tool rules before changing completion or blocked behavior.
 - Preserve the frozen objective, scope, non-goals, deployment target, acceptance criteria, evidence, risk tier, and authorized-system contract.
 - Preserve the requirement-to-artifact-to-evidence audit and task-local evidence ledger invalidation rules.
 - Keep reviewer input free from the leader's verdict or suspected answer.
 - Do not turn persistence into expanded destructive or production authority.
 - Classify only acceptance failures, current-change regressions, in-scope critical safety failures, and declared-deployment impossibility as blockers; keep other findings deferred.
-- Preserve one initial full-scope review, focused rereview after accepted blocker repairs, and one final full verification unless a recorded core-architecture change invalidates that budget.
+- Preserve one initial full-scope review, focused rereview after accepted blocker repairs, and one initial stable-candidate full verification. Later verification covers failed or invalidated evidence, including the full suite when shared-input changes or uncertain impact demand it; additional full review still requires a recorded core-architecture change.
 - Require a material-expansion checkpoint before adding repositories, cloud resources, deployment methods, operational services, or redesigned contracts.
 - When the risk tier requires independent review, use a separate native Codex execution explicitly sandboxed read-only. Keep the reviewer terminal and include filesystem identity as well as content in the frozen candidate packet.
-- Keep commits and handoff refreshes at stable boundaries instead of emitting them after each small review correction.
+- Track dirty input identity, shared dependencies, fixtures, build, renderer, host/environment, and baseline branch in the existing ledger; do not add parallel state tracking.
+- Follow the package's browser reference for representative versus final coverage, required review counts, stable served builds, bounded readiness, product timing, failure diagnosis, and actual task-resource release.
+- Record expensive-check estimates and diagnosis checkpoints; distinguish CPU/runtime cost from tokens and preserve raw artifacts without repeatedly loading them.
+- Keep missing required environments pending. Separate local completion and pre-publication device validation only under an approved split contract.
+- Keep authorized commits and documentation at stable boundaries. HANDOFF and project-history updates require a separate user request; checkpoint timing never supplies that authorization.
 
 ### milestone-runner
 
@@ -232,7 +237,7 @@ Use $spec-interview to clarify organization-level API keys for this existing app
 ```
 
 ```text
-/goal Fix a reproducible cache invalidation regression and prove it with the existing tests, typecheck, and final diff review. Use $completion-loop.
+/goal Implement the approved plan within its scope and completion criteria. Use $completion-loop. Reuse valid evidence and complete required verification and independent review. Do not commit, push, or update HANDOFF or project history.
 ```
 
 ```text
@@ -255,12 +260,14 @@ For every forward test, verify the trace as well as the final prose: question co
 | --- | --- | --- |
 | `spec-interview` | Inspects repository evidence, asks exactly one material user decision, uses choices only for a complete bounded option set, preserves a custom answer, and waits | Fixture fingerprint remains unchanged |
 | `reviewed-plan` | Produces a repository-grounded plan, runs Architect before Critic, and reports both verdicts | Fixture fingerprint remains unchanged across both gates |
-| `completion-loop` | Reproduces the failure, implements the smallest fix, runs fresh checks, and independently reviews the final fingerprint | Only the disposable fixture changes and its tests pass |
+| `completion-loop` | Enters only for approved execution, reuses the plan and valid evidence, diagnoses failures before retrying, and preserves all risk-tier-required checks and independent review | Only the disposable fixture changes; required tests pass and missing gates remain pending |
 | `milestone-runner` | Creates `.agent-workflows/`, runs goals sequentially, rejects stale or out-of-order transitions, checkpoints evidence, and reconciles a completed native goal | Only the disposable fixture and its explicit durable state change; no other skill is invoked |
 | `visual-match` | With installation prohibited, offers the isolated Chromium fallback but performs no download and returns the safe missing-browser blocker; with a browser already available, completes baseline/edit/recapture, scores every equivalent target, uses the lowest score, and never passes below threshold or with unresolved major drift | Only the disposable fixture and task-scoped captures change; the package-local scorer creates no state |
 | `review-gate` | Includes staged, unstaged, and untracked content, withholds seeded credential values from both lane packets, runs both lanes, and catches seeded actionable defects | The original fixture fingerprint remains unchanged and both sanitized packet digests match |
 
 Keep forward-test fixtures outside the repository. Do not install dependencies, touch user configuration, contact production systems, post external reviews, or leave browser sessions and temporary artifacts running. Record current results in [native-workflow-forward-test-report.md](native-workflow-forward-test-report.md).
+
+For Completion Loop, use [validation queries](../skills/completion-loop/evals/validation_queries.json) for trigger and decision cases. Give the evaluating agent only each `query` and `context`, the package, and required raw fixture artifacts; withhold `should_trigger` and `expected_behavior` until judging the trace. Exercise the small-fix case in a disposable repository. Decision-only browser/device cases check routing and honesty, not actual browser rendering or device success. Existing static contract tests protect guardrails but do not establish behavioral pass results.
 
 ## Installation
 

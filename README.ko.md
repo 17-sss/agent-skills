@@ -66,7 +66,7 @@ npx skills add https://github.com/17-sss/agent-skills --skill design-loop
 | Git Workflow | 공통 | [`github-pr-publish`](skills/github-pr-publish/SKILL.md) | 현재 브랜치를 안전하게 push하고 PR로 공개할 때 |
 | Git Workflow | 공통 | [`commit-helper`](skills/commit-helper/SKILL.md) | 저장소 규칙과 staged diff에 맞는 커밋을 만들 때 |
 | Codex | Codex 특화 | [`reviewed-plan`](skills/reviewed-plan/SKILL.md) | Planner, Architect, Critic을 거친 구현 계획이 필요할 때 |
-| Codex | Codex 특화 | [`completion-loop`](skills/completion-loop/SKILL.md) | 명확한 Goal을 검증 가능한 완료까지 밀어붙일 때 |
+| Codex | Codex 특화 | [`completion-loop`](skills/completion-loop/SKILL.md) | 승인된 구현을 유효한 검증 근거를 재사용하며 완료할 때 |
 | Codex | Codex 특화 | [`milestone-runner`](skills/milestone-runner/SKILL.md) | 큰 작업을 재시작 가능한 순차 milestone로 실행할 때 |
 | Codex | Codex 특화 | [`review-gate`](skills/review-gate/SKILL.md) | 고위험 변경을 공개하거나 병합하기 전에 엄격한 두-lane gate를 실행할 때 |
 
@@ -232,17 +232,25 @@ Use $commit-helper to inspect this repository's commit rules and staged changes,
 
 ### completion-loop
 
-범위가 고정된 명확한 Codex Goal을 조사, 구현, 위험도별 검증, 실패 진단과 집중 수정 루프로 완료합니다.
+승인된 구현이나 명확하게 허가된 작은 수정을 고정된 범위 안에서 완료합니다. 승인된 계획을 재사용하며, 아이디어 상담·조사·계획만 작성하는 요청·사용법 질문은 구현으로 전환하지 않습니다.
 
 - 편집 전에 목표, 범위, non-goal, 배포 대상, acceptance criteria, 증거, 위험도와 승인된 시스템을 고정합니다.
 - 완료 계약 밖의 리뷰 관찰은 목표를 확장하지 않고 deferred로 분류합니다.
-- evidence ledger로 검증 중복을 제거하고 blocker 수정 뒤에는 focused rereview만 실행합니다.
-- 핵심 아키텍처 변경이 기록된 경우를 제외하면 최초 전체 리뷰와 최종 전체 검증은 각각 한 번만 실행합니다.
+- 코드·dirty 변경·의존성·fixture·빌드·환경을 기록해 유효한 근거를 재사용하고, 실패하거나 무효화된 검사만 재실행하며 영향이 불명확하면 검증을 확대합니다.
+- 기존 브라우저 runner와 개발 중 대표 사례를 재사용하되 필수 최종 조합, 시각 검토, 시간 조건과 자원 정리를 유지합니다.
+- 위험도별 필수 독립 검토를 유지하고 구현 완료·통합 검증 중·실기기 검증 대기를 구분합니다.
+- 호출만으로 목표 생성·모드 전환·커밋·원격 작업이 승인되지 않습니다. HANDOFF·프로젝트 이력 갱신에는 별도 요청이 필요합니다.
 
-사용 예시:
+사용 예시: 승인된 계획 실행(`/goal` 요청으로 목표 추적을 명시적으로 선택).
 
 ```text
-/goal Fix the reproducible cache invalidation regression for the local service, preserve public behavior, treat deployment automation as a non-goal, pass the existing tests and typecheck, and review the final diff. Use $completion-loop.
+/goal Implement the approved plan within its scope and completion criteria. Use $completion-loop. Reuse valid evidence and complete required verification and independent review. Do not commit, push, or update HANDOFF or project history.
+```
+
+작은 수정은 별도 계획이나 목표 생성 요청 없이 시작할 수 있습니다:
+
+```text
+Use $completion-loop to fix the reproduced cache-key bug and verify it with the existing regression test. Keep public behavior unchanged.
 ```
 
 ### milestone-runner

@@ -87,6 +87,19 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
 
+    if args.snapshot and not args.snapshot_kind:
+        parser.error("--snapshot requires --snapshot-kind.")
+    if args.snapshot and not args.snapshot_reason:
+        parser.error("--snapshot requires --snapshot-reason.")
+    if args.snapshot and args.document != "handoff":
+        parser.error("--snapshot only supports --document handoff.")
+    if args.snapshot_reason and not args.snapshot:
+        parser.error("--snapshot-reason requires --snapshot.")
+    if args.snapshot_kind and not args.snapshot:
+        parser.error("--snapshot-kind requires --snapshot.")
+    if args.snapshot_label and not args.snapshot:
+        parser.error("--snapshot-label requires --snapshot.")
+
     try:
         resolution = resolve_document(
             Path(args.project_root),
@@ -97,13 +110,6 @@ def main() -> int:
         )
     except ValueError as error:
         parser.error(str(error))
-
-    if args.snapshot and not args.snapshot_kind:
-        parser.error("--snapshot requires --snapshot-kind.")
-    if args.snapshot_reason and not args.snapshot:
-        parser.error("--snapshot-reason requires --snapshot.")
-    if args.snapshot_kind and not args.snapshot:
-        parser.error("--snapshot-kind requires --snapshot.")
 
     existed_before = resolution.handoff_path.exists()
     previous_text = (
@@ -124,8 +130,6 @@ def main() -> int:
             )
             snapshot_repositories = [path.name for path in inferred]
     if args.snapshot:
-        if args.document != "handoff":
-            parser.error("--snapshot only supports --document handoff.")
         if existed_before and previous_text.strip():
             snapshot_path = create_snapshot(
                 resolution,

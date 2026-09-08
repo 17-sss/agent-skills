@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 from dataclasses import dataclass
@@ -1135,24 +1136,36 @@ def dirty_paths(
 ) -> list[Path]:
     ignored = {path.resolve() for path in (ignore_paths or set())}
     commands = (
-        ("diff", "--name-only"),
-        ("diff", "--cached", "--name-only"),
-        ("ls-files", "--others", "--exclude-standard"),
+        ("diff", "--name-only", "-z"),
+        ("diff", "--cached", "--name-only", "-z"),
+        ("ls-files", "--others", "--exclude-standard", "-z"),
     )
     paths: set[Path] = set()
     for args in commands:
-        output = run_git(project_root, *args)
-        if not output:
+        try:
+            result = subprocess.run(
+                ["git", "-C", str(project_root), *args],
+                check=True,
+                capture_output=True,
+            )
+        except (FileNotFoundError, subprocess.CalledProcessError):
             continue
-        for raw in output.splitlines():
+        for encoded in result.stdout.split(b"\0"):
+            if not encoded:
+                continue
+            raw = os.fsdecode(encoded)
             candidate = (project_root / raw).resolve()
             if candidate in ignored:
                 continue
             if any(parent in ignored for parent in candidate.parents):
                 continue
-            if candidate.exists():
-                paths.add(candidate)
-    return sorted(paths)
+            paths.add(candidate)
+    return sorted(paths, key=os.fspath)
+
+
+def latest_existing_path_epoch(paths: list[Path]) -> int | None:
+    mtimes = [path.stat().st_mtime for path in paths if path.exists()]
+    return int(max(mtimes)) if mtimes else None
 
 
 def latest_dirty_epoch(
@@ -1160,9 +1173,7 @@ def latest_dirty_epoch(
     ignore_paths: set[Path] | None = None,
 ) -> int | None:
     dirty = dirty_paths(project_root, ignore_paths=ignore_paths)
-    if not dirty:
-        return None
-    return int(max(path.stat().st_mtime for path in dirty))
+    return latest_existing_path_epoch(dirty)
 
 
 def repo_status(
@@ -1175,7 +1186,7 @@ def repo_status(
         "branch": current_branch(project_root) or "unknown",
         "latest_commit_epoch": latest_commit_epoch(project_root),
         "dirty_paths_count": len(dirty),
-        "latest_dirty_epoch": int(max(path.stat().st_mtime for path in dirty)) if dirty else None,
+        "latest_dirty_epoch": latest_existing_path_epoch(dirty),
     }
 
 

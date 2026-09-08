@@ -10,6 +10,8 @@ import unittest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 VALIDATOR = REPO_ROOT / "skills" / "handoff-memory" / "scripts" / "validate_handoff.py"
+CREATE = REPO_ROOT / "skills" / "handoff-memory" / "scripts" / "create_handoff.py"
+STALENESS = REPO_ROOT / "skills" / "handoff-memory" / "scripts" / "check_staleness.py"
 
 
 class HandoffMemoryValidatorTest(unittest.TestCase):
@@ -36,6 +38,51 @@ class HandoffMemoryValidatorTest(unittest.TestCase):
             stderr=subprocess.PIPE,
             check=check,
         )
+
+    def git(self, *args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["git", "-C", str(self.project), *args],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+        )
+
+    def init_git_project(self, filenames: tuple[str, ...]) -> None:
+        self.git("init")
+        self.git("config", "user.name", "Handoff Test")
+        self.git("config", "user.email", "handoff@example.com")
+        for filename in filenames:
+            path = self.project / filename
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(f"tracked: {filename}\n", encoding="utf-8")
+        self.git("add", "--all")
+        self.git("commit", "-m", "test: add fixture files")
+        handoff = self.project / "docs" / "HANDOFF.md"
+        handoff.parent.mkdir(parents=True, exist_ok=True)
+        handoff.write_text(
+            "# HANDOFF\n\n## Metadata\n\n- Last Updated: 2999-01-01T00:00:00+00:00\n",
+            encoding="utf-8",
+        )
+
+    def run_staleness(self) -> dict[str, object]:
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(STALENESS),
+                "--project-root",
+                str(self.project),
+                "--scope",
+                "repo",
+                "--format",
+                "json",
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+        )
+        return json.loads(result.stdout)
 
     def write_handoff_with_line_count(self, target_line_count: int) -> Path:
         handoff = self.project / "docs" / "HANDOFF.md"
@@ -165,6 +212,67 @@ Continue from the current fixture state.
         self.assertEqual(payload["warnings"], [])
         self.assertIsNone(payload["document_metrics"]["recommended_max_lines"])
         self.assertEqual(payload["document_metrics"]["largest_sections"], [])
+
+    def test_staleness_detects_deletion_even_without_dirty_file_mtime(self):
+        self.init_git_project(("deleted.txt",))
+        (self.project / "deleted.txt").unlink()
+
+        payload = self.run_staleness()
+
+        self.assertTrue(payload["stale"])
+        self.assertEqual(payload["scope_status"][0]["dirty_paths_count"], 1)
+        self.assertIsNone(payload["scope_status"][0]["latest_dirty_epoch"])
+        self.assertIn(str(self.project.resolve()), payload["dirty_repositories"])
+
+    def test_staleness_preserves_unusual_names_and_renames(self):
+        self.init_git_project(
+            (
+                "staged-delete.txt",
+                "unstaged-delete.txt",
+                "한글.txt",
+                "rename-source.txt",
+            )
+        )
+        (self.project / "staged-delete.txt").unlink()
+        self.git("add", "staged-delete.txt")
+        (self.project / "unstaged-delete.txt").unlink()
+        (self.project / "한글.txt").write_text("changed\n", encoding="utf-8")
+        self.git("mv", "rename-source.txt", "rename-target.txt")
+        (self.project / "tab\tname.txt").write_text("tab\n", encoding="utf-8")
+        (self.project / "line\nname.txt").write_text("newline\n", encoding="utf-8")
+
+        payload = self.run_staleness()
+        status = payload["scope_status"][0]
+
+        self.assertTrue(payload["stale"])
+        self.assertEqual(status["dirty_paths_count"], 6)
+        self.assertIsNotNone(status["latest_dirty_epoch"])
+
+    def test_invalid_snapshot_options_do_not_create_documents(self):
+        cases = (
+            ("--document", "decisions", "--snapshot", "--snapshot-kind", "handoff", "--snapshot-reason", "reason"),
+            ("--document", "handoff", "--snapshot", "--snapshot-kind", "handoff"),
+            ("--document", "handoff", "--snapshot-label", "named"),
+        )
+        for args in cases:
+            with self.subTest(args=args):
+                result = subprocess.run(
+                    [
+                        sys.executable,
+                        str(CREATE),
+                        "--project-root",
+                        str(self.project),
+                        "--scope",
+                        "workspace",
+                        *args,
+                    ],
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    check=False,
+                )
+                self.assertNotEqual(result.returncode, 0)
+                self.assertFalse((self.project / "_memory").exists())
 
 
 if __name__ == "__main__":

@@ -96,7 +96,7 @@ safe_repo=${REPO:-current-repo}
 safe_repo=${safe_repo//[^A-Za-z0-9._-]/-}
 prepare_output_dir "github-pr-publish" "$safe_repo" "$timestamp"
 
-if gh auth status --hostname github.com >/dev/null 2>&1; then
+if gh auth status --active --hostname github.com >/dev/null 2>&1; then
   account=$(gh api user --jq .login 2>/dev/null || true)
   printf 'authenticated_account=%s\n' "${account:-unknown}" >"$OUTPUT_DIR/auth.txt"
   printf 'GitHub auth: authenticated as @%s\n' "${account:-unknown}"

@@ -25,7 +25,7 @@ export FAKE_PR_URL="https://github.com/OWNER/REPO/pull/123"
 pass_count=0
 fail() { printf 'not ok - %s\n' "$*" >&2; exit 1; }
 pass() { pass_count=$((pass_count + 1)); printf 'ok %d - %s\n' "$pass_count" "$*"; }
-reset_logs() { : >"$FAKE_GH_LOG"; : >"$FAKE_GIT_LOG"; : >"$FAKE_SSH_LOG"; unset FAKE_DETACHED FAKE_REMOTE_HAS_HEAD FAKE_AUTH_FAIL FAKE_ALLOW_PUSH FAKE_REMOTE_URL FAKE_API_FAIL FAKE_CREATE_404 FAKE_API_INPUT_COPY FAKE_SSH_ALIAS FAKE_SSH_HOSTNAME FAKE_HEAD_SHA FAKE_REMOTE_HEAD_SHA FAKE_GITHUB_HEAD_SHA FAKE_GITHUB_HEAD_MISSING; export FAKE_REMOTE_URL="git@github.com:OWNER/REPO.git"; export FAKE_REMOTE_HAS_HEAD=1; }
+reset_logs() { : >"$FAKE_GH_LOG"; : >"$FAKE_GIT_LOG"; : >"$FAKE_SSH_LOG"; unset FAKE_DETACHED FAKE_REMOTE_HAS_HEAD FAKE_AUTH_FAIL FAKE_INACTIVE_AUTH_FAIL FAKE_ALLOW_PUSH FAKE_REMOTE_URL FAKE_API_FAIL FAKE_CREATE_404 FAKE_API_INPUT_COPY FAKE_SSH_ALIAS FAKE_SSH_HOSTNAME FAKE_HEAD_SHA FAKE_REMOTE_HEAD_SHA FAKE_GITHUB_HEAD_SHA FAKE_GITHUB_HEAD_MISSING; export FAKE_REMOTE_URL="git@github.com:OWNER/REPO.git"; export FAKE_REMOTE_HAS_HEAD=1; }
 run_ok() { local out=$1; shift; "$SCRIPT" "$@" >"$out" 2>"$out.err"; }
 run_fail() { local out=$1; shift; if "$SCRIPT" "$@" >"$out" 2>"$out.err"; then cat "$out" "$out.err" >&2; fail "expected failure: $*"; fi; }
 assert_contains() { grep -F -- "$2" "$1" >/dev/null || { cat "$1" >&2; fail "expected '$2' in $1"; }; }
@@ -62,7 +62,7 @@ reset_logs
 out="$TEST_TMP/preview.out"
 run_ok "$out" --repo OWNER/REPO --base main --head OWNER:feature-branch --title 'Add feature' --body-file "$body"
 assert_contains "$out" 'preview: no remote mutation performed'
-assert_contains "$out" '--head OWNER:feature-branch'
+assert_contains "$out" '--head feature-branch'
 assert_not_contains "$FAKE_GH_LOG" 'pr create'
 assert_not_contains "$FAKE_GIT_LOG" 'push'
 pass 'preview performs no mutation and renders explicit head'
@@ -81,7 +81,7 @@ out="$TEST_TMP/ssh-alias-create.out"
 run_ok "$out" --repo OWNER/REPO --base main --head OWNER:feature-branch --title 'Add feature' --body-file "$body" --yes
 assert_contains "$FAKE_SSH_LOG" 'ssh -G github.com-17-sss'
 assert_contains "$FAKE_GH_LOG" 'pr create'
-assert_contains "$FAKE_GH_LOG" '--head OWNER:feature-branch'
+assert_contains "$FAKE_GH_LOG" '--head feature-branch'
 pass 'scp-style ssh alias resolving to github.com is accepted for create'
 
 reset_logs
@@ -128,6 +128,14 @@ out="$TEST_TMP/auth-fail.out"
 run_fail "$out" --repo OWNER/REPO --base main --head OWNER:feature-branch --title 'Add feature' --body-file "$body" --yes
 assert_contains "$out.err" "Run 'gh auth login'"
 pass 'auth failure is classified without token output'
+
+reset_logs
+export FAKE_INACTIVE_AUTH_FAIL=1
+out="$TEST_TMP/inactive-auth-fail.out"
+run_ok "$out" --repo OWNER/REPO --base main --head OWNER:feature-branch --title 'Add feature' --body-file "$body" --yes
+assert_contains "$FAKE_GH_LOG" 'auth status --active --hostname github.com'
+assert_contains "$FAKE_GH_LOG" 'pr create'
+pass 'inactive account failures do not block the active GitHub identity'
 
 reset_logs
 export FAKE_DETACHED=1
@@ -181,7 +189,7 @@ out="$TEST_TMP/push-create.out"
 run_ok "$out" --repo OWNER/REPO --base main --title 'Add feature' --body-file "$body" --push --remote origin --yes
 assert_contains "$FAKE_GIT_LOG" 'push origin HEAD:feature-branch'
 assert_contains "$FAKE_GH_LOG" 'pr create'
-assert_contains "$FAKE_GH_LOG" '--head OWNER:feature-branch'
+assert_contains "$FAKE_GH_LOG" '--head feature-branch'
 pass 'guarded push creates with explicit derived head'
 
 reset_logs
@@ -192,7 +200,7 @@ out="$TEST_TMP/ssh-url-alias-push-create.out"
 run_ok "$out" --repo OWNER/REPO --base main --title 'Add feature' --body-file "$body" --push --remote origin --yes
 assert_contains "$FAKE_SSH_LOG" 'ssh -G github.com-17-sss'
 assert_contains "$FAKE_GIT_LOG" 'push origin HEAD:feature-branch'
-assert_contains "$FAKE_GH_LOG" '--head OWNER:feature-branch'
+assert_contains "$FAKE_GH_LOG" '--head feature-branch'
 pass 'ssh-url alias resolving to github.com is accepted for guarded push'
 
 reset_logs

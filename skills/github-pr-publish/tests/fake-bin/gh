@@ -34,6 +34,9 @@ case "${1:-}" in
   auth)
     if [[ "${2:-}" == "status" ]]; then
       [[ "${FAKE_AUTH_FAIL:-0}" == "1" ]] && gh_die 'HTTP 401 Bad credentials'
+      if [[ "${FAKE_INACTIVE_AUTH_FAIL:-0}" == "1" && "$*" != *"--active"* ]]; then
+        gh_die 'one or more inactive accounts have invalid credentials'
+      fi
       printf 'Logged in to github.com as %s\n' "$account"; exit 0
     fi
     ;;

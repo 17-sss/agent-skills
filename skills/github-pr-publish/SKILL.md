@@ -19,7 +19,7 @@ This workflow supports public and private repositories. Private repositories req
 - Identify the authenticated account before actual PR creation.
 - Treat all created PRs and pushed branches as actions from the authenticated account and configured git remote.
 - Never rely on interactive `gh pr create`. Actual creation requires complete prompt-free inputs.
-- Always pass an explicit `--head` value to `gh pr create`.
+- Always pass an explicit `--head` value to `gh pr create`. After verifying that the requested owner and remote match the target repository, use the branch-only form for same-repository CLI creation; reserve `OWNER:branch` for validation and REST payloads.
 - Do not rely on the GitHub CLI PR-create preview flag; this skill uses its own preview path because the CLI can still push git changes.
 - Do not create forks. Do not force-push. Do not push from detached HEAD.
 - Push only when explicitly requested with `--push --remote <name> --yes`.
@@ -38,7 +38,7 @@ For read-only preflight, `git` and `gh` should be available. For private repos a
 Useful commands:
 
 ```bash
-gh auth status --hostname github.com
+gh auth status --active --hostname github.com
 gh api user --jq .login
 ```
 
@@ -63,7 +63,7 @@ Supported GitHub remote forms include:
 
 The trailing `.git` suffix is optional for these forms.
 
-If an SSH alias cannot be verified as `github.com`, do not push through it. If `--head OWNER:branch` is explicit and no push is requested, the helper may still use the prompt-free `gh pr create --repo OWNER/REPO --head OWNER:branch` path after proving the local `HEAD` matches both the remote branch SHA and the GitHub branch SHA.
+If an SSH alias cannot be verified as `github.com`, do not push through it. If `--head OWNER:branch` is explicit and no push is requested, the helper may still use the prompt-free create path after proving the local `HEAD` matches both the remote branch SHA and the GitHub branch SHA. The helper then passes `--head branch` to `gh pr create` because the head is in the verified target repository.
 
 ### 3. Draft PR content before creation
 
@@ -127,7 +127,7 @@ test "$remote_sha" = "$local_sha"
 gh pr create \
   --repo OWNER/REPO \
   --base main \
-  --head OWNER:feature-branch \
+  --head feature-branch \
   --title "Add feature" \
   --body-file /tmp/pr-body.md
 ```
@@ -148,7 +148,7 @@ skills/github-pr-publish/scripts/create_pr.sh \
   --yes
 ```
 
-The helper derives an explicit head from `OWNER` and the current branch, checks the branch is safe, checks the remote maps to the target repository, pushes exactly `HEAD:<branch>`, and then creates the PR.
+The helper derives and validates the expected owner and current branch, checks the branch is safe, checks the remote maps to the target repository, pushes exactly `HEAD:<branch>`, and then creates the PR with the same-repository branch-only CLI head.
 
 SSH alias remotes are valid for this path only after alias normalization proves `hostname github.com` and the remote path matches `--repo`.
 

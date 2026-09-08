@@ -366,7 +366,7 @@ if [[ -n "$BODY_FILE" ]]; then content_args+=(--body-file "$BODY_FILE"); fi
 if [[ -n "$FILL_MODE" ]]; then content_args+=("$FILL_MODE"); fi
 if [[ -n "$TEMPLATE" ]]; then content_args+=(--template "$TEMPLATE"); fi
 
-common_args=(--repo "$REPO" --base "$BASE" --head "$HEAD")
+common_args=(--repo "$REPO" --base "$BASE" --head "$HEAD_BRANCH")
 [[ $DRAFT -eq 1 ]] && common_args+=(--draft)
 [[ $WEB -eq 1 ]] && common_args+=(--web)
 if ((${#REVIEWERS[@]})); then for reviewer in "${REVIEWERS[@]}"; do common_args+=(--reviewer "$reviewer"); done; fi
@@ -386,7 +386,7 @@ if [[ $PREVIEW -eq 1 ]]; then
   exit 0
 fi
 
-if ! gh auth status --hostname github.com >/dev/null 2>&1; then
+if ! gh auth status --active --hostname github.com >/dev/null 2>&1; then
   die "GitHub CLI is not authenticated. Run 'gh auth login' before creating a PR."
 fi
 ACCOUNT=$(gh api user --jq .login 2>/dev/null || true)

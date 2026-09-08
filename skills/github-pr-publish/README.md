@@ -12,12 +12,13 @@ Agent-neutral workflow for safely publishing GitHub pull requests with `gh`, loc
 
 - Previews by default and performs no push, PR creation, browser open, or mutating API call without `--yes`
 - Requires prompt-free PR content for creation
-- Always constructs `gh pr create` with explicit `--head`
+- Always constructs `gh pr create` with an explicit same-repository branch-only `--head` after validating the owner and remote
 - Avoids the GitHub CLI PR-create preview flag because it can still push git changes
 - Guards pushes behind `--push --remote <name> --yes`
 - Accepts GitHub SSH host aliases only when `ssh -G <alias>` resolves them to `hostname github.com`
 - Rejects unsafe push situations such as forks, detached HEAD, wrong remotes, base/default/protected branches, and force-like paths
 - Allows a no-push explicit-head fallback after verifying local `HEAD`, the remote branch SHA, and the GitHub branch SHA match
+- Checks the active authenticated `gh` identity so expired inactive accounts do not block a valid session
 - Supports private repos through authenticated `gh` and clear SSO, auth, permission, private not-found, and validation diagnostics
 - Includes fake `gh`/`git` tests that prove no mutation by default and no token leakage
 

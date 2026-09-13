@@ -1,13 +1,13 @@
 # Skill classification and installation
 
-Runtime reviewed: 2026-09-08. Display groups updated: 2026-09-08.
+Runtime reviewed: 2026-09-13. Display groups updated: 2026-09-13.
 
 Classify a skill by the minimum runtime surface required to satisfy its own completion contract. Origin, inspiration, OpenAI UI metadata, and optional acceleration do not make a skill Codex-only.
 
 - `Codex`: the skill cannot honestly reach its success verdict without a Codex-specific Goal, review, sandboxed execution, or native subagent contract.
-- `Cross-agent`: the core workflow can complete with common files, shell commands, Git, GitHub APIs, browser automation, image input, or equivalent capabilities exposed by multiple agents.
+- `Cross-agent`: the core workflow can complete with common files, shell commands, Git, GitHub APIs, browser automation, image input, local media helpers, or equivalent capabilities exposed by multiple agents.
 
-Keep runtime compatibility separate from display grouping. Codex-dependent workflows remain in `Codex`; cross-agent skills use `Planning`, `Execution`, `Design`, `Git Workflow`, and `Project Memory` groups. `Experimental` takes precedence over the purpose group for skills still being validated, currently the Godot game-development skill `godot-dev-loop`. It describes maturity, not a runtime restriction; behavior and interfaces may change.
+Keep runtime compatibility separate from display grouping. Codex-dependent workflows remain in `Codex`; cross-agent skills use `Planning`, `Execution`, `Design`, `Git Workflow`, and `Project Memory` groups. `Experimental` takes precedence over the purpose group for skills still being validated, currently `audio-asset-generator` and `godot-dev-loop`. It describes maturity, not a runtime restriction; behavior and interfaces may change.
 
 ## Audited inventory
 
@@ -18,6 +18,7 @@ Keep runtime compatibility separate from display grouping. Codex-dependent workf
 | Codex | Codex | `review-gate` | Requires two independent native Codex review lanes with tool-enforced isolation |
 | Execution | Cross-agent | `completion-loop` | Uses common repository and verification capabilities; Goal tracking is optional and required independent review is capability-gated rather than Codex-specific |
 | Design | Cross-agent | `design-loop` | Uses rendered UI evidence and adapts to available browser, screenshot, and image capabilities |
+| Experimental | Cross-agent | `audio-asset-generator` | Uses repository inspection, package-local dependency-free procedural synthesis, existing audio tools, and only already-available provider capabilities; no Codex-only primitive is required |
 | Experimental | Cross-agent | `godot-dev-loop` | Uses repository files, Bash, Git, Godot 4.x real-window capture, image inspection, and fresh non-interactive runner processes without requiring one agent's native workflow tools |
 | Planning | Cross-agent | `spec-interview` | The interview, read-only inspection, and specification work without an agent-exclusive command; delegation is optional |
 | Design | Cross-agent | `visual-match` | Uses equivalent screenshots, browser automation, image evidence, and a package-local standard-library scorer |
@@ -51,13 +52,13 @@ Therefore `.agents/skills/` is the expected Codex project path, even for a Codex
 Cross-agent skills can still be installed only for Codex:
 
 ```bash
-npx skills add https://github.com/17-sss/agent-skills --skill visual-match --agent codex
+npx skills add https://github.com/17-sss/agent-skills --skill audio-asset-generator --agent codex
 ```
 
 Or they can be installed for every supported agent:
 
 ```bash
-npx skills add https://github.com/17-sss/agent-skills --skill visual-match --agent '*'
+npx skills add https://github.com/17-sss/agent-skills --skill audio-asset-generator --agent '*'
 ```
 
 ## Maintenance rule

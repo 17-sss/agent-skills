@@ -29,6 +29,7 @@
       "name": "experimental",
       "source": "./",
       "skills": [
+        "./skills/audio-asset-generator",
         "./skills/godot-dev-loop"
       ]
     },

@@ -24,7 +24,7 @@ npx skills add https://github.com/17-sss/agent-skills
 - `Design`: UI 구현·개선과 기준 화면 재현
 - `Git Workflow`: 커밋, PR 생성과 PR 리뷰
 - `Project Memory`: 현재 작업 인수인계와 장기 프로젝트 이력
-- `Experimental`: 아직 검증 중인 실험적 스킬로, 현재는 `godot-dev-loop`가 해당하며 동작과 인터페이스가 바뀔 수 있음
+- `Experimental`: 아직 검증 중인 실험적 스킬로, 현재는 `audio-asset-generator`와 `godot-dev-loop`가 해당하며 동작과 인터페이스가 바뀔 수 있음
 
 `Codex`를 제외한 그룹은 Codex를 포함한 여러 호환 에이전트에서 사용할 수 있는 공통 스킬입니다. `Experimental`은 성숙도 표시이며 특정 에이전트 의존성을 뜻하지 않습니다.
 
@@ -58,6 +58,7 @@ npx skills add https://github.com/17-sss/agent-skills --skill design-loop
 | 그룹 | 호환성 | 스킬 | 이런 때 사용합니다 |
 | --- | --- | --- | --- |
 | Design | 공통 | [`design-loop`](skills/design-loop/SKILL.md) | UI를 실제 렌더 결과로 반복 개선할 때 |
+| Experimental | 공통 | [`audio-asset-generator`](skills/audio-asset-generator/SKILL.md) | 제품 오디오 에셋을 계획·생성·통합하고 정직하게 검증할 때 |
 | Experimental | 공통 | [`godot-dev-loop`](skills/godot-dev-loop/SKILL.md) | Godot 게임을 durable state, 렌더 캡처와 fresh agent iteration으로 다듬을 때 |
 | Planning | 공통 | [`spec-interview`](skills/spec-interview/SKILL.md) | 구현 전에 모호한 요구사항을 한 질문씩 명확히 할 때 |
 | Execution | 공통 | [`completion-loop`](skills/completion-loop/SKILL.md) | 승인된 구현을 유효한 검증 근거를 재사용하며 완료할 때 |
@@ -74,6 +75,24 @@ npx skills add https://github.com/17-sss/agent-skills --skill design-loop
 ## 공통 스킬
 
 특정 에이전트의 전용 명령에 의존하지 않는 워크플로입니다. Codex에서도 사용할 수 있으며, 다른 호환 에이전트에서는 제공되는 브라우저, 셸, GitHub, 이미지 도구에 맞춰 동작합니다.
+
+### audio-asset-generator
+
+> **Experimental · 실험적 스킬:** 아직 검증 중인 워크플로이며 동작과 인터페이스가 바뀔 수 있습니다.
+
+대상 runtime, playback architecture, asset 관례, 전달 제약과 라이선스 요구를 먼저 확인한 뒤 게임, 인터랙티브 웹앱, 네이티브 제품용 오디오 에셋을 만들고 통합합니다.
+
+- 각 에셋을 기존 재사용 가능 오디오, dependency-free 로컬 procedural synthesis, 실제 사용 가능한 first-party capability, 이미 설정된 고급 generator, prompt-only fallback 순서로 처리합니다.
+- 외부 Python 패키지 없이 짧은 synthetic `ui-click`, `success`, `error`, `pickup`, `whoosh`, `impact`, `portal` 효과의 deterministic mono PCM WAV variation을 생성합니다.
+- voice, music, ambience, 현실적인 Foley와 synthetic SFX를 서로 다른 capability로 다루며, speech/TTS surface는 voice 경로만 증명합니다.
+- 비용이 발생할 수 있는 생성은 먼저 승인을 받고 provenance와 라이선스 제약을 보존하며, 설정된 credential을 비용 승인으로 간주하지 않습니다.
+- 제품의 기존 manifest, preload, lifecycle, mute, music, SFX volume 구조에 통합한 뒤 file validation과 실제 playback/listening verification을 구분합니다.
+
+사용 예시:
+
+```text
+Use $audio-asset-generator to inspect this web game's audio architecture, create suitable zero-cost procedural UI and gameplay SFX, return exact prompts for any ambience or music that cannot be generated with available tools, integrate the assets, and report file-level and listening verification separately.
+```
 
 ### design-loop
 
@@ -296,7 +315,7 @@ Use $review-gate as the final pre-PR gate for this high-risk change. Keep the wo
 - 스킬 하나만 설치해도 해당 핵심 워크플로가 동작해야 합니다.
 - 선택적 workflow handoff는 추천일 뿐입니다. 현재 작업의 available-skill inventory에 표시된 downstream workflow만 언급하며, inventory 또는 최적의 스킬을 사용할 수 없으면 아무것도 제안하지 않습니다.
 - 공통 스킬은 각자의 invocation policy를 따르며, 명확한 재현을 원하면 예시처럼 `$skill-name`을 직접 지정합니다.
-- Codex 특화 3개와 제어가 중요한 공통 `spec-interview`, `completion-loop`, `visual-match`, `godot-dev-loop`는 `allow_implicit_invocation: false`이며 명시적으로 호출합니다.
+- Codex 특화 3개와 제어가 중요한 공통 `audio-asset-generator`, `spec-interview`, `completion-loop`, `visual-match`, `godot-dev-loop`는 `allow_implicit_invocation: false`이며 명시적으로 호출합니다.
 - optional plugin이나 도구가 없으면 저장소 기본 도구와 안전한 fallback을 우선합니다.
 - 외부 게시, push, 환경 설치와 destructive action은 스킬 호출만으로 승인된 것으로 보지 않습니다.
 
@@ -307,7 +326,7 @@ Use $review-gate as the final pre-PR gate for this high-risk change. Keep the wo
 두 스크립트의 역할은 다음과 같습니다.
 
 - `skills/milestone-runner/scripts/goal_state.py`: `milestone-runner` 하나의 durable repository state만 관리합니다.
-- `scripts/check-native-workflow-skills.py`: 설치 가능한 13개 스킬 전체에 공통 구조, metadata, link, catalog, `quick_validate` 검사를 적용하고, 관리 대상 6개 패키지와 `godot-dev-loop`에는 native-workflow 독립성·state 계약을 추가로 검사합니다. source drift는 기존 관리 대상 6개에만 적용하며, `handoff-memory`와 `project-chronicle`에 선언된 sibling-reference 경계도 함께 검증합니다.
+- `scripts/check-native-workflow-skills.py`: 설치 가능한 14개 스킬 전체에 공통 구조, metadata, link, catalog, `quick_validate` 검사를 적용하고, 관리 대상 6개 패키지와 `audio-asset-generator`, `godot-dev-loop`에는 native-workflow 독립성·state 계약을 추가로 검사합니다. source drift는 기존 관리 대상 6개에만 적용하며, `handoff-memory`와 `project-chronicle`에 선언된 sibling-reference 경계도 함께 검증합니다.
 
 ### Workflow checker modes
 

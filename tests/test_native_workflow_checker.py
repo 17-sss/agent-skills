@@ -67,6 +67,7 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
         self.assertEqual(
             set(checker.NATIVE_WORKFLOW_SKILL_NAMES),
             {
+                "audio-asset-generator",
                 "spec-interview",
                 "reviewed-plan",
                 "completion-loop",
@@ -79,6 +80,7 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
         self.assertEqual(
             set(checker.INSTALLABLE_SKILL_NAMES),
             {
+                "audio-asset-generator",
                 "commit-helper",
                 "completion-loop",
                 "design-loop",
@@ -97,6 +99,7 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
         self.assertEqual(
             set(checker.CROSS_AGENT_SKILL_NAMES),
             {
+                "audio-asset-generator",
                 "design-loop",
                 "godot-dev-loop",
                 "spec-interview",

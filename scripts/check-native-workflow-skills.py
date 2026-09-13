@@ -30,9 +30,11 @@ MANAGED_SKILL_NAMES = (
 )
 NATIVE_WORKFLOW_SKILL_NAMES = (
     *MANAGED_SKILL_NAMES,
+    "audio-asset-generator",
     "godot-dev-loop",
 )
 INSTALLABLE_SKILL_NAMES = (
+    "audio-asset-generator",
     "commit-helper",
     "completion-loop",
     "design-loop",
@@ -92,6 +94,7 @@ HARD_HANDOFF_PATTERNS = {
     ),
 }
 CROSS_AGENT_SKILL_NAMES = (
+    "audio-asset-generator",
     "design-loop",
     "godot-dev-loop",
     "spec-interview",
@@ -107,7 +110,7 @@ TUI_SKILL_GROUPS = {
     "codex": CODEX_SKILL_NAMES,
     "design": ("design-loop", "visual-match"),
     "execution": ("completion-loop",),
-    "experimental": ("godot-dev-loop",),
+    "experimental": ("audio-asset-generator", "godot-dev-loop"),
     "git-workflow": ("commit-helper", "github-pr-review", "github-pr-publish"),
     "planning": ("spec-interview",),
     "project-memory": ("handoff-memory", "project-chronicle"),

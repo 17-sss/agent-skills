@@ -522,6 +522,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
 
     def test_catalog_groups_every_skill_and_provides_copyable_usage(self):
         common = (
+            "audio-asset-generator",
             "design-loop",
             "godot-dev-loop",
             "spec-interview",
@@ -572,6 +573,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
             "milestone-runner",
         ]
         common = {
+            "audio-asset-generator",
             "design-loop",
             "godot-dev-loop",
             "spec-interview",
@@ -589,7 +591,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
             "codex": set(codex_native),
             "design": {"design-loop", "visual-match"},
             "execution": {"completion-loop"},
-            "experimental": {"godot-dev-loop"},
+            "experimental": {"audio-asset-generator", "godot-dev-loop"},
             "git-workflow": {"commit-helper", "github-pr-review", "github-pr-publish"},
             "planning": {"spec-interview"},
             "project-memory": {"handoff-memory", "project-chronicle"},
@@ -620,7 +622,14 @@ class NativeWorkflowContractTest(unittest.TestCase):
         for name in codex_group:
             ui = read(f"skills/{name}/agents/openai.yaml")
             self.assertIn('display_name: "Codex · ', ui)
-        for name in {"spec-interview", "completion-loop", "visual-match", "godot-dev-loop", "project-chronicle"}:
+        for name in {
+            "audio-asset-generator",
+            "spec-interview",
+            "completion-loop",
+            "visual-match",
+            "godot-dev-loop",
+            "project-chronicle",
+        }:
             ui = read(f"skills/{name}/agents/openai.yaml")
             metadata = read(f"skills/{name}/metadata.json")
             self.assertNotIn('display_name: "Codex · ', ui)

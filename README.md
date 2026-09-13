@@ -24,7 +24,7 @@ The selection screen separates Codex-dependent workflows from shared skills grou
 - `Design`: interface implementation, refinement, and reference matching
 - `Git Workflow`: commits, pull request publication, and PR review
 - `Project Memory`: current handoffs and long-term project history
-- `Experimental`: skills still being validated, currently `godot-dev-loop`; behavior and interfaces may change
+- `Experimental`: skills still being validated, currently `audio-asset-generator` and `godot-dev-loop`; behavior and interfaces may change
 
 All groups except `Codex` contain shared skills that work with Codex and other compatible agents. `Experimental` describes maturity, not an agent requirement.
 
@@ -58,6 +58,7 @@ Start a new agent task after installation so the refreshed skill discovery resul
 | Group | Runtime | Skill | Best for |
 | --- | --- | --- | --- |
 | Design | Shared | [`design-loop`](skills/design-loop/SKILL.md) | Iteratively improving a UI against real rendered evidence |
+| Experimental | Shared | [`audio-asset-generator`](skills/audio-asset-generator/SKILL.md) | Planning, generating, integrating, and honestly verifying product audio assets |
 | Experimental | Shared | [`godot-dev-loop`](skills/godot-dev-loop/SKILL.md) | Refining a Godot game through durable state, rendered captures, and fresh agent iterations |
 | Planning | Shared | [`spec-interview`](skills/spec-interview/SKILL.md) | Resolving ambiguous requirements one material question at a time |
 | Execution | Shared | [`completion-loop`](skills/completion-loop/SKILL.md) | Finishing approved implementation with reusable verification evidence |
@@ -74,6 +75,24 @@ Start a new agent task after installation so the refreshed skill discovery resul
 ## Shared Skills
 
 These workflows do not depend on commands exclusive to one agent. They work in Codex and adapt to the browser, shell, GitHub, and image tools available in other compatible agents.
+
+### audio-asset-generator
+
+> **Experimental:** This workflow is still being validated, and its behavior and interfaces may change.
+
+Create and integrate audio assets for games, interactive web apps, and native products after inspecting the target runtime, playback architecture, asset conventions, delivery constraints, and licensing needs.
+
+- Route each asset through existing reusable audio, local dependency-free procedural synthesis, an actually available first-party capability, an already-configured richer generator, or a prompt-only fallback—in that order.
+- Generate deterministic mono PCM WAV variations for short synthetic `ui-click`, `success`, `error`, `pickup`, `whoosh`, `impact`, and `portal` effects without third-party Python packages.
+- Keep voice, music, ambience, realistic Foley, and synthetic SFX as distinct capability classes; a speech/TTS surface proves only a voice route.
+- Require approval before potentially billable generation, preserve provenance and licensing constraints, and never treat configured credentials as spending approval.
+- Integrate through the product's existing manifest, preload, lifecycle, mute, music, and SFX-volume architecture, then distinguish file validation from actual playback or listening verification.
+
+Usage example:
+
+```text
+Use $audio-asset-generator to inspect this web game's audio architecture, create suitable zero-cost procedural UI and gameplay SFX, return exact prompts for any ambience or music that cannot be generated with available tools, integrate the assets, and report file-level and listening verification separately.
+```
 
 ### design-loop
 
@@ -296,7 +315,7 @@ Use $review-gate as the final pre-PR gate for this high-risk change. Keep the wo
 - Installing one skill must be sufficient for its core workflow to run.
 - Optional workflow handoffs are recommendations only. A skill may name only a downstream workflow advertised in the current task's available-skill inventory; when that inventory or the best-fit skill is unavailable, it makes no suggestion.
 - Shared skills follow their own invocation policy; specify `$skill-name` for reproducible explicit invocation.
-- The three Codex-dependent workflows, plus the high-control shared `spec-interview`, `completion-loop`, `visual-match`, and `godot-dev-loop` workflows, set `allow_implicit_invocation: false` and must be invoked explicitly.
+- The three Codex-dependent workflows, plus the high-control shared `audio-asset-generator`, `spec-interview`, `completion-loop`, `visual-match`, and `godot-dev-loop` workflows, set `allow_implicit_invocation: false` and must be invoked explicitly.
 - When an optional plugin or tool is unavailable, prefer repository-native tools and safe fallbacks.
 - Invoking a skill does not grant approval for external publishing, pushes, environment installation, or destructive actions.
 
@@ -307,7 +326,7 @@ The source snapshot, native capability mapping, update cadence, and forward-test
 The two maintenance scripts have distinct responsibilities.
 
 - `skills/milestone-runner/scripts/goal_state.py`: manages durable repository state for `milestone-runner` only.
-- `scripts/check-native-workflow-skills.py`: applies common structure, metadata, link, catalog, and `quick_validate` checks to all 13 installable skills, then applies native-workflow independence and state contracts to the six managed packages plus `godot-dev-loop`; source drift remains scoped to the six managed packages, and guarded sibling-reference boundaries are also checked for `handoff-memory` and `project-chronicle`.
+- `scripts/check-native-workflow-skills.py`: applies common structure, metadata, link, catalog, and `quick_validate` checks to all 14 installable skills, then applies native-workflow independence and state contracts to the six managed packages plus `audio-asset-generator` and `godot-dev-loop`; source drift remains scoped to the six managed packages, and guarded sibling-reference boundaries are also checked for `handoff-memory` and `project-chronicle`.
 
 ### Workflow checker modes
 

@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import wave
 
 
@@ -32,7 +33,17 @@ class AudioAssetGeneratorTest(unittest.TestCase):
 
         self.assertEqual(
             imported_roots,
-            {"__future__", "argparse", "math", "pathlib", "random", "struct", "wave"},
+            {
+                "__future__",
+                "argparse",
+                "math",
+                "os",
+                "pathlib",
+                "random",
+                "struct",
+                "tempfile",
+                "wave",
+            },
         )
 
     def test_all_required_presets_write_valid_normalized_mono_pcm_wav(self):
@@ -79,6 +90,29 @@ class AudioAssetGeneratorTest(unittest.TestCase):
                 self.assertEqual(first, repeated)
                 self.assertNotEqual(first, variation)
 
+    def test_phase_oscillator_integrates_frequency_sweeps(self):
+        frequencies = [700 + (1100 * i / 999) for i in range(1000)]
+        oscillator = generator.PhaseOscillator()
+
+        for frequency in frequencies:
+            oscillator.sample(frequency)
+
+        expected_phase = (
+            2.0 * generator.math.pi * sum(frequencies) / generator.SAMPLE_RATE
+        ) % (2.0 * generator.math.pi)
+        self.assertAlmostEqual(oscillator.phase, expected_phase, places=12)
+
+    def test_success_note_transition_has_no_full_scale_click(self):
+        samples = generator.render("success", seed=17)
+        midpoint = len(samples) // 2
+        transition = samples[midpoint - 128 : midpoint + 128]
+        largest_step = max(
+            abs(current - previous)
+            for previous, current in zip(transition, transition[1:])
+        )
+
+        self.assertLess(largest_step, 0.2)
+
     def test_cli_lists_presets_and_generates_a_real_file(self):
         listed = subprocess.run(
             [sys.executable, str(GENERATOR_PATH), "--list-presets"],
@@ -113,6 +147,33 @@ class AudioAssetGeneratorTest(unittest.TestCase):
             self.assertTrue(output.is_file())
             self.assertGreater(output.stat().st_size, 44)
 
+    def test_generator_rejects_output_extension_that_mislabels_wav_data(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            invalid_output = Path(temp_dir) / "impact.mp3"
+            samples = generator.render("impact", seed=9)
+
+            with self.assertRaisesRegex(ValueError, r"must use a \.wav extension"):
+                generator.write_wav(invalid_output, samples)
+            self.assertFalse(invalid_output.exists())
+
+            cli_result = subprocess.run(
+                [
+                    sys.executable,
+                    str(GENERATOR_PATH),
+                    "--preset",
+                    "impact",
+                    "--output",
+                    str(invalid_output),
+                ],
+                cwd=REPO_ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(cli_result.returncode, 2)
+            self.assertIn("must use a .wav extension", cli_result.stderr)
+            self.assertFalse(invalid_output.exists())
+
     def test_cli_refuses_overwrite_without_explicit_force(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             output = Path(temp_dir) / "pickup.wav"
@@ -146,6 +207,44 @@ class AudioAssetGeneratorTest(unittest.TestCase):
             )
             self.assertEqual(replaced.returncode, 0, replaced.stderr)
             self.assertEqual(output.read_bytes()[:4], b"RIFF")
+
+    def test_force_replacement_preserves_existing_asset_when_writing_fails(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = Path(temp_dir) / "impact.wav"
+            original = b"preserve-existing-asset"
+            output.write_bytes(original)
+
+            with mock.patch.object(
+                generator,
+                "_write_wav_stream",
+                side_effect=RuntimeError("simulated encoder failure"),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "simulated encoder failure"):
+                    generator.write_wav(
+                        output,
+                        generator.render("impact", seed=9),
+                        overwrite=True,
+                    )
+
+            self.assertEqual(output.read_bytes(), original)
+            self.assertEqual(list(output.parent.glob(f".{output.name}.*.tmp")), [])
+
+    def test_force_replacement_replaces_symlink_without_touching_its_target(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            target = Path(temp_dir) / "original.wav"
+            target.write_bytes(b"preserve-symlink-target")
+            output = Path(temp_dir) / "replacement.wav"
+            output.symlink_to(target)
+
+            generator.write_wav(
+                output,
+                generator.render("impact", seed=9),
+                overwrite=True,
+            )
+
+            self.assertFalse(output.is_symlink())
+            self.assertEqual(output.read_bytes()[:4], b"RIFF")
+            self.assertEqual(target.read_bytes(), b"preserve-symlink-target")
 
     def test_contract_separates_provider_capabilities_and_unverified_output(self):
         skill = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")

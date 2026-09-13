@@ -20,6 +20,20 @@ The current official OpenAI text-to-speech guide documents spoken-audio generati
 
 If an OpenAI capability is unavailable in the current agent/runtime, do not attempt to install unofficial shims or silently switch to a paid third-party provider.
 
+## Voice consent and disclosure
+
+For OpenAI text-to-speech output, make sure the product presents a clear disclosure that the voice is AI-generated. Record where that disclosure will appear before committed product integration.
+
+Use a custom voice only through a documented provider surface and only after the user confirms authorization from the speaker. For OpenAI custom voices, require the provider's consent recording and matching audio sample; access to the endpoint or source audio alone does not prove consent. Do not clone or imitate a recognizable real person's voice when identity rights or consent remain unresolved.
+
+For every custom or recognizable voice asset, extend the provenance note with:
+
+```text
+voice_identity: <stock voice or authorized custom identity>
+speaker_authorization: <not applicable or confirmed evidence location>
+ai_disclosure: <where the product tells users the voice is AI-generated>
+```
+
 ## External and local generators
 
 A richer generator is eligible only when one of these is true:
@@ -69,6 +83,7 @@ prompt: <exact audible production prompt>
 negative_constraints: <for example no music, no voice, dry, no clipping>
 provider_requirement: <capability needed; do not invent a provider>
 license_requirement: <intended distribution and unresolved rights>
+voice_safety: <for voice only: stock/custom status, authorization, consent, and disclosure owner>
 ```
 
 Keep `status: not generated` until a real output file has been produced and validated.

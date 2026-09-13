@@ -95,7 +95,7 @@ When the task needs realistic Foley, environmental ambience, long-form backgroun
 - Record the provider, model or mode when known, prompt, generation date, and any material license constraint in a task-local note or existing project asset manifest.
 - Do not fabricate provider output when the generator is unavailable. Return the exact prompts and asset map needed for a later generation pass instead.
 
-For voice, use a documented speech-generation surface only when voice is actually requested. Treat voice, music, and sound effects as separate capabilities.
+For voice, use a documented speech-generation surface only when voice is actually requested. Treat voice, music, and sound effects as separate capabilities. Before using a custom or recognizable voice identity, confirm the speaker authorization, consent evidence, and disclosure obligations required by the provider and product. A connected voice tool is not evidence that those rights are satisfied.
 
 When generation is unavailable, mark each audio-map item `not generated` and provide a ready-to-run prompt with its category, audible target, duration, loop requirement, output format, and negative constraints. Do not use a prompt-only deliverable as evidence that an audio file exists.
 
@@ -122,6 +122,26 @@ For music, specify:
 - desired duration;
 - vocals or no vocals;
 - scene transitions or intensity variants when needed.
+
+For ambience, specify:
+
+- environment and time or weather context;
+- persistent bed, foreground events, and any intermittent layers;
+- density, motion, and variation over time;
+- acoustic space, listener perspective, and spatial treatment when relevant;
+- target loop duration and an unobtrusive seam; and
+- exclusions such as no music, no voice, or no identifiable recordings.
+
+For voice, specify:
+
+- the exact approved script without silently rewriting it;
+- language, locale, and pronunciations or phonetic guidance;
+- character or narrator role, emotional intent, pace, and energy;
+- pauses, emphasis, and delivery variants when relevant;
+- dry or environmental recording treatment and file segmentation; and
+- stock or custom voice status, speaker authorization when applicable, and required AI-generated-voice disclosure.
+
+Do not request an imitation of a recognizable real person's voice without documented authorization. If authorization, consent evidence, or disclosure ownership is unresolved, stop at a voice asset map and prompt rather than generating or integrating the voice.
 
 Do not name copyrighted songs or ask for direct imitation of a living artist's distinctive style when a neutral sonic description will achieve the goal.
 

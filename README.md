@@ -85,6 +85,7 @@ Create and integrate audio assets for games, interactive web apps, and native pr
 - Route each asset through existing reusable audio, local dependency-free procedural synthesis, an actually available first-party capability, an already-configured richer generator, or a prompt-only fallback—in that order.
 - Generate deterministic mono PCM WAV variations for short synthetic `ui-click`, `success`, `error`, `pickup`, `whoosh`, `impact`, and `portal` effects without third-party Python packages.
 - Keep voice, music, ambience, realistic Foley, and synthetic SFX as distinct capability classes; a speech/TTS surface proves only a voice route.
+- Specify ambience layers, spatial perspective, temporal variation, and loop seams; preserve exact voice scripts, pronunciation guidance, speaker authorization, and required AI-generated-voice disclosure.
 - Require approval before potentially billable generation, preserve provenance and licensing constraints, and never treat configured credentials as spending approval.
 - Integrate through the product's existing manifest, preload, lifecycle, mute, music, and SFX-volume architecture, then distinguish file validation from actual playback or listening verification.
 

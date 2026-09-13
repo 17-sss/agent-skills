@@ -85,6 +85,7 @@ npx skills add https://github.com/17-sss/agent-skills --skill design-loop
 - 각 에셋을 기존 재사용 가능 오디오, dependency-free 로컬 procedural synthesis, 실제 사용 가능한 first-party capability, 이미 설정된 고급 generator, prompt-only fallback 순서로 처리합니다.
 - 외부 Python 패키지 없이 짧은 synthetic `ui-click`, `success`, `error`, `pickup`, `whoosh`, `impact`, `portal` 효과의 deterministic mono PCM WAV variation을 생성합니다.
 - voice, music, ambience, 현실적인 Foley와 synthetic SFX를 서로 다른 capability로 다루며, speech/TTS surface는 voice 경로만 증명합니다.
+- ambience layer, 공간 관점, 시간 변화와 loop seam을 명세하고, voice의 확정 대본, 발음 지침, 화자 승인과 필수 AI 생성 음성 고지를 보존합니다.
 - 비용이 발생할 수 있는 생성은 먼저 승인을 받고 provenance와 라이선스 제약을 보존하며, 설정된 credential을 비용 승인으로 간주하지 않습니다.
 - 제품의 기존 manifest, preload, lifecycle, mute, music, SFX volume 구조에 통합한 뒤 file validation과 실제 playback/listening verification을 구분합니다.
 

@@ -78,6 +78,13 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
             },
         )
         self.assertEqual(
+            set(checker.INDEPENDENCE_VALIDATED_SKILL_NAMES),
+            {
+                *checker.NATIVE_WORKFLOW_SKILL_NAMES,
+                "minimal",
+            },
+        )
+        self.assertEqual(
             set(checker.INSTALLABLE_SKILL_NAMES),
             {
                 "audio-asset-generator",
@@ -89,6 +96,7 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
                 "godot-dev-loop",
                 "handoff-memory",
                 "milestone-runner",
+                "minimal",
                 "project-chronicle",
                 "review-gate",
                 "reviewed-plan",
@@ -110,6 +118,7 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
                 "github-pr-review",
                 "github-pr-publish",
                 "commit-helper",
+                "minimal",
             },
         )
         self.assertIn("playwright.dev", checker.ALLOWED_REFERENCE_HOSTS)
@@ -403,16 +412,44 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
         self.assertTrue(any("must be self-contained" in error for error in errors))
 
     def test_standalone_package_rejects_sibling_skill_dependencies(self):
+        for invocation, sibling_name in (
+            ("Invoke $completion-loop before continuing.\n", "completion-loop"),
+            ("Invoke $minimal before continuing.\n", "minimal"),
+        ):
+            with self.subTest(sibling_name=sibling_name):
+                with tempfile.TemporaryDirectory(dir=REPO_ROOT / "skills") as temp_dir:
+                    skill_dir = Path(temp_dir)
+                    (skill_dir / "SKILL.md").write_text(
+                        invocation,
+                        encoding="utf-8",
+                    )
+                    errors = []
+                    with redirect_stdout(io.StringIO()):
+                        checker.validate_standalone_package(skill_dir, errors)
+                self.assertTrue(
+                    any(f"references sibling skill {sibling_name}" in error for error in errors)
+                )
+
+    def test_standalone_checker_does_not_mistake_plain_minimal_prose_for_a_skill(self):
         with tempfile.TemporaryDirectory(dir=REPO_ROOT / "skills") as temp_dir:
             skill_dir = Path(temp_dir)
             (skill_dir / "SKILL.md").write_text(
-                "Invoke $completion-loop before continuing.\n",
+                "Offer a minimal isolated browser bootstrap.\n",
                 encoding="utf-8",
             )
             errors = []
             with redirect_stdout(io.StringIO()):
                 checker.validate_standalone_package(skill_dir, errors)
-        self.assertTrue(any("references sibling skill completion-loop" in error for error in errors))
+        self.assertEqual(errors, [])
+
+    def test_minimal_package_passes_independence_validators(self):
+        skill_dir = REPO_ROOT / "skills" / "minimal"
+        errors = []
+        with redirect_stdout(io.StringIO()):
+            checker.validate_runtime_independence(skill_dir, errors)
+            checker.validate_standalone_package(skill_dir, errors)
+            checker.validate_state_contract(skill_dir, errors)
+        self.assertEqual(errors, [])
 
     def test_standalone_packages_allow_only_guarded_optional_handoffs(self):
         for name in checker.STANDALONE_REFERENCE_RULES:

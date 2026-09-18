@@ -1,0 +1,8 @@
+{
+  "name": "minimal",
+  "version": "0.1.0",
+  "organization": "17-sss",
+  "date": "September 2026",
+  "abstract": "Cross-agent implementation strategy for producing the smallest correct change within accepted scope. It prefers existing code, native capabilities, standard libraries, and installed dependencies while preserving required security, validation, tests, and workflow gates.",
+  "references": []
+}

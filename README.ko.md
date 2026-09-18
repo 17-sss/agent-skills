@@ -61,6 +61,7 @@ npx skills add https://github.com/17-sss/agent-skills --skill design-loop
 | Experimental | 공통 | [`audio-asset-generator`](skills/audio-asset-generator/SKILL.md) | 제품 오디오 에셋을 계획·생성·통합하고 정직하게 검증할 때 |
 | Experimental | 공통 | [`godot-dev-loop`](skills/godot-dev-loop/SKILL.md) | Godot 게임을 durable state, 렌더 캡처와 fresh agent iteration으로 다듬을 때 |
 | Planning | 공통 | [`spec-interview`](skills/spec-interview/SKILL.md) | 구현 전에 모호한 요구사항을 한 질문씩 명확히 할 때 |
+| Execution | 공통 | [`minimal`](skills/minimal/SKILL.md) | 승인된 범위 안에서 가장 작은 올바른 구현을 고를 때 |
 | Execution | 공통 | [`completion-loop`](skills/completion-loop/SKILL.md) | 승인된 구현을 유효한 검증 근거를 재사용하며 완료할 때 |
 | Design | 공통 | [`visual-match`](skills/visual-match/SKILL.md) | 승인된 이미지나 URL과 구현 화면을 엄격히 맞출 때 |
 | Project Memory | 공통 | [`handoff-memory`](skills/handoff-memory/SKILL.md) | 저장소나 워크스페이스의 HANDOFF를 만들고 이어갈 때 |
@@ -232,6 +233,22 @@ Use $github-pr-publish to preflight the current branch and prepare a draft PR. S
 Use $commit-helper to inspect this repository's commit rules and staged changes, then create the local commit. Do not push.
 ```
 
+### minimal
+
+확정된 동작 자체를 줄이지 않으면서, 그 동작을 만족하는 가장 작은 올바른 구현을 선택합니다.
+
+- 최소화하기 전에 실제 실행 흐름, 영향을 받는 caller, 기존 helper, 관례, 테스트와 관련 boundary를 확인합니다.
+- 기존 코드 재사용, 표준 라이브러리, native capability, 이미 설치된 dependency 순으로 검토한 뒤에만 응집된 새 구현을 추가합니다.
+- 변경 줄 수가 가장 적은 symptom patch보다 가장 작은 올바른 root-cause boundary를 우선합니다.
+- security, authorization, validation, error handling, accessibility, compatibility, migration safety, decisive test와 활성 workflow의 acceptance·review gate를 약화하지 않습니다.
+- standalone·explicit-only 스킬이며, 도구 설치·persistent behavior·다른 workflow 호출을 하지 않습니다.
+
+사용 예시:
+
+```text
+Use $minimal to fix this bug at the smallest correct root-cause boundary and run the smallest decisive regression check.
+```
+
 ### completion-loop
 
 승인된 구현이나 명확하게 허가된 작은 수정을 고정된 범위 안에서 완료합니다. 승인된 계획을 재사용하며, 아이디어 상담·조사·계획만 작성하는 요청·사용법 질문은 구현으로 전환하지 않습니다.
@@ -316,7 +333,7 @@ Use $review-gate as the final pre-PR gate for this high-risk change. Keep the wo
 - 스킬 하나만 설치해도 해당 핵심 워크플로가 동작해야 합니다.
 - 선택적 workflow handoff는 추천일 뿐입니다. 현재 작업의 available-skill inventory에 표시된 downstream workflow만 언급하며, inventory 또는 최적의 스킬을 사용할 수 없으면 아무것도 제안하지 않습니다.
 - 공통 스킬은 각자의 invocation policy를 따르며, 명확한 재현을 원하면 예시처럼 `$skill-name`을 직접 지정합니다.
-- Codex 특화 3개와 제어가 중요한 공통 `audio-asset-generator`, `spec-interview`, `completion-loop`, `visual-match`, `godot-dev-loop`는 `allow_implicit_invocation: false`이며 명시적으로 호출합니다.
+- Codex 특화 3개와 제어가 중요한 공통 `audio-asset-generator`, `spec-interview`, `minimal`, `completion-loop`, `visual-match`, `godot-dev-loop`는 `allow_implicit_invocation: false`이며 명시적으로 호출합니다.
 - optional plugin이나 도구가 없으면 저장소 기본 도구와 안전한 fallback을 우선합니다.
 - 외부 게시, push, 환경 설치와 destructive action은 스킬 호출만으로 승인된 것으로 보지 않습니다.
 
@@ -327,7 +344,7 @@ Use $review-gate as the final pre-PR gate for this high-risk change. Keep the wo
 두 스크립트의 역할은 다음과 같습니다.
 
 - `skills/milestone-runner/scripts/goal_state.py`: `milestone-runner` 하나의 durable repository state만 관리합니다.
-- `scripts/check-native-workflow-skills.py`: 설치 가능한 14개 스킬 전체에 공통 구조, metadata, link, catalog, `quick_validate` 검사를 적용하고, 관리 대상 6개 패키지와 `audio-asset-generator`, `godot-dev-loop`에는 native-workflow 독립성·state 계약을 추가로 검사합니다. source drift는 기존 관리 대상 6개에만 적용하며, `handoff-memory`와 `project-chronicle`에 선언된 sibling-reference 경계도 함께 검증합니다.
+- `scripts/check-native-workflow-skills.py`: 설치 가능한 15개 스킬 전체에 공통 구조, metadata, link, catalog, `quick_validate` 검사를 적용합니다. 관리 대상 6개 패키지와 `audio-asset-generator`, `godot-dev-loop`, `minimal`에는 independence, standalone-package, state-root 검사를 추가로 적용합니다. source drift는 기존 관리 대상 6개에만 적용하며, `handoff-memory`와 `project-chronicle`에 선언된 sibling-reference 경계도 함께 검증합니다.
 
 ### Workflow checker modes
 

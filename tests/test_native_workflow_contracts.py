@@ -491,7 +491,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
         )
         self.assertEqual(tuple(sorted(installable or ())), discovered)
         self.assertIn("for name in INSTALLABLE_SKILL_NAMES:", checker_text)
-        self.assertIn("for name in NATIVE_WORKFLOW_SKILL_NAMES:", checker_text)
+        self.assertIn("for name in INDEPENDENCE_VALIDATED_SKILL_NAMES:", checker_text)
         self.assertIn("tuple(lines[4:]) not in ((), optional_policy)", checker_text)
         self.assertIn("Empty metadata reference lists are valid", read("docs/native-workflow-skills-maintenance.md"))
 
@@ -526,6 +526,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
             "design-loop",
             "godot-dev-loop",
             "spec-interview",
+            "minimal",
             "completion-loop",
             "visual-match",
             "handoff-memory",
@@ -584,13 +585,14 @@ class NativeWorkflowContractTest(unittest.TestCase):
             "github-pr-review",
             "github-pr-publish",
             "commit-helper",
+            "minimal",
         }
 
         groups = {plugin["name"]: plugin for plugin in manifest["plugins"]}
         expected_groups = {
             "codex": set(codex_native),
             "design": {"design-loop", "visual-match"},
-            "execution": {"completion-loop"},
+            "execution": {"minimal", "completion-loop"},
             "experimental": {"audio-asset-generator", "godot-dev-loop"},
             "git-workflow": {"commit-helper", "github-pr-review", "github-pr-publish"},
             "planning": {"spec-interview"},
@@ -626,6 +628,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
             "audio-asset-generator",
             "spec-interview",
             "completion-loop",
+            "minimal",
             "visual-match",
             "godot-dev-loop",
             "project-chronicle",

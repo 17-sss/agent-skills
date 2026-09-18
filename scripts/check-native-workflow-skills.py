@@ -33,6 +33,10 @@ NATIVE_WORKFLOW_SKILL_NAMES = (
     "audio-asset-generator",
     "godot-dev-loop",
 )
+INDEPENDENCE_VALIDATED_SKILL_NAMES = (
+    *NATIVE_WORKFLOW_SKILL_NAMES,
+    "minimal",
+)
 INSTALLABLE_SKILL_NAMES = (
     "audio-asset-generator",
     "commit-helper",
@@ -43,6 +47,7 @@ INSTALLABLE_SKILL_NAMES = (
     "godot-dev-loop",
     "handoff-memory",
     "milestone-runner",
+    "minimal",
     "project-chronicle",
     "review-gate",
     "reviewed-plan",
@@ -105,11 +110,12 @@ CROSS_AGENT_SKILL_NAMES = (
     "github-pr-review",
     "github-pr-publish",
     "commit-helper",
+    "minimal",
 )
 TUI_SKILL_GROUPS = {
     "codex": CODEX_SKILL_NAMES,
     "design": ("design-loop", "visual-match"),
-    "execution": ("completion-loop",),
+    "execution": ("minimal", "completion-loop"),
     "experimental": ("audio-asset-generator", "godot-dev-loop"),
     "git-workflow": ("commit-helper", "github-pr-review", "github-pr-publish"),
     "planning": ("spec-interview",),
@@ -341,6 +347,10 @@ def standalone_section_span(text: str, heading: str) -> tuple[int, int] | None:
 
 
 def sibling_reference_pattern(name: str) -> re.Pattern[str]:
+    if name == "minimal":
+        # "minimal" is also ordinary prose. Treat it as a sibling only when it
+        # uses an explicit invocation or code-form skill name.
+        return re.compile(r"(?i)(?:\$minimal\b|`minimal`)")
     return re.compile(
         rf"(?<![a-z0-9-])\$?{re.escape(name)}(?![a-z0-9-])",
         re.IGNORECASE,
@@ -1114,14 +1124,14 @@ def main() -> int:
         validate_links(skill_dir, errors)
         validate_catalog_files(skill_dir, errors)
 
-    for name in NATIVE_WORKFLOW_SKILL_NAMES:
+    for name in INDEPENDENCE_VALIDATED_SKILL_NAMES:
         skill_dir = REPO_ROOT / "skills" / name
         validate_runtime_independence(skill_dir, errors)
         validate_standalone_package(skill_dir, errors)
         validate_state_contract(skill_dir, errors)
 
     for name in STANDALONE_REFERENCE_RULES:
-        if name in NATIVE_WORKFLOW_SKILL_NAMES:
+        if name in INDEPENDENCE_VALIDATED_SKILL_NAMES:
             continue
         validate_standalone_package(REPO_ROOT / "skills" / name, errors)
 

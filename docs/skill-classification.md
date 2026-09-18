@@ -1,6 +1,6 @@
 # Skill classification and installation
 
-Runtime reviewed: 2026-09-13. Display groups updated: 2026-09-13.
+Runtime reviewed: 2026-09-18. Display groups updated: 2026-09-18.
 
 Classify a skill by the minimum runtime surface required to satisfy its own completion contract. Origin, inspiration, OpenAI UI metadata, and optional acceleration do not make a skill Codex-only.
 
@@ -16,6 +16,7 @@ Keep runtime compatibility separate from display grouping. Codex-dependent workf
 | Codex | Codex | `reviewed-plan` | Requires fresh native Codex Architect and Critic reviewers behind enforced read-only isolation |
 | Codex | Codex | `milestone-runner` | Reconciles durable milestones with native Codex Goal tools and the completed goal object |
 | Codex | Codex | `review-gate` | Requires two independent native Codex review lanes with tool-enforced isolation |
+| Execution | Cross-agent | `minimal` | Uses repository inspection and common implementation capabilities to select the smallest correct solution without requiring a native workflow primitive |
 | Execution | Cross-agent | `completion-loop` | Uses common repository and verification capabilities; Goal tracking is optional and required independent review is capability-gated rather than Codex-specific |
 | Design | Cross-agent | `design-loop` | Uses rendered UI evidence and adapts to available browser, screenshot, and image capabilities |
 | Experimental | Cross-agent | `audio-asset-generator` | Uses repository inspection, package-local dependency-free procedural synthesis, existing audio tools, and only already-available provider capabilities; no Codex-only primitive is required |

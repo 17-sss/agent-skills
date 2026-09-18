@@ -1,0 +1,6 @@
+interface:
+  display_name: "Minimal"
+  short_description: "Implement the smallest correct change"
+  default_prompt: "Use $minimal to satisfy this coding task with the smallest correct implementation, reusing existing code and platform capabilities before adding abstractions, files, configuration, or dependencies."
+policy:
+  allow_implicit_invocation: false

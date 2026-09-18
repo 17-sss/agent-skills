@@ -61,6 +61,7 @@ Start a new agent task after installation so the refreshed skill discovery resul
 | Experimental | Shared | [`audio-asset-generator`](skills/audio-asset-generator/SKILL.md) | Planning, generating, integrating, and honestly verifying product audio assets |
 | Experimental | Shared | [`godot-dev-loop`](skills/godot-dev-loop/SKILL.md) | Refining a Godot game through durable state, rendered captures, and fresh agent iterations |
 | Planning | Shared | [`spec-interview`](skills/spec-interview/SKILL.md) | Resolving ambiguous requirements one material question at a time |
+| Execution | Shared | [`minimal`](skills/minimal/SKILL.md) | Choosing the smallest correct implementation within accepted scope |
 | Execution | Shared | [`completion-loop`](skills/completion-loop/SKILL.md) | Finishing approved implementation with reusable verification evidence |
 | Design | Shared | [`visual-match`](skills/visual-match/SKILL.md) | Matching an implementation to an approved image or URL |
 | Project Memory | Shared | [`handoff-memory`](skills/handoff-memory/SKILL.md) | Creating or resuming a repository or workspace HANDOFF |
@@ -232,6 +233,22 @@ Usage example:
 Use $commit-helper to inspect this repository's commit rules and staged changes, then create the local commit. Do not push.
 ```
 
+### minimal
+
+Choose the smallest correct implementation for accepted behavior without reducing the requirement itself.
+
+- Inspect the real execution flow, affected callers, existing helpers, conventions, tests, and relevant boundaries before minimizing.
+- Prefer reuse, then the standard library, native capabilities, and already-installed dependencies before adding coherent new code.
+- Fix the smallest correct root-cause boundary rather than optimizing for the fewest changed lines.
+- Preserve security, authorization, validation, error handling, accessibility, compatibility, migration safety, decisive tests, and every active workflow's acceptance and review gates.
+- Remain standalone and explicit-only; the skill does not install tools, create persistent behavior, or invoke another workflow.
+
+Usage example:
+
+```text
+Use $minimal to add request deduplication here. Reuse the existing cache and avoid new abstractions or dependencies unless the current behavior actually requires them.
+```
+
 ### completion-loop
 
 Complete approved implementation or clearly authorized small fixes within frozen scope. Reuse the approved plan; brainstorming, research, plan-only requests, and usage questions do not start implementation.
@@ -316,7 +333,7 @@ Use $review-gate as the final pre-PR gate for this high-risk change. Keep the wo
 - Installing one skill must be sufficient for its core workflow to run.
 - Optional workflow handoffs are recommendations only. A skill may name only a downstream workflow advertised in the current task's available-skill inventory; when that inventory or the best-fit skill is unavailable, it makes no suggestion.
 - Shared skills follow their own invocation policy; specify `$skill-name` for reproducible explicit invocation.
-- The three Codex-dependent workflows, plus the high-control shared `audio-asset-generator`, `spec-interview`, `completion-loop`, `visual-match`, and `godot-dev-loop` workflows, set `allow_implicit_invocation: false` and must be invoked explicitly.
+- The three Codex-dependent workflows, plus the high-control shared `audio-asset-generator`, `spec-interview`, `minimal`, `completion-loop`, `visual-match`, and `godot-dev-loop` workflows, set `allow_implicit_invocation: false` and must be invoked explicitly.
 - When an optional plugin or tool is unavailable, prefer repository-native tools and safe fallbacks.
 - Invoking a skill does not grant approval for external publishing, pushes, environment installation, or destructive actions.
 
@@ -327,7 +344,7 @@ The source snapshot, native capability mapping, update cadence, and forward-test
 The two maintenance scripts have distinct responsibilities.
 
 - `skills/milestone-runner/scripts/goal_state.py`: manages durable repository state for `milestone-runner` only.
-- `scripts/check-native-workflow-skills.py`: applies common structure, metadata, link, catalog, and `quick_validate` checks to all 14 installable skills, then applies native-workflow independence and state contracts to the six managed packages plus `audio-asset-generator` and `godot-dev-loop`; source drift remains scoped to the six managed packages, and guarded sibling-reference boundaries are also checked for `handoff-memory` and `project-chronicle`.
+- `scripts/check-native-workflow-skills.py`: applies common structure, metadata, link, catalog, and `quick_validate` checks to all 15 installable skills. It applies independence, standalone-package, and state-root checks to the six managed packages plus `audio-asset-generator`, `godot-dev-loop`, and `minimal`; source drift remains scoped to the six managed packages, and guarded sibling-reference boundaries are also checked for `handoff-memory` and `project-chronicle`.
 
 ### Workflow checker modes
 

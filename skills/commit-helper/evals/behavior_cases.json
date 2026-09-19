@@ -64,6 +64,10 @@
     "goal": "Keep explicit conventional format while still polishing the summary wording naturally."
   },
   {
+    "name": "prefixed_conventional_summary_is_idempotent",
+    "goal": "Treat an already formatted Conventional Commit summary as idempotent and collapse accidental nested type/scope prefixes."
+  },
+  {
     "name": "explicit_gitmoji_repo_with_natural_wording",
     "goal": "Keep the allowlist and gitmoji mode while polishing the summary wording to match repo-local phrasing."
   },

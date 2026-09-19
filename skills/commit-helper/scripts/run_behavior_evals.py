@@ -492,6 +492,72 @@ def case_explicit_conventional_repo_with_natural_wording() -> None:
   assert_true(drafted['title'].endswith('조회 범위 조정'), 'explicit conventional repo should still polish the summary wording naturally')
 
 
+def case_prefixed_conventional_summary_is_idempotent() -> None:
+  repo = init_repo('commit-helper-prefixed-conventional-summary')
+  write(repo / 'CONTRIBUTING.md', 'Use Conventional Commits.\n')
+  git(repo, 'add', 'CONTRIBUTING.md')
+  git(repo, 'commit', '-m', 'docs: add commit convention')
+  make_history_commit(repo, 'feat(skills): add helper')
+  make_history_commit(repo, 'fix(skills): correct helper output')
+  write(repo / 'skills/helper.py', 'SAFE_TITLE = True\n')
+  git(repo, 'add', 'skills/helper.py')
+
+  drafted = json.loads(
+      draft(
+          repo,
+          '--summary',
+          'fix(skills): prevent duplicate commit types',
+          '--no-body',
+      ).stdout
+  )
+  assert_equal(
+      drafted['title'],
+      'fix(skills): prevent duplicate commit types',
+      'a formatted Conventional Commit summary should be idempotent',
+  )
+  assert_equal(
+      drafted['polished_summary'],
+      'prevent duplicate commit types',
+      'the prefix should not remain in the polished subject',
+  )
+
+  nested = json.loads(
+      draft(
+          repo,
+          '--summary',
+          'docs(skills): fix(commit-helper): prevent duplicate commit types',
+          '--no-body',
+      ).stdout
+  )
+  assert_equal(
+      nested['title'],
+      'docs(skills): prevent duplicate commit types',
+      'nested prefixes should collapse to the outermost Conventional Commit prefix',
+  )
+  assert_equal(
+      len(nested['parsed_conventional_prefixes']),
+      2,
+      'the draft should expose every removed prefix for review',
+  )
+
+  gitmoji_repo = init_repo('commit-helper-prefixed-summary-gitmoji')
+  configure_gitmoji_repo(gitmoji_repo)
+  write(gitmoji_repo / 'src/helper.py', 'SAFE_TITLE = True\n')
+  git(gitmoji_repo, 'add', 'src/helper.py')
+  gitmoji_draft = json.loads(
+      draft(
+          gitmoji_repo,
+          '--summary',
+          'fix(api): align helper output',
+          '--no-body',
+      ).stdout
+  )
+  assert_true(
+      gitmoji_draft['title'].startswith('🐛 (api) '),
+      'a parsed fix type should remain bugfix evidence when translated to gitmoji style',
+  )
+
+
 def case_explicit_gitmoji_repo_with_natural_wording() -> None:
   repo = init_repo('commit-helper-explicit-gitmoji-phrasing')
   configure_gitmoji_repo(repo)
@@ -573,6 +639,7 @@ CASES = [
     ('korean_verbose_summary_polish', case_korean_verbose_summary_polish),
     ('mixed_repo_language_profile', case_mixed_repo_language_profile),
     ('explicit_conventional_repo_with_natural_wording', case_explicit_conventional_repo_with_natural_wording),
+    ('prefixed_conventional_summary_is_idempotent', case_prefixed_conventional_summary_is_idempotent),
     ('explicit_gitmoji_repo_with_natural_wording', case_explicit_gitmoji_repo_with_natural_wording),
     ('commit_helper_invocation_boundary', case_commit_helper_invocation_boundary),
     ('unborn_repository_first_commit', case_unborn_repository_first_commit),

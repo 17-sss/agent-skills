@@ -10,7 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from inspect_commit_style import inspect_repo, text_contains_keyword
+from inspect_commit_style import CONVENTIONAL_RE, inspect_repo, text_contains_keyword
 
 EXTERNAL_HARNESS_POLICY = (
     'commit-helper-only: do not add orchestration metadata, Lore trailers, '
@@ -124,6 +124,28 @@ def normalize_summary(summary: str) -> str:
   return ' '.join(summary.replace('\\n', ' ').split())
 
 
+def split_conventional_summary(summary: str) -> tuple[str, list[dict[str, object]]]:
+  remaining = normalize_summary(summary)
+  prefixes: list[dict[str, object]] = []
+  while True:
+    match = CONVENTIONAL_RE.match(remaining)
+    if match is None:
+      break
+    raw_prefix = match.group(0).rstrip()
+    raw_scope = match.group(2)
+    prefixes.append({
+        'type': match.group(1),
+        'scope': raw_scope[1:-1] if raw_scope else None,
+        'breaking': '!:' in raw_prefix,
+        'raw': raw_prefix,
+    })
+    remaining = remaining[match.end():].strip()
+
+  if prefixes and not remaining:
+    raise ValueError('Summary must include subject text after its Conventional Commit prefix.')
+  return remaining, prefixes
+
+
 def summary_indicates_bugfix(summary: str) -> tuple[bool, list[str]]:
   lowered = normalize_summary(summary).lower()
   reasons: list[str] = []
@@ -213,8 +235,12 @@ def find_bugfix_gitmoji_candidate(
 def apply_summary_semantics(
     inspection: dict[str, object | None],
     summary: str,
+    conventional_type: str | None = None,
 ) -> dict[str, object | None]:
   is_bugfix, reasons = summary_indicates_bugfix(summary)
+  if conventional_type == 'fix':
+    is_bugfix = True
+    reasons.insert(0, 'parsed Conventional Commit type indicates a bugfix')
   if not is_bugfix:
     return inspection
 
@@ -504,6 +530,7 @@ def build_title(
     scope: str | None,
     gitmoji_candidate: dict[str, object] | None,
     conventional_type: str,
+    conventional_breaking: bool,
     warnings: list[str],
 ) -> tuple[str, str]:
   if style_family == 'plain':
@@ -523,9 +550,10 @@ def build_title(
     style_family = 'conventional'
 
   if style_family == 'conventional':
+    breaking_marker = '!' if conventional_breaking else ''
     if scope:
-      return f'{conventional_type}({scope}): {summary}', 'conventional'
-    return f'{conventional_type}: {summary}', 'conventional'
+      return f'{conventional_type}({scope}){breaking_marker}: {summary}', 'conventional'
+    return f'{conventional_type}{breaking_marker}: {summary}', 'conventional'
 
   return f'{conventional_type}: {summary}', 'conventional'
 
@@ -540,7 +568,11 @@ def build_commit_argv(repo: Path, title: str, body: str | None) -> list[str]:
 def main() -> int:
   parser = argparse.ArgumentParser(description='Draft a repo-aligned commit message from staged changes.')
   parser.add_argument('repo', help='Path to the target git repository')
-  parser.add_argument('--summary', required=True, help='Short staged-only summary for the commit title')
+  parser.add_argument(
+      '--summary',
+      required=True,
+      help='Short staged-only subject or an already formatted Conventional Commit title',
+  )
   parser.add_argument('--scope', help='Override the inferred scope')
   parser.add_argument('--gitmoji', help='Override the recommended gitmoji with an allowed emoji')
   parser.add_argument('--type', dest='conventional_type', help='Override the inferred conventional commit type')
@@ -566,19 +598,42 @@ def main() -> int:
   except ValueError as exc:
     raise SystemExit(str(exc)) from exc
 
-  summary = normalize_summary(args.summary)
-  if not summary:
+  original_summary = normalize_summary(args.summary)
+  if not original_summary:
     raise SystemExit('Summary cannot be empty.')
+  try:
+    summary, parsed_prefixes = split_conventional_summary(original_summary)
+  except ValueError as exc:
+    raise SystemExit(str(exc)) from exc
+  parsed_prefix = parsed_prefixes[0] if parsed_prefixes else None
+  parsed_type = parsed_prefix.get('type') if isinstance(parsed_prefix, dict) else None
   polished_summary, summary_polish_reason, summary_language = polish_summary(summary, inspection)
-  inspection = apply_summary_semantics(inspection, polished_summary)
+  inspection = apply_summary_semantics(
+      inspection,
+      original_summary,
+      str(parsed_type) if parsed_type else None,
+  )
 
   warnings: list[str] = []
+  if parsed_prefix is not None:
+    add_warning(
+        warnings,
+        'parsed the Conventional Commit prefix from --summary to avoid duplicate type/scope formatting.',
+    )
+  if len(parsed_prefixes) > 1:
+    add_warning(
+        warnings,
+        'removed nested Conventional Commit prefixes from the summary subject; the outermost prefix was retained.',
+    )
   effective_style_family = determine_effective_style_family(
       inspection,
       args.style_family,
       warnings,
   )
-  scope = args.scope or inspection.get('preferred_scope')
+  parsed_scope = parsed_prefix.get('scope') if isinstance(parsed_prefix, dict) else None
+  if args.scope and parsed_scope and args.scope != parsed_scope:
+    add_warning(warnings, '--scope overrides the scope parsed from --summary.')
+  scope = args.scope or parsed_scope or inspection.get('preferred_scope')
 
   normalized_body_lines, had_literal_backslash_n = normalize_body_lines(args.body_line)
   body_policy = inspection.get('body_policy')
@@ -598,7 +653,14 @@ def main() -> int:
       args.gitmoji,
       warnings,
   )
-  conventional_type = infer_conventional_type(inspection, args.conventional_type, warnings)
+  if args.conventional_type and parsed_type and args.conventional_type != parsed_type:
+    add_warning(warnings, '--type overrides the type parsed from --summary.')
+  conventional_type = infer_conventional_type(
+      inspection,
+      args.conventional_type or (str(parsed_type) if parsed_type else None),
+      warnings,
+  )
+  conventional_breaking = bool(parsed_prefix and parsed_prefix.get('breaking'))
   title, final_style_family = build_title(
       effective_style_family,
       inspection,
@@ -606,16 +668,18 @@ def main() -> int:
       scope if isinstance(scope, str) else None,
       gitmoji_candidate,
       conventional_type,
+      conventional_breaking,
       warnings,
   )
   commit_argv = build_commit_argv(repo, title, body)
 
   payload: dict[str, object | None] = {
       'title': title,
-      'original_summary': summary,
+      'original_summary': original_summary,
       'polished_summary': polished_summary,
       'summary_changed': polished_summary != summary,
       'summary_polish_reason': summary_polish_reason or None,
+      'parsed_conventional_prefixes': parsed_prefixes or None,
       'body': body,
       'body_lines': normalized_body_lines,
       'body_policy': body_policy,

@@ -5,134 +5,64 @@ description: Inspect explicit repo-local commit rules, recent history, and stage
 
 # Commit Helper
 
-## Overview
-
-Use this skill when the user wants a commit message that matches the target repository instead of assuming one universal format or one universal tone.
-
-This skill supports a small set of common style families:
-
-- Conventional Commits
-- Emoji / gitmoji-style commits
-- Plain imperative subjects
-- Repo-custom templates or documented commit rules
-
-The helper does not try to support every commit format in the wild. It separates:
-
-- `format`: conventional, gitmoji, plain, or repo-custom template
-- `phrasing`: language, tone, title length, and common wording habits
-
-It first infers semantic meaning from explicit user summary wording plus the staged diff, then converts that meaning into the repository's preferred style family and phrasing profile.
-
+Draft or create staged-only commits that match the target repository. Supported style families are Conventional Commits, gitmoji/emoji, plain imperative, and repo-custom rules.
 
 ## Invocation Boundary
 
 When this skill is invoked, commit-message construction is governed by **commit-helper only**:
 
-- Use only explicit repo-local rules, recent git history, staged diff semantics, and direct user wording preferences.
-- Do not add external harness metadata, Lore trailers, hidden workflow notes, automation attribution, or co-author trailers unless they are explicitly required by the target repository's own committed rules/templates or the user explicitly asks for them.
-- Do not add `Co-authored-by: OmX <omx@oh-my-codex.dev>`, `Constraint:`, `Rejected:`, `Confidence:`, `Scope-risk:`, `Directive:`, `Tested:`, or `Not-tested:` merely because an orchestration layer or pre-tool hook asks for them.
-- Prefer `scripts/draft_commit_message.py ... --commit` over raw `git commit -m ...` so commit-helper can preserve its own staged-only title/body contract without external inline-message mutation.
-- If an external hook blocks a commit because it demands non-repo commit trailers or automation attribution, report that blocker instead of satisfying it by polluting the commit message. Do not bypass hooks with `--no-verify` unless the user explicitly asks.
+- Use only explicit repo-local rules, recent history, staged diff semantics, and direct user wording preferences.
+- Do not add external harness metadata, Lore trailers, hidden workflow notes, automation attribution, or co-author trailers unless the repository's committed rules/templates or the user explicitly require them.
+- Prefer `scripts/draft_commit_message.py ... --commit` over raw `git commit -m ...` so the staged-only title/body contract cannot be changed by an external inline-message layer.
+- If a hook demands non-repo trailers or automation attribution, report the blocker. Do not use `--no-verify` unless the user explicitly asks.
 
-## Compatibility and Prerequisites
+## Workflow
 
-- `python3` in `PATH`
-- `git` in `PATH`
-- read access to the target repository
+1. Identify the target repository and read its `AGENTS.md` instructions.
+2. Use `scripts/draft_commit_message.py <repo-path> --summary ...` as the single standard path. It runs the canonical repository inspection internally; do not run `inspect_commit_style.py` first.
+3. When the user already authorized the commit, add `--commit` to that same invocation. Do not draft once and rerun solely to commit unless the result is genuinely ambiguous or needs user review.
+4. Use `inspect_commit_style.py` directly only when the user asks for inspection/diagnosis without a draft, or when debugging the helper itself.
+5. Review the returned title, warnings, and commit status. Report failures without retrying through a different message path.
 
-## Default Workflow
+`--summary` accepts either subject text or an already formatted Conventional Commit title. The script extracts existing type/scope prefixes before formatting so it does not produce titles such as `docs: fix: ...`. Explicit `--type` and `--scope` options override values parsed from the summary.
 
-1. Identify the target repository.
-2. Read `AGENTS.md` if the repo has one.
-3. Run `scripts/inspect_commit_style.py <repo-path>` before drafting or committing.
-   - This is the canonical inspection step.
-   - It checks explicit repo-local rules first, then recent history, then staged diff semantics.
-4. Respect the priority order:
-   - explicit repo-local rules
-   - recent history
-   - conservative fallback
-5. Treat format and phrasing separately.
-   - Format comes from explicit rules, history, and fallback policy.
-   - Phrasing comes mostly from recent history, even when format falls back conservatively.
-6. Use `scripts/draft_commit_message.py <repo-path> --summary ... [--body-line ...]` as the standard generation path.
-   - Add `--commit` when the user asked you to create the commit.
-   - Prefer this script over raw `git commit -m ...` because it preserves multiline bodies safely.
-7. Draft from staged changes only.
-8. If no strong signal exists, fall back to a conventional commit title and conservative phrasing.
+## Essential Rules
 
-## Writing Rules
+- Draft from staged changes only and keep unrelated unstaged work out of the title.
+- Apply evidence in this order: explicit repo-local rules, recent history, conservative fallback.
+- Treat format and phrasing separately. Infer meaning from the staged diff and user summary, then express it in the repository's preferred style and language.
+- Use Conventional Commits only as the fallback when stronger local evidence is absent.
+- Activate gitmoji only from repo-local config/docs or clearly emoji-dominant history, and obey any local allowlist.
+- Keep bugfix classification conservative; layout, spacing, wrapper cleanup, and similar presentation changes are not bugfixes by default.
+- Prefer title-only commits unless local rules/history require a body. Pass repeated `--body-line` values for a body; never place a literal `\n` in it.
+- Use path-derived scopes as weak hints. Explicit user wording and staged-diff intent are stronger.
 
-- Do not assume one universal commit format.
-- Write the commit from staged changes only.
-- Keep the title scoped to the staged changes, not to unrelated unstaged work.
-- Use explicit local rules over recent history whenever they conflict.
-- Use recent history over generic heuristics whenever explicit local rules are absent.
-- If explicit rules and history are weak or mixed, use the conservative fallback.
-- The semantic layer is global. The presentation layer is repo-specific.
-  - Infer staged diff meaning as one of: `feature`, `bugfix`, `critical-bug`, `refactor`, `structure`, `move`, `ui-style`, `responsive`, `accessibility`, `docs`, `config`, `tooling`, `cleanup`, or `modify`.
-  - Let explicit user summary wording refine that staged semantic inference before selecting the conventional type or gitmoji.
-  - Then express that meaning in the repository's style family.
-- Treat path hints as weaker than user summary and diff intent.
-  - Do not treat routine app page paths such as `apps/*/src/+routes/pages/**/index.tsx` or `index.hooks.ts` as strong `structure` evidence by themselves.
-  - Use `structure` strongly only for actual architecture, routing-structure, folder-structure, file-move, public-export-shape, or component responsibility changes.
-- Conventional fallback is the default safe fallback when the repo does not clearly signal another style.
-- Phrasing fallback should stay conservative.
-  - Korean: prefer short natural noun/verb-style wording over report-like description.
-  - English: prefer short imperative wording.
-  - Mixed repos: follow the dominant language when confidence is sufficient; otherwise keep the title short and neutral.
-- Gitmoji is not the global default.
-  - Strongly activate gitmoji only when repo-local config, repo documentation, or clear emoji-dominant history says to do so.
-  - If a repo-local allowlist exists, do not use emojis outside that allowlist.
-  - If gitmoji confidence is low, prefer the repo-local fallback gitmoji when one exists. Do not force a bugfix emoji on ambiguous changes.
-- Bugfix classification must be conservative.
-  - Use `bugfix` or `critical-bug` only when the staged diff clearly fixes broken behavior, validation blocks, regressions, crashes, or incorrect state.
-  - Raise bugfix confidence when the user summary or diff indicates warning/error removal, direct-access guards, redirect guards, unauthorized visibility fixes, missing guards, or prevention of invalid requests.
-  - UI spacing, modal sizing, wrapper cleanup, and layout changes should usually land in `ui-style`, `structure`, or `modify` instead.
-- Keep `title-only-preferred`, `body-optional`, and `body-required` policies distinct.
-- The helper should match repo-local wording habits when possible.
-  - Track `dominant_language`, `dominant_tone`, `title_length_profile`, `common_korean_suffixes`, `common_action_nouns`, `preferred_summary_style`, and `avoid_report_like_phrasing`.
-  - If the user-supplied summary is awkward, polish the wording without changing the underlying meaning.
-- Body default: if the repo does not strongly require a body, treat `title-only-preferred` as the default.
-- If a body is needed, keep it short and use a few bullet lines.
-- Literal `\n` is forbidden in commit bodies. Do not build a shell string like `"title\n\nbody"`.
-- Use `draft_commit_message.py --commit` as the standard commit execution path whenever practical; for `$commit-helper` invocations, do not fall back to raw inline `git commit -m` if that would trigger external message validators to inject non-repo metadata.
+For detailed semantic categories, phrasing guidance, and style-family policy, read [references/commit-patterns.md](references/commit-patterns.md) only when the ordinary script output is insufficient.
 
-## Safe Commit Examples
+## Commands
 
-- Title-only draft:
-  `python3 scripts/draft_commit_message.py <repo-path> --summary "..." --no-body`
-- Title + multiline body draft:
-  `python3 scripts/draft_commit_message.py <repo-path> --summary "..." --body-line "first bullet" --body-line "second bullet"`
-- Safe commit execution without literal `\n`:
-  `python3 scripts/draft_commit_message.py <repo-path> --summary "..." --body-line "first bullet" --body-line "second bullet" --commit`
-- If you must use raw `git commit`, pass an actual multiline second `-m`, not a literal backslash escape:
-  `BODY="$(printf '%s\n' '- first bullet' '- second bullet')"`
-  `git -C <repo-path> commit -m "title" -m "$BODY"`
+Draft a title-only message:
 
-## Script
+```bash
+python3 scripts/draft_commit_message.py <repo-path> --summary "..." --no-body
+```
 
-- `scripts/inspect_commit_style.py`
-  - inspects explicit rule files such as `AGENTS.md`, `CONTRIBUTING.md`, `README*`, commit templates, commitlint configs, and `.vscode/settings.json` only when it contains `gitmoji.*` keys
-  - classifies recent history into common style families: `conventional`, `gitmoji`, `plain`, or mixed
-  - infers staged semantic categories before choosing a commit style expression
-  - infers phrasing profile fields such as `dominant_language`, `dominant_tone`, `title_length_profile`, `common_korean_suffixes`, `common_action_nouns`, `preferred_summary_style`, and `avoid_report_like_phrasing`
-  - emits policy fields such as `style_mode`, `repo_has_explicit_commit_rule`, `repo_has_gitmoji_signal`, `should_use_gitmoji`, `fallback_commit_style`, `fallback_gitmoji`, `requires_human_gitmoji_review`, `semantic_confidence`, `is_bugfix_confident`, and `presentational_change_likelihood`
-- `scripts/draft_commit_message.py`
-  - is the standard generation and commit path
-  - assembles a staged-only title/body draft from inspect output
-  - applies explicit-rule, history, and fallback policy in that order
-  - polishes wording to match repo-local phrasing when it can do so safely
-  - warns when manual overrides conflict with repo policy or low-confidence semantics
-  - normalizes body bullets without literal `\n`
-  - can execute `git commit` safely with subprocess argv via `--commit`
+Create an authorized commit in one pass:
 
-## Reference
+```bash
+python3 scripts/draft_commit_message.py <repo-path> --summary "..." --no-body --commit
+```
 
-- `references/commit-patterns.md`
-  - style-family notes and conservative fallback guidance
+Create a commit with a safe multiline body:
 
-## Evals
+```bash
+python3 scripts/draft_commit_message.py <repo-path> --summary "..." --body-line "first bullet" --body-line "second bullet" --commit
+```
 
-- `evals/train_queries.json`
-- `evals/validation_queries.json`
-- `evals/behavior_cases.json`
+## Resources
+
+- `scripts/draft_commit_message.py`: standard draft and commit path; performs repository inspection once.
+- `scripts/inspect_commit_style.py`: standalone inspection and diagnostic output.
+- `scripts/run_behavior_evals.py`: deterministic behavioral regression checks.
+- `references/commit-patterns.md`: detailed style and fallback policy.
+- `evals/behavior_cases.json`: behavioral evaluation inventory.

@@ -2,6 +2,8 @@
 
 Use this model when creating a new chronicle or restructuring an unusable one. Preserve a stronger repository convention when it already separates orientation, period-level history, and detailed evidence.
 
+The default root is `docs/project-history/` with `README.md`, `TIMELINE.md`, and `LOG.md`. Add `entries/` and `GAPS.md` only when material detail or unresolved history warrants them.
+
 ## Reading layers
 
 The documents serve different reading speeds:

@@ -18,10 +18,12 @@ class NativeWorkflowContractTest(unittest.TestCase):
     def test_design_loop_offers_only_an_approved_isolated_renderer_bootstrap(self):
         skill = read("skills/design-loop/SKILL.md")
         routing = read("skills/design-loop/references/surface-capability-guide.md")
-        self.assertIn("offer a minimal isolated Chromium bootstrap", skill)
+        self.assertIn("Offer a minimal isolated Chromium bootstrap", skill)
         self.assertIn("explicit user approval", skill)
-        self.assertIn("The skill invocation alone is not installation approval", skill)
+        self.assertIn("the skill invocation alone is not installation approval", skill)
         self.assertIn("Do not modify the target repository's manifests", skill)
+        self.assertIn("desktop `1440 x 900` and mobile `390 x 844`", skill)
+        self.assertIn("Keep route, seed data, account state, viewport, scroll position", skill)
         self.assertIn("PLAYWRIGHT_BROWSERS_PATH", routing)
         self.assertIn("Do not run `install-deps`, `--with-deps`, `sudo`", routing)
         self.assertIn("Remove task-scoped downloads after use", routing)
@@ -90,12 +92,13 @@ class NativeWorkflowContractTest(unittest.TestCase):
         )
 
         self.assertIn("## Offer an Optional Durable-History Follow-Up", skill)
-        self.assertIn("Keep this package complete on its own", skill)
+        self.assertIn("Complete HANDOFF creation, compaction, validation, and resume with this package first", skill)
         self.assertIn("current task's available-skill inventory", skill)
         self.assertIn("Do not inspect installation directories", skill)
-        self.assertIn("do not install a missing skill", skill)
-        self.assertIn("Offer at most one recommendation", skill)
+        self.assertIn("install or invoke the skill", skill)
+        self.assertIn("at most one `$project-chronicle` suggestion", skill)
         self.assertIn("the user explicitly chooses and invokes", skill)
+        self.assertIn("If the user already requested both workflows, that request supplies the follow-up choice", skill)
         self.assertIn("`$project-chronicle`", skill)
         self.assertIn("Complete the HANDOFF compaction first", usage)
         self.assertNotIn("project-chronicle", scripts)
@@ -105,11 +108,13 @@ class NativeWorkflowContractTest(unittest.TestCase):
         text = read("skills/spec-interview/SKILL.md")
         self.assertIn("single highest-leverage unresolved question", text)
         self.assertIn("Do not implement the solution or modify project files", text)
-        self.assertIn("capture a content fingerprint", text)
-        self.assertIn("tool-enforced `read-only` boundary", text)
-        self.assertIn("skip optional delegation", text)
-        self.assertIn("file type, executable mode bits, symlink target", text)
-        self.assertIn("delegate recursively", text)
+        delegated = read("skills/spec-interview/references/delegated-inspection.md")
+        self.assertIn("[delegated-inspection.md](references/delegated-inspection.md)", text)
+        self.assertIn("capture a content fingerprint", delegated)
+        self.assertIn("tool-enforced `read-only` boundary", delegated)
+        self.assertIn("skip optional delegation", delegated)
+        self.assertIn("file type, executable mode bits, symlink target", delegated)
+        self.assertIn("delegate recursively", delegated)
         self.assertIn("Wait for the answer", text)
         self.assertIn("native structured-choice input", text)
         self.assertIn("2 or 3 mutually exclusive options", text)
@@ -119,13 +124,13 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("genuinely open-ended", text)
         self.assertIn("## Offer an optional next workflow", text)
         self.assertIn("current task's available-skill inventory", text)
-        self.assertIn("current agent satisfies the runtime requirements", text)
-        self.assertIn("Do not inspect the filesystem", text)
-        self.assertIn("Do not install a missing skill", text)
+        self.assertIn("advertised runtime requirements", text)
+        self.assertIn("Do not inspect installation directories", text)
+        self.assertIn("never invoke, install", text)
         self.assertIn("If the inventory is unavailable", text)
-        self.assertIn("runtime compatibility is unclear", text)
-        self.assertIn("Omit this section when the user ends early", text)
-        self.assertIn("the user explicitly chooses and invokes", text)
+        self.assertIn("compatibility is unclear", text)
+        self.assertIn("Skip this section if the user ends early", text)
+        self.assertIn("user must explicitly choose and invoke", text)
 
     def test_reviewed_plan_enforces_sequential_independent_gates_and_integrity(self):
         skill = read("skills/reviewed-plan/SKILL.md")
@@ -153,16 +158,17 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("discard the affected verdict", contract)
         self.assertIn("## Offer an optional next workflow", skill)
         self.assertIn("current task's available-skill inventory", skill)
-        self.assertIn("current agent satisfies the runtime requirements", skill)
+        self.assertIn("advertised runtime requirements", skill)
         self.assertIn("Do not inspect the filesystem", skill)
-        self.assertIn("Do not install a missing skill", skill)
-        self.assertIn("If the inventory is unavailable", skill)
-        self.assertIn("the handoff is `NOT APPROVED`", skill)
-        self.assertIn("the user explicitly chooses and invokes", skill)
+        self.assertIn("Never invoke or install", skill)
+        self.assertIn("If availability or compatibility is unclear", skill)
+        self.assertIn("Omit suggestions for `NOT APPROVED`", skill)
+        self.assertIn("user must explicitly choose and invoke", skill)
 
     def test_completion_loop_freezes_scope_and_budgets_review(self):
         skill = read("skills/completion-loop/SKILL.md")
         contract = read("skills/completion-loop/references/verification-contract.md")
+        independent = read("skills/completion-loop/references/independent-review.md")
         for field in (
             "**Objective**",
             "**In scope**",
@@ -182,20 +188,21 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("An implementation change invalidates only evidence", skill)
         self.assertIn("material expansion", skill.lower())
         self.assertIn("Do not invent requirements", skill)
-        self.assertIn("exact `base...HEAD` range", contract)
-        self.assertIn("one deterministic packet digest", contract)
-        self.assertIn("known existing failures", contract)
+        self.assertIn("exact `base...HEAD` range", independent)
+        self.assertIn("one deterministic packet digest", independent)
+        self.assertIn("known existing failures", independent)
 
     def test_completion_loop_keeps_scope_drift_deferred_and_deduplicates_evidence(self):
         skill = read("skills/completion-loop/SKILL.md")
         contract = read("skills/completion-loop/references/verification-contract.md")
+        independent = read("skills/completion-loop/references/independent-review.md")
         self.assertIn(
             "A local-only goal treats a Kubernetes-readiness finding as deferred",
             contract,
         )
         self.assertIn(
             "Defer findings outside the frozen contract",
-            contract,
+            independent,
         )
         self.assertIn(
             "Do not rerun an unchanged test when the target fingerprint",
@@ -211,7 +218,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
         )
         self.assertIn(
             "Spend at most one final full verification",
-            contract,
+            independent,
         )
         self.assertIn("task-local evidence ledger", skill)
         self.assertIn("does not authorize destructive actions, commits, new threads", skill)
@@ -233,14 +240,15 @@ class NativeWorkflowContractTest(unittest.TestCase):
     def test_completion_loop_invalidation_preserves_required_gates(self):
         skill = read("skills/completion-loop/SKILL.md")
         contract = read("skills/completion-loop/references/verification-contract.md")
+        independent = read("skills/completion-loop/references/independent-review.md")
         for identity in ("dirty diff fingerprint", "shared dependency/lockfile", "fixture/seed", "build identity", "host/environment", "baseline branch identity"):
             self.assertIn(identity, contract)
         self.assertIn("do not count one cached result as multiple passes", contract)
         self.assertIn("Impact cannot safely be narrowed | Rerun the whole required suite", contract)
         self.assertIn("it is never evidence of completion", contract)
         self.assertIn("Do not infer tokens from build duration or CPU load", contract)
-        self.assertIn("tool-enforced read-only execution", skill)
-        self.assertIn("Keep it terminal and prevent recursive delegation", skill)
+        self.assertIn("tool-enforced read-only execution", independent)
+        self.assertIn("Keep it terminal and prevent recursive delegation", independent)
         self.assertIn("independent correctness plus architecture review", contract)
         self.assertIn("remains missing evidence, never a pass", contract)
         self.assertIn("only when the approved contract defines that split", contract)
@@ -266,6 +274,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
     def test_completion_loop_handoff_timing_never_implies_authority(self):
         skill = read("skills/completion-loop/SKILL.md")
         contract = read("skills/completion-loop/references/verification-contract.md")
+        independent = read("skills/completion-loop/references/independent-review.md")
         maintenance = read("docs/native-workflow-skills-maintenance.md")
         self.assertIn("Update HANDOFF or project history only when separately requested by the user", skill)
         self.assertIn("Only after a separate user request, refresh HANDOFF or project history", contract)
@@ -340,10 +349,11 @@ class NativeWorkflowContractTest(unittest.TestCase):
             "skills/visual-match/references/visual-verdict-contract.md"
         )
         scorer = read("skills/visual-match/scripts/score_visual_match.py")
-        self.assertIn("Before editing, prove that an available capability can render", skill)
+        self.assertIn("Before editing, prove equivalent rendering and capture", skill)
+        self.assertIn("Match route, scroll, data, locale, theme, authentication, component state, and animation timing", skill)
         self.assertIn("stop before editing", skill)
-        self.assertIn("offer the minimal isolated Chromium bootstrap", skill)
-        self.assertIn("invoking this skill is not installation approval", skill)
+        self.assertIn("offer a minimal isolated chromium bootstrap", skill.lower())
+        self.assertIn("the skill invocation alone is not installation approval", skill)
         self.assertIn("PLAYWRIGHT_BROWSERS_PATH", routing)
         self.assertIn("Do not use `install-deps`, `--with-deps`, `sudo`", routing)
         self.assertIn("Do not modify project manifests, lockfiles, or `node_modules`", routing)
@@ -353,7 +363,7 @@ class NativeWorkflowContractTest(unittest.TestCase):
         self.assertIn("Do not submit forms", skill)
         self.assertIn("separate explicit, narrowly scoped authorization", skill)
         self.assertIn("visual_similarity_percent", skill)
-        self.assertIn("uses the lowest target as both `score`", skill)
+        self.assertIn("minimum target score", rubric)
         self.assertIn("score >= 90", skill)
         self.assertIn("Python standard library", skill)
         self.assertIn("do not make another UI edit until", skill)

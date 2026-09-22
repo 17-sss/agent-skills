@@ -254,12 +254,16 @@ class AudioAssetGeneratorTest(unittest.TestCase):
         delivery = (SKILL_ROOT / "references" / "web-audio-delivery.md").read_text(
             encoding="utf-8"
         )
+        prompts = (SKILL_ROOT / "references" / "prompt-specifications.md").read_text(
+            encoding="utf-8"
+        )
         interface = (SKILL_ROOT / "agents" / "openai.yaml").read_text(encoding="utf-8")
 
         self.assertIn("Treat voice, music, and sound effects as separate capabilities", skill)
         self.assertIn("Treat unknown pricing or credit use as potentially billable", skill)
-        self.assertIn("For ambience, specify:", skill)
-        self.assertIn("For voice, specify:", skill)
+        self.assertIn("[prompt-specifications.md](references/prompt-specifications.md)", skill)
+        self.assertIn("For ambience, specify:", prompts)
+        self.assertIn("For voice, specify:", prompts)
         self.assertIn("speaker authorization", skill)
         self.assertIn("status: not generated", routing)
         self.assertIn("does not establish music or sound-effect generation", routing)

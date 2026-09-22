@@ -29,11 +29,9 @@ If an Architect or Critic reviewer is unavailable, fails, or returns no evidence
 
 If the workspace fingerprint changes during a delegated gate, stop with `NOT APPROVED`, report the exact changed paths, preserve the files, and do not reuse that gate's verdict.
 
-1. **Planner** — create the initial implementation plan, acceptance criteria, viable alternatives, risks, and verification strategy from repository evidence.
-2. **Architect** — review the draft for boundaries, compatibility, coupling, migration safety, operational risk, and the strongest credible alternative. Wait for this pass to finish.
-3. If Architect returns `REVISE`, revise the plan and obtain a new Architect verdict before continuing.
-4. **Critic** — run only after Architect returns `ACCEPT`. Check completeness, executability, regression risk, testability, rollback coverage, and evidence quality.
-5. If Critic returns `ITERATE` or `REJECT`, revise through Planner, then repeat Architect before Critic.
+1. **Planner** drafts from repository evidence using the inputs and output in [review-contracts.md](references/review-contracts.md).
+2. **Architect** reviews the draft and returns `ACCEPT` or `REVISE`. Revise and repeat Architect until `ACCEPT` or a stop condition applies.
+3. **Critic** runs only after Architect `ACCEPT`. If it returns `ITERATE` or `REJECT`, revise through Planner, then repeat Architect before Critic.
 
 Never run Architect and Critic in parallel. Never treat planning artifacts or a Planner draft as consensus evidence.
 
@@ -74,15 +72,13 @@ Report consensus only when Architect returned `ACCEPT` and the subsequent Critic
 
 ## Offer an optional next workflow
 
-Keep this package complete on its own. Do not invoke or activate another skill. Treat a downstream skill as available only when the current task's available-skill inventory explicitly advertises its exact name and the current agent satisfies the runtime requirements stated in that advertised description. Do not inspect the filesystem, installation directories, catalog files, or downstream skill contents to infer availability. Do not install a missing skill. If the inventory is unavailable or runtime compatibility is unclear, treat the downstream skill as unavailable. Do not mention unavailable skills. Availability is not authorization: the user explicitly chooses and invokes any suggested workflow in a later turn.
+Offer at most one best-fit workflow and one genuinely applicable alternative only after Architect `ACCEPT` and subsequent Critic `APPROVE` on the same executable revision, with no material decision outstanding. Omit suggestions for `NOT APPROVED`, missing gates, unresolved decisions, or a user request to stop. Never invoke or install the next workflow automatically.
 
-Offer at most one recommendation and one genuinely applicable alternative only when Architect returned `ACCEPT` and the subsequent Critic returned `APPROVE` for the same plan revision, the handoff is executable, and no material user decision remains. Omit this section when the handoff is `NOT APPROVED`, either review gate is missing, a material decision remains unresolved, or the user asks to stop without follow-up suggestions.
+Use only the current task's available-skill inventory and the advertised runtime requirements to establish availability. Do not inspect the filesystem, installation directories, catalog, or downstream skill contents. If availability or compatibility is unclear, make no suggestion. The user must explicitly choose and invoke a suggestion later.
 
-Choose the best-fit route first, then check whether that exact skill is available:
+| Approved handoff | Best-fit suggestion |
+| --- | --- |
+| Multiple ordered, independently verifiable, restartable stages | `$milestone-runner` |
+| One coherent outcome with concrete acceptance and verification criteria | `$completion-loop` |
 
-- Suggest `$milestone-runner` when the approved plan has multiple ordered, independently verifiable, restartable stages.
-- Suggest `$completion-loop` when the approved plan targets one coherent implementation outcome with concrete acceptance and verification criteria.
-
-Do not substitute a weaker route merely because the best-fit skill is unavailable. If durable milestones are necessary and `$milestone-runner` is unavailable, suggest `$completion-loop` only when the approved plan can still be executed safely as one goal.
-
-Render the recommendation as a copyable invocation under `Optional next workflow`. Stop after the suggestion; do not begin implementation.
+Do not substitute a weaker route merely because the best fit is unavailable. A missing `$milestone-runner` permits `$completion-loop` only when the plan can safely execute as one goal. Render the suggestion as a copyable invocation and stop before implementation.

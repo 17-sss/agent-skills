@@ -47,13 +47,7 @@ Draft a title-only message:
 python3 scripts/draft_commit_message.py <repo-path> --summary "..." --no-body
 ```
 
-Create an authorized commit in one pass:
-
-```bash
-python3 scripts/draft_commit_message.py <repo-path> --summary "..." --no-body --commit
-```
-
-Create a commit with a safe multiline body:
+For an authorized commit, add `--commit` to the draft command. For a multiline body, pass repeated `--body-line` values:
 
 ```bash
 python3 scripts/draft_commit_message.py <repo-path> --summary "..." --body-line "first bullet" --body-line "second bullet" --commit

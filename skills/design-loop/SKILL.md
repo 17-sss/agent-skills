@@ -50,9 +50,11 @@ Prefer existing components and tokens. Distinguish observed rules from inferred 
 
 When the user explicitly asks for current design principles, references, or best practices, research current primary or authoritative sources after inspecting the local contract. Cite the sources used, translate them into task-specific decisions, and do not replace the product's established identity with generic trends.
 
-Read [surface-capability-guide.md](references/surface-capability-guide.md) before choosing the Product Design, render, screenshot, interaction, or image-generation path.
+Read the relevant section of [surface-capability-guide.md](references/surface-capability-guide.md) when Product Design, a special capture surface, renderer recovery, image generation, audit, alternatives, or design-rule extraction is needed. Ordinary local rendering and interaction checks can follow this workflow directly.
 
-If no existing capability can render and capture the applicable target, offer a minimal isolated Chromium bootstrap before treating visual verification as unavailable. State the network download, disk use, and cache location, and require explicit user approval unless the user already authorized installing a renderer. The skill invocation alone is not installation approval. Do not modify the target repository's manifests, lockfiles, or `node_modules`; do not install a branded browser or system packages; and do not use elevated privileges. After an approved bootstrap, prove it with a disposable screenshot smoke check. If approval is declined or the isolated browser cannot run, continue only with separately valid non-visual work and report the exact visual verification gap.
+For ordinary rendering, reuse an existing browser or repository screenshot harness and inspect the captured pixels. Prefer repository-defined viewports; otherwise start with desktop `1440 x 900` and mobile `390 x 844`. Keep route, seed data, account state, viewport, scroll position, and relevant open state stable across comparisons. If the current session cannot inspect screenshots, report that verification gap.
+
+If no existing capability can render and capture the target, follow [Optional Chromium Bootstrap](references/surface-capability-guide.md#optional-chromium-bootstrap). Offer a minimal isolated Chromium bootstrap only with explicit user approval unless installation was already authorized; the skill invocation alone is not installation approval. Do not modify the target repository's manifests, lockfiles, or `node_modules`. If capture remains unavailable, report the exact visual verification gap.
 
 ### 3. Capture the baseline
 
@@ -108,34 +110,11 @@ Fix one coherent issue cluster at a time, such as hierarchy, spacing, responsive
 
 Default to two focused improvement passes after the first functional render. Continue only while a blocking or major issue remains and another pass has a clear hypothesis. Avoid an unbounded "make it prettier" loop.
 
-### 8. Compare alternatives only when useful
+### 8. Optional modes
 
-Create alternatives when the user asks for them or when one consequential visual decision remains genuinely uncertain.
+For audit-only requests, visual alternatives, or reusable design-rule extraction, read the matching section in [surface-capability-guide.md](references/surface-capability-guide.md#alternative-comparison-and-rule-extraction). Keep the same rendered-evidence and interaction standards; do not implement an audit-only request.
 
-- Produce two or three variants, not an open-ended gallery.
-- Keep content, behavior, viewport, and data constant.
-- Compare them with the same rubric and user task.
-- Select a winner based on evidence, not novelty.
-- Remove unused implementation artifacts unless the user asks to retain them.
-
-Do not use A/B exploration to delay an obvious fix.
-
-### 9. Extract reusable rules when requested
-
-When a successful result should guide future screens, summarize:
-
-- palette and semantic color use
-- typography hierarchy
-- spacing and layout rhythm
-- radius, border, elevation, and motion rules
-- component variants and interaction states
-- responsive adaptations
-- accessibility constraints
-- imagery and iconography guidance
-
-Update an existing authoritative design document when one exists. If none exists, use the repository's design-document convention or a dedicated design-source workflow rather than silently introducing a new source of truth.
-
-### 10. Verify completion
+### 9. Verify completion
 
 Do not stop until the requested scope has fresh evidence for all applicable items:
 

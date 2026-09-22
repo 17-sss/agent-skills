@@ -23,7 +23,7 @@ Small-fix invocation: `Use $completion-loop to fix the reproduced cache-key bug 
 
 Skill activation alone does not authorize goal creation, a mode switch, commits, or remote work. Honor authority already granted in the conversation; do not request it again.
 
-Read [verification-contract.md](references/verification-contract.md) before starting the execution loop. Read [browser-verification.md](references/browser-verification.md) only when browser or rendered evidence is required.
+Read [verification-contract.md](references/verification-contract.md) before execution. Read [independent-review.md](references/independent-review.md) only when the risk tier or user requires independent review; Low-risk self-review stays in this entrypoint. Read [browser-verification.md](references/browser-verification.md) only when browser or rendered evidence is required.
 
 ## Freeze the completion contract
 
@@ -86,26 +86,14 @@ Reproduce each proposed blocker against the actual code and contract before acce
 
 ## Spend the review and verification budget
 
-Use the risk-tier matrix and review packet in the verification contract.
+Use the risk-tier matrix in [verification-contract.md](references/verification-contract.md). When independent review is required, read [independent-review.md](references/independent-review.md) for the frozen packet, isolation, and focused rereview procedure. If tool-enforced read-only isolation is unavailable, report the required review as pending; never substitute same-context role-play.
 
-- **Initial full-scope review: at most one.** Use the frozen packet and the review depth required by the risk tier.
-- **Blocker repair: focused rereview only.** Recheck the finding's cause, modified files, directly connected call paths, new regression tests, and plausible adjacent regressions.
-- **Final full verification: at most one** initial run on the stable candidate after targeted evidence and required review findings are clear. Later runs cover only failed or invalidated ledger entries; broad invalidation can require the whole suite again.
-- Do not repeat an identical full review packet or unchanged validation merely to seek a different answer.
-- Allow one additional full-scope review only when the current work genuinely changes a core architecture boundary such as authentication, database authorization, or a public API contract. Record the reason and apply the material-expansion checkpoint when that change was not already in scope.
+- **Initial full-scope review: at most one.** Use the required risk-tier depth.
+- **Blocker repair: focused rereview only.** Recheck the cause, affected call path, regression tests, and plausible adjacent regressions.
+- **Final full verification: at most one** initial stable-candidate run; afterward rerun failed or invalidated checks. If impact cannot safely be narrowed, rerun the required suite.
+- Permit one additional full-scope review only for a recorded core-architecture change, subject to the material-expansion checkpoint.
 
-After a focused rereview, classify every new finding again:
-
-- a regression created by the repair remains a blocker;
-- a pre-existing issue that fails an acceptance criterion remains a blocker;
-- an issue outside the frozen contract is deferred;
-- an ambiguous issue requires user confirmation, not automatic expansion.
-
-An implementation change invalidates only evidence and review conclusions whose recorded invalidation conditions intersect the changed boundary. It does not automatically reset the entire review.
-
-Changes to shared dependencies, fixtures, renderer, host, build, environment, or baseline branch can invalidate broader evidence even when the edited source file is small. Revalidate the whole required suite if the impact cannot safely be narrowed. Explicit coverage, visual-review counts, consecutive-pass requirements, and mandatory independent review survive cost optimization.
-
-When an independent review is required, run it through a tool-enforced read-only execution that cannot mutate the workspace or external systems. Keep it terminal and prevent recursive delegation. If that capability is unavailable, report the missing required evidence and request the minimum user decision needed; do not pretend the review occurred. If the user explicitly invokes a separate review workflow, follow that workflow's stricter contract without making it a dependency of this package.
+An implementation change invalidates only evidence and review conclusions whose recorded inputs or affected boundaries changed. Shared dependencies, fixtures, renderer, host, build, environment, or baseline movement may widen invalidation. Required repetitions and review gates still apply. Classify new findings against the frozen contract before accepting them.
 
 ## Pause at material expansion
 

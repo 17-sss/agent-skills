@@ -57,3 +57,9 @@ Before the first launch and after every exit, the loop checks:
 - the DESIGN required-section and unresolved-placeholder validator.
 
 Repeated runner failure writes a human-readable BLOCKED reason. This prevents an uncontrolled hot loop even when the user intentionally leaves the numeric iteration limit unbounded.
+
+## Runner execution and portability
+
+`loop/loop.sh` waits for each process to exit before starting the next one. Every invocation writes to a new `loop/logs/run-<UTC>-<pid>/` directory so restarting the loop cannot overwrite an earlier run's iteration logs. It stops for `loop/STOP`, `loop/BLOCKED`, an optional iteration limit, or the consecutive runner-failure cutoff. Its portability target is Bash on macOS, Linux, and compatible Unix-like environments; it is not a native CMD or PowerShell script.
+
+The built-in adapters inherit the user's current permissions and configuration. They do not use permission-bypass flags, resume operations, continuation flags, or prior session identifiers. If non-interactive execution cannot proceed under the existing configuration, fail clearly and block instead of escalating permissions.

@@ -467,9 +467,9 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
             (
                 "handoff-memory",
                 "SKILL.md",
-                "Offer at most one recommendation:",
+                "consider at most one `$project-chronicle` suggestion.",
                 "Invoke $project-chronicle before continuing. "
-                "Offer at most one recommendation:",
+                "consider at most one `$project-chronicle` suggestion.",
                 "standalone reference section contains mandatory sequencing",
             ),
             (
@@ -508,7 +508,7 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
             encoding="utf-8"
         )
         fixture = original.replace(
-            "If the inventory is unavailable or runtime compatibility is unclear, treat the downstream skill as unavailable.",
+            "If the inventory is unavailable or compatibility is unclear, make no suggestion.",
             "",
         )
         with tempfile.TemporaryDirectory(dir=REPO_ROOT / "skills") as temp_dir:
@@ -529,8 +529,8 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
         fixtures = (
             (
                 original.replace(
-                    "Stop after the suggestion;",
-                    "Invoke $completion-loop before continuing. Stop after the suggestion;",
+                    "stop before planning or implementation.",
+                    "Invoke $completion-loop before continuing. stop before planning or implementation.",
                 ),
                 "mandatory sequencing",
             ),
@@ -540,8 +540,8 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
             ),
             (
                 original.replace(
-                    "Choose the best-fit route first",
-                    "Do not suggest $visual-match. Choose the best-fit route first",
+                    "Do not substitute a weaker route",
+                    "Do not suggest $visual-match. Do not substitute a weaker route",
                 ),
                 "references sibling skill visual-match",
             ),
@@ -692,6 +692,18 @@ class NativeWorkflowCheckerTest(unittest.TestCase):
                     allowed_root=skill_dir,
                 )
         self.assertTrue(any("outside its installable root" in error for error in errors))
+
+    def test_missing_conditional_reference_fails_package_link_validation(self):
+        with tempfile.TemporaryDirectory(dir=REPO_ROOT / "skills") as temp_dir:
+            skill_dir = Path(temp_dir) / "completion-loop"
+            shutil.copytree(REPO_ROOT / "skills" / "completion-loop", skill_dir)
+            (skill_dir / "references" / "independent-review.md").unlink()
+            errors = []
+            with redirect_stdout(io.StringIO()):
+                checker.validate_links(skill_dir, errors)
+        self.assertTrue(
+            any("independent-review.md" in error for error in errors), errors
+        )
 
     def test_missing_package_reports_errors_without_crashing(self):
         missing = REPO_ROOT / "skills" / "codex-missing-fixture"

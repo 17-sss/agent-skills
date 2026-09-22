@@ -17,11 +17,7 @@ Remain in requirements mode. Do not implement the solution or modify project fil
    - an interpretation that needs confirmation
    - a goal, boundary, preference, or tradeoff only the user can decide
 3. Resolve discoverable facts with read-only tools. Cite concrete file paths, symbols, behavior, or authoritative external sources when they affect a question.
-4. Use a delegated worker only when an independent repository map materially improves speed or confidence. Keep human decisions with the main agent.
-
-Before delegated repository inspection, prove that the worker runs behind a tool-enforced `read-only` boundary. A prose instruction to remain read-only is not enforcement. Use delegation only when the current agent can prove the delegated execution cannot write to the repository or external systems. Keep the inspection lane bounded: it must not activate another workflow or delegate recursively. If isolation cannot be proved, skip optional delegation and inspect directly in the main context.
-
-Also capture a content fingerprint from the current `HEAD`, staged and unstaged diff bytes, and a canonical serialization of each untracked path's file type, executable mode bits, symlink target when applicable, and content or content hash. Compare it after the subagent returns as defense in depth. If the fingerprint changed, stop the interview, report the exact drift, preserve the files, and do not trust the delegated result.
+4. Inspect directly by default. For optional independent repository inspection, read [delegated-inspection.md](references/delegated-inspection.md) first; use it only behind a tool-enforced read-only boundary, then verify workspace integrity.
 
 Do not ask the user for repository facts that can be established directly. If documentation and code disagree, present both pieces of evidence and ask which contract should govern.
 
@@ -100,16 +96,14 @@ Do not begin implementation. Hand the specification to the planning or execution
 
 ## Offer an optional next workflow
 
-Keep this package complete on its own. Do not invoke or activate another skill. Treat a downstream skill as available only when the current task's available-skill inventory explicitly advertises its exact name and the current agent satisfies the runtime requirements stated in that advertised description. Do not inspect the filesystem, installation directories, catalog files, or downstream skill contents to infer availability. Do not install a missing skill. If the inventory is unavailable or runtime compatibility is unclear, treat the downstream skill as unavailable. Do not mention unavailable skills. Availability is not authorization: the user explicitly chooses and invokes any suggested workflow in a later turn.
+After the readiness gate passes, offer at most one best-fit workflow and one genuinely applicable alternative. Skip this section if the user ends early, a material decision or authority is missing, or the user asks to stop. Keep this package complete: never invoke, install, or automatically start a downstream skill.
 
-Offer at most one recommendation and one genuinely applicable alternative only after the readiness gate has passed and no remaining decision could materially change implementation direction or acceptance. Omit this section when the user ends early, material ambiguity remains, required authority is missing, or the user asks to stop without follow-up suggestions.
+Check the exact name in the current task's available-skill inventory and its advertised runtime requirements. Do not inspect installation directories, catalog files, or downstream contents to infer availability. If the inventory is unavailable or compatibility is unclear, make no suggestion. The user must explicitly choose and invoke a suggested workflow later.
 
-Choose the best-fit route first, then check whether that exact skill is available:
+| Accepted work | Best-fit suggestion |
+| --- | --- |
+| Architecture, security, migration, destructive, public-contract, or compliance risk | `$reviewed-plan` |
+| Ordered, independently verifiable, restartable stages | `$milestone-runner` |
+| One scoped implementation goal with acceptance and verification criteria | `$completion-loop` |
 
-- Suggest `$reviewed-plan` for architecture-heavy, security-sensitive, migration, destructive, public-contract, compliance, or otherwise high-risk work that benefits from reviewed planning before implementation.
-- Suggest `$milestone-runner` for an accepted outcome that genuinely requires multiple ordered, independently verifiable, restartable stages.
-- Suggest `$completion-loop` for one clearly scoped implementation goal with concrete acceptance and verification criteria.
-
-Do not substitute a weaker route merely because the best-fit skill is unavailable. If reviewed planning is necessary and `$reviewed-plan` is unavailable, make no workflow suggestion. If durable milestones are necessary and `$milestone-runner` is unavailable, suggest `$completion-loop` only when the accepted scope can still be executed safely as one goal.
-
-Render the recommendation as a copyable invocation under `Optional next workflow`. Stop after the suggestion; do not begin planning or implementation.
+Do not substitute a weaker route merely because the best fit is unavailable. A missing `$reviewed-plan` yields no suggestion. If `$milestone-runner` is unavailable, suggest `$completion-loop` only when the accepted scope can be executed safely as one goal. Render any suggestion as a copyable invocation and stop before planning or implementation.

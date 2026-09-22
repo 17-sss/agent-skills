@@ -344,7 +344,7 @@ The source snapshot, native capability mapping, update cadence, and forward-test
 The two maintenance scripts have distinct responsibilities.
 
 - `skills/milestone-runner/scripts/goal_state.py`: manages durable repository state for `milestone-runner` only.
-- `scripts/check-native-workflow-skills.py`: applies common structure, metadata, link, catalog, and `quick_validate` checks to all 15 installable skills. It applies independence, standalone-package, and state-root checks to the six managed packages plus `audio-asset-generator`, `godot-dev-loop`, and `minimal`; source drift remains scoped to the six managed packages, and guarded sibling-reference boundaries are also checked for `handoff-memory` and `project-chronicle`.
+- `scripts/check-native-workflow-skills.py`: applies common structure, metadata, link, catalog, and `quick_validate` checks to every installable package in its inventory. Independence, standalone-package, and state-root checks cover its explicit independence inventory; source drift covers the managed packages, and guarded sibling-reference boundaries cover `handoff-memory` and `project-chronicle`.
 
 ### Workflow checker modes
 

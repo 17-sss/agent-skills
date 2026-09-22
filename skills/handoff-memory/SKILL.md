@@ -82,7 +82,7 @@ Use `_memory/INDEX.json` as the lightweight workstream index. Companion `WORKSPA
 
 5. Refresh and validate the canonical handoff again when material state changed.
 
-Read [agent-usage-best-practices.md](references/agent-usage-best-practices.md) for the complete start-, during-, and end-of-session behavior and resume selection priority.
+Read [agent-usage-best-practices.md](references/agent-usage-best-practices.md) when resume selection, session close-out, or substantial compaction needs the detailed priority and maintenance rules.
 
 ## Content Rules
 
@@ -100,27 +100,11 @@ Use [handoff-template.md](references/handoff-template.md) when creating or subst
 
 ## Offer an Optional Durable-History Follow-Up
 
-Keep this package complete on its own. Finish handoff creation, refresh, compaction, validation, and resume work with this package's own scripts, snapshots, repository documents, and Git evidence. Do not require, import, invoke, or install another skill to make a HANDOFF usable.
-
-Consider a separate durable-history workflow only after the canonical HANDOFF is resume-usable and the material removed during compaction explains lasting project evolution, rationale, or consequences rather than current operational state. An existing repository-owned history document may be linked from `Quick Reference`, but do not update that history unless the user also requested history work.
-
-Offer at most one recommendation: `$project-chronicle`, and only when its exact name appears in the current task's available-skill inventory and the current agent satisfies its advertised runtime requirements. Do not inspect installation directories, catalog files, or the downstream package to infer availability, and do not install a missing skill. If the inventory is unavailable, runtime compatibility is unclear, the HANDOFF is not yet resume-usable, or the removed material does not warrant durable history, omit the recommendation. Availability is not authorization: unless the user already requested both workflows, the user explicitly chooses and invokes the follow-up in a later turn.
+Complete HANDOFF creation, compaction, validation, and resume with this package first. If removed material has lasting historical significance, consider at most one `$project-chronicle` suggestion. Suggest it only when the exact name is advertised in the current task's available-skill inventory, its runtime fits, and the HANDOFF is resume-usable. Do not inspect installation directories or downstream contents, install or invoke the skill, or update history without the user's request. When inventory or compatibility is unclear, make no suggestion. If the user already requested both workflows, that request supplies the follow-up choice; otherwise the user explicitly chooses and invokes it later.
 
 ## Optional Snapshots
 
-Create a snapshot only for a meaningful transition such as a risky migration, deploy boundary, major context transfer, debugging checkpoint, or substantial handoff rewrite. Always provide both `--snapshot-kind` and `--snapshot-reason`:
-
-```bash
-python3 scripts/create_handoff.py \
-  --project-root <path> \
-  --scope auto \
-  --document handoff \
-  --snapshot \
-  --snapshot-kind handoff \
-  --snapshot-reason "Context transfer before ending the session"
-```
-
-Read [snapshot-strategy.md](references/snapshot-strategy.md) for supported kinds, naming, workstream examples, and when to skip a snapshot.
+Create a snapshot only for a meaningful transition, such as a risky migration, deployment, context transfer, or substantial rewrite. Use both `--snapshot-kind` and `--snapshot-reason`; read [snapshot-strategy.md](references/snapshot-strategy.md) for commands, kinds, and skip conditions.
 
 ## Script Responsibilities
 

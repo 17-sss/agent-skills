@@ -60,31 +60,23 @@ CODEX_SKILL_NAMES = (
     "review-gate",
 )
 OPTIONAL_HANDOFF_HEADING = "## Offer an optional next workflow"
-OPTIONAL_HANDOFF_MARKERS = (
-    "Keep this package complete on its own.",
-    "Do not invoke or activate another skill.",
-    "current task's available-skill inventory",
-    "current agent satisfies the runtime requirements",
-    "Do not inspect the filesystem",
-    "Do not install a missing skill.",
-    "If the inventory is unavailable or runtime compatibility is unclear",
-    "Do not mention unavailable skills.",
-    "the user explicitly chooses and invokes",
-    "Offer at most one recommendation",
-    "Omit this section",
-    "Do not substitute a weaker route merely because the best-fit skill is unavailable.",
-    "Render the recommendation as a copyable invocation",
-)
-OPTIONAL_HANDOFF_READINESS_MARKERS = {
-    "spec-interview": (
-        "only after the readiness gate has passed",
-        "no remaining decision could materially change implementation direction or acceptance",
-    ),
-    "reviewed-plan": (
-        "Architect returned `ACCEPT`",
-        "Critic returned `APPROVE` for the same plan revision",
-        "the handoff is `NOT APPROVED`",
-    ),
+OPTIONAL_HANDOFF_PATTERNS = {
+    "no automatic execution": re.compile(r"(?is)(?:never|do not).{0,70}\b(?:invoke|install|start)\b"),
+    "current inventory": re.compile(r"current task's available-skill inventory", re.I),
+    "runtime fit": re.compile(r"\bruntime\b", re.I),
+    "user choice": re.compile(r"(?is)user.{0,35}explicitly.{0,35}(?:choose|invoke)"),
+    "bounded suggestion": re.compile(r"at most one", re.I),
+    "unavailable fallback": re.compile(r"(?is)\b(?:inventory|availability)\b.{0,75}\b(?:unavailable|unclear)\b.{0,75}\b(?:no suggestion|omit)\b"),
+}
+OPTIONAL_HANDOFF_READINESS_PATTERNS = {
+    "spec-interview": {
+        "readiness gate": re.compile(r"readiness gate.{0,35}pass", re.I),
+        "unresolved decisions": re.compile(r"(?:material decision|material ambiguity).{0,60}(?:missing|remains|stop|skip)", re.I),
+    },
+    "reviewed-plan": {
+        "same-revision approval": re.compile(r"Architect `ACCEPT`.{0,65}Critic `APPROVE`.{0,70}same.{0,25}revision", re.I),
+        "non-approval stop": re.compile(r"(?:omit|skip).{0,55}`NOT APPROVED`", re.I),
+    },
 }
 HARD_HANDOFF_PATTERNS = {
     "mandatory sequencing": re.compile(r"(?i)\bbefore continuing\b"),
@@ -136,10 +128,7 @@ STANDALONE_REFERENCE_RULES = {
             "SKILL.md",
             OPTIONAL_HANDOFF_HEADING,
             ("reviewed-plan", "completion-loop", "milestone-runner"),
-            (
-                *OPTIONAL_HANDOFF_MARKERS,
-                *OPTIONAL_HANDOFF_READINESS_MARKERS["spec-interview"],
-            ),
+            (),
         ),
     ),
     "visual-match": (
@@ -160,10 +149,7 @@ STANDALONE_REFERENCE_RULES = {
             "SKILL.md",
             OPTIONAL_HANDOFF_HEADING,
             ("completion-loop", "milestone-runner"),
-            (
-                *OPTIONAL_HANDOFF_MARKERS,
-                *OPTIONAL_HANDOFF_READINESS_MARKERS["reviewed-plan"],
-            ),
+            (),
         ),
     ),
     "handoff-memory": (
@@ -171,14 +157,7 @@ STANDALONE_REFERENCE_RULES = {
             "SKILL.md",
             "## Offer an Optional Durable-History Follow-Up",
             ("project-chronicle",),
-            (
-                "Keep this package complete on its own.",
-                "current task's available-skill inventory",
-                "Do not inspect installation directories",
-                "do not install a missing skill",
-                "Offer at most one recommendation",
-                "the user explicitly chooses and invokes",
-            ),
+            (),
         ),
         StandaloneReferenceSection(
             "README.md",
@@ -382,6 +361,19 @@ def validate_standalone_package(skill_dir: Path, errors: list[str]) -> None:
         start, end = span
         section_text = text[start:end]
         allowed_references.append((path, start, end, rule.targets))
+        if rule.relative_path == "SKILL.md" and skill_dir.name in (
+            "spec-interview", "reviewed-plan", "handoff-memory"
+        ):
+            patterns = {
+                **OPTIONAL_HANDOFF_PATTERNS,
+                **OPTIONAL_HANDOFF_READINESS_PATTERNS.get(skill_dir.name, {}),
+            }
+            for label, pattern in patterns.items():
+                if not pattern.search(section_text):
+                    fail(
+                        f"{path.relative_to(REPO_ROOT)} standalone reference section lacks guardrail {label!r}",
+                        errors,
+                    )
         for marker in rule.markers:
             if marker not in section_text:
                 fail(

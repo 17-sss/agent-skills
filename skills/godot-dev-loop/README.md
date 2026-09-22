@@ -24,6 +24,8 @@ The bootstrap helper preserves existing state and QA files. It never changes the
 
 ## Bootstrap
 
+Use this path once when the project lacks the loop and QA files. For an existing bootstrapped project, read its DESIGN, STATUS, INBOX, and QA state and continue a bounded iteration without rerunning bootstrap.
+
 From the installed skill directory:
 
 ```bash

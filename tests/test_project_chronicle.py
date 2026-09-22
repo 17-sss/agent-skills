@@ -447,7 +447,7 @@ class ProjectChronicleContractTest(unittest.TestCase):
             for path in sorted((SKILL_ROOT / "scripts").glob("*.py"))
         )
 
-        self.assertIn("Every Bootstrap or Record run must add one dated `LOG.md` record", skill)
+        self.assertIn("Every Bootstrap or Record run adds a dated `LOG.md` record", skill)
         self.assertIn("Keep history distinct from handoff state", skill)
         self.assertIn("data boundary, not a package dependency", skill)
         self.assertIn("its absence does not block any mode", skill)

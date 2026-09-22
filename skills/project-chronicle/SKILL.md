@@ -39,19 +39,7 @@ Honor an explicit user or repository convention first. Otherwise reuse an existi
 
 Do not repurpose `CHANGELOG.md`: release-facing change lists do not replace project background and reasoning. Treat `HISTORY.md`, ADRs, decision logs, architecture docs, release notes, issue trackers, and HANDOFF files as evidence or linked authorities unless the repository already declares one of them to be the canonical project history.
 
-Use this default target model:
-
-```text
-docs/project-history/
-├── README.md
-├── TIMELINE.md
-├── LOG.md
-├── entries/
-│   └── YYYY-MM[-DD]-<slug>.md
-└── GAPS.md
-```
-
-Always maintain `README.md`, `TIMELINE.md`, and `LOG.md`. Create `entries/` and `GAPS.md` lazily when detail or unresolved history warrants them.
+When creating or restructuring a chronicle, read [document-model.md](references/document-model.md) for the default files, optional entries and gaps, and their responsibilities.
 
 ## Collect evidence
 
@@ -91,21 +79,7 @@ When sources disagree, preserve the contradiction and its dates. Do not silently
 
 ## Write for layered reading
 
-Maintain three levels:
-
-1. `README.md` — a five-minute orientation: purpose, origins, what exists, history coverage, eras, source-of-truth map, and reading guide.
-2. `TIMELINE.md` — a concise period-level narrative grouped by workstream or milestone.
-3. `LOG.md` and `entries/` — one lightweight record per chronicle run plus detailed evidence-backed narratives only where background matters.
-
-Every Bootstrap or Record run must add one dated `LOG.md` record. If there was no material historical change, record a short review entry and say so; do not fabricate a milestone. Update `TIMELINE.md` only when the period-level story changes. Update `README.md` only when durable background, the project map, coverage, or recommended reading path changes.
-
-Keep this marker near the top of `LOG.md`:
-
-```md
-<!-- project-chronicle:last-recorded-commit: <full-commit-hash-or-none> -->
-```
-
-The marker represents the latest committed history covered by the chronicle. Dirty working-tree evidence must be labeled uncommitted and must not advance the marker beyond `HEAD`.
+Use [document-model.md](references/document-model.md) for the orientation, timeline, log, detailed-entry, and gap layers. Every Bootstrap or Record run adds a dated `LOG.md` record, including a short review entry when nothing material changed. Update `TIMELINE.md` only when the period story changes, and `README.md` only when durable background, coverage, or the source map changes. The `project-chronicle:last-recorded-commit` marker tracks committed history; label dirty evidence separately and never advance it beyond `HEAD`. Read [recording-rules.md](references/recording-rules.md) before changing that marker.
 
 ## Keep history distinct from handoff state
 

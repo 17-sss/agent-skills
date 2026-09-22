@@ -34,29 +34,9 @@ Establish `docs/DESIGN.md` before autonomous work. It should be concise and exec
 
 Read [project-state-contract.md](references/project-state-contract.md) when establishing or updating the three canonical state files.
 
-## Bootstrap a target Godot project
+## Choose first-use or existing-project path
 
-Confirm the target contains `project.godot`, then run the bundled helper from the installed skill directory:
-
-```bash
-python3 scripts/bootstrap_godot_dev_loop.py /path/to/game \
-  --game "<game concept>" \
-  --core-loop "<repeatable player loop>" \
-  --good-enough "<observable stop condition>"
-```
-
-Optional arguments record player fantasy, playable-slice target, visual direction, constraints, and non-goals. If a complete canonical `docs/DESIGN.md` already exists, inspect it and use `--accept-existing-design`; the helper preserves it and validates the required sections.
-
-The helper:
-
-- checks `git rev-parse --show-toplevel` before considering `git init`;
-- reuses an enclosing worktree instead of creating a nested repository;
-- initializes Git only when the project is genuinely outside any repository;
-- creates missing workflow, runner, state, and Godot QA files without silently overwriting existing files;
-- leaves the real project main scene unchanged; and
-- adds only a marked ignore block for transient captures, loop logs, STOP, and BLOCKED.
-
-Resolve reported conflicts deliberately. Do not bypass them by deleting target-project files.
+For a first-time target with `project.godot`, read [bootstrap-contract.md](references/bootstrap-contract.md), establish `docs/DESIGN.md`, and create the missing loop and QA files. For an existing bootstrapped project, inspect `docs/DESIGN.md`, `docs/STATUS.md`, `docs/feedback/INBOX.md`, and the current QA state instead of rerunning bootstrap. Preserve existing files and resolve any reported conflict deliberately.
 
 ## Prove visual observability before iteration
 
@@ -110,9 +90,7 @@ GODOT_DEV_RUNNER=claude ./loop/loop.sh
 GODOT_DEV_RUNNER=./my-runner-adapter ./loop/loop.sh
 ```
 
-`loop/loop.sh` waits for each process to exit before starting the next one. Every invocation writes to a new `loop/logs/run-<UTC>-<pid>/` directory so restarting the loop cannot overwrite an earlier run's iteration logs. It stops for `loop/STOP`, `loop/BLOCKED`, an optional iteration limit, or the consecutive runner-failure cutoff. Its portability target is Bash on macOS, Linux, and compatible Unix-like environments; it is not a native CMD or PowerShell script.
-
-The built-in adapters inherit the user's current permissions and configuration. They do not use permission-bypass flags, resume operations, continuation flags, or prior session identifiers. If non-interactive execution cannot proceed under the existing configuration, fail clearly and block instead of escalating permissions.
+The loop starts a fresh non-interactive process for each bounded iteration and stops at `loop/STOP`, `loop/BLOCKED`, the configured iteration limit, or the consecutive runner-failure cutoff. Read [fresh-runner-contract.md](references/fresh-runner-contract.md) for log naming, portability, and adapter permission behavior.
 
 ## Finish honestly
 

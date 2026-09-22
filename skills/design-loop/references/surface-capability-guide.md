@@ -93,3 +93,37 @@ Generate assets for cases such as a product illustration, game portrait, texture
 - decorative imagery that distracts from the primary task
 
 After generation, place the asset in the real layout and re-run the screenshot review. An attractive asset in isolation can still harm hierarchy, contrast, performance, or responsiveness.
+
+## Alternative comparison and rule extraction
+
+### 8. Compare alternatives only when useful
+
+Create alternatives when the user asks for them or when one consequential visual decision remains genuinely uncertain.
+
+- Produce two or three variants, not an open-ended gallery.
+- Keep content, behavior, viewport, and data constant.
+- Compare them with the same rubric and user task.
+- Select a winner based on evidence, not novelty.
+- Remove unused implementation artifacts unless the user asks to retain them.
+
+Do not use A/B exploration to delay an obvious fix.
+
+### 9. Extract reusable rules when requested
+
+When a successful result should guide future screens, summarize:
+
+- palette and semantic color use
+- typography hierarchy
+- spacing and layout rhythm
+- radius, border, elevation, and motion rules
+- component variants and interaction states
+- responsive adaptations
+- accessibility constraints
+- imagery and iconography guidance
+
+Update an existing authoritative design document when one exists. If none exists, use the repository's design-document convention or a dedicated design-source workflow rather than silently introducing a new source of truth.
+
+
+## Audit-only requests
+
+Inspect fresh rendered evidence and the representative interaction flow. Report findings with severity and source evidence; do not edit the implementation unless the user authorizes a fix.

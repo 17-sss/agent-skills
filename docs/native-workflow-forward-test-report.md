@@ -2,6 +2,14 @@
 
 This file records behavioral evidence that cannot be established by schema validation alone. Tests run only in disposable Git repositories under `/tmp`; no dependency installation, external write, user-configuration change, or production access is allowed.
 
+## 2026-09-22 local maintenance checks
+
+Status: partial behavioral evidence. The local skill-maintenance pass ran 137 unit tests, the validator across all 15 installable packages, 22 commit-helper fixture evaluations, 29 PR-publish shell cases, and 8 PR-review shell cases; all passed. A procedural `ui-click` fixture produced a readable 7,982-byte mono PCM WAV at 44,100 Hz. These tests check scripts and written contracts, not blind agent behavior. See [the maintenance handoff](skill-maintenance-2026-09-22.md) for contract locations, required-reading counts, and safety regression scope.
+
+An attempted existing-Firefox screenshot of a disposable HTML fixture timed out after 25 seconds, so no new visual-render success is claimed. Godot was unavailable, no audio was listened to, and no real GitHub write or cross-agent model evaluation occurred. Earlier pending paths remain pending.
+
+A follow-up source-contract audit found and corrected three condensed-instruction gaps: ordinary Design Loop capture defaults, Visual Match capture-condition detail, and prior authorization for a jointly requested Handoff Memory plus Chronicle run. Both PR helpers also gained quoted authorization-value coverage. The 137 unit tests, 15 package validations, 29 publish cases, 8 review cases, and `git diff --check` passed again after these corrections; the model-level pending status above is unchanged.
+
 ## 2026-09-08 staged audit follow-up and cross-agent attempt
 
 Status: partial. The confirmed helper defects and contract inconsistencies were repaired in independent source commits, and blind-input corpora now cover Spec Interview choice routing, Visual Match renderer refusal, Completion Loop HANDOFF authority, and the existing execution/evidence cases. Adding or statically validating a corpus is not a behavioral PASS.

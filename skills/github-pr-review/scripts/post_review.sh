@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/redaction.sh"
 
 usage() {
   cat <<'USAGE'
@@ -22,16 +23,8 @@ warn() {
   printf 'warning: %s\n' "$*" >&2
 }
 
-sanitize_stream() {
-  sed -E \
-    -e 's/(Authorization:[[:space:]]*)([^[:space:]]+)/\1[REDACTED]/Ig' \
-    -e 's/(token|GH_TOKEN|GITHUB_TOKEN|PAT)=([^[:space:]]+)/\1=[REDACTED]/Ig' \
-    -e 's#https?://[^/@[:space:]]+(:[^/@[:space:]]+)?@#https://[REDACTED]@#g' \
-    -e 's/(github_pat_|gh[pousr]_)[A-Za-z0-9_]+/\1[REDACTED]/g'
-}
-
 print_sanitized_error_file() {
-  sanitize_stream < "$1" >&2
+  cat "$1" >&2
 }
 
 classify_error() {
@@ -79,8 +72,12 @@ parse_pr_ref() {
 }
 
 print_command() {
+  local arg safe_arg
   printf 'command:'
-  printf ' %q' "$@"
+  for arg in "$@"; do
+    safe_arg=$(printf '%s\n' "$arg" | sanitize_stream)
+    printf ' %q' "$safe_arg"
+  done
   printf '\n'
 }
 
@@ -192,11 +189,19 @@ if ! gh auth status --active --hostname github.com >/dev/null 2>&1; then
   die "GitHub CLI is not authenticated. Run 'gh auth login' before posting a review."
 fi
 
-account=$(gh api user --jq .login 2>/dev/null || true)
+account_file=$(mktemp)
+account_err=$(mktemp)
+REDACTION_TEMP_FILES+=("$account_file" "$account_err")
+capture_command "$account_file" "$account_err" gh api user --jq .login || true
+account=$(cat "$account_file")
 [[ -n "$account" ]] || die "could not determine authenticated GitHub account"
 
 if [[ -n "$COMMIT_SHA" ]]; then
-  current_head_sha=$(gh pr view "${pr_args[@]}" --json headRefOid --jq .headRefOid 2>/dev/null || true)
+  head_file=$(mktemp)
+  head_err=$(mktemp)
+  REDACTION_TEMP_FILES+=("$head_file" "$head_err")
+  capture_command "$head_file" "$head_err" gh pr view "${pr_args[@]}" --json headRefOid --jq .headRefOid || true
+  current_head_sha=$(cat "$head_file")
   [[ -n "$current_head_sha" ]] || die "could not determine the current PR head SHA"
   [[ "$current_head_sha" == "$COMMIT_SHA" ]] || die "PR head moved from reviewed SHA '$COMMIT_SHA' to '$current_head_sha'; refresh the review before posting"
 fi
@@ -212,11 +217,14 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
 fi
 
 err_file=$(mktemp)
-if ! "${cmd[@]}" 2> "$err_file"; then
+out_file=$(mktemp)
+REDACTION_TEMP_FILES+=("$err_file" "$out_file")
+if ! capture_command "$out_file" "$err_file" "${cmd[@]}"; then
   classify_error "$err_file"
   print_sanitized_error_file "$err_file"
   rm -f "$err_file"
   exit 1
 fi
+cat "$out_file"
 rm -f "$err_file"
 printf 'Review posted as @%s\n' "$account"

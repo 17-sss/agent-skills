@@ -23,12 +23,15 @@ Agent-neutral workflow for reviewing GitHub pull requests with `gh`, local `git`
 - Keeps inline review top-level bodies short and leaves routine validation evidence for the assistant response
 - Verifies posted reviews with response `id`, `state`, and `html_url`
 - Records the reviewed `headRefOid`, stops on head drift, and includes `commit_id` in inline review payloads
+- Captures command output through package-local redaction before writing private context or error files; a redaction failure stops execution
 
 ## Package Layout
 
 - `SKILL.md` - Main read, analysis, review, authentication, and confirmation workflow
 - `scripts/collect_pr_context.sh` - Collect PR metadata, diff, checks, and sanitized account context
 - `scripts/post_review.sh` - Post a confirmed summary review with `gh pr review`
+- `scripts/redaction.sh` - Package-local fail-closed output capture shared by the two scripts
+- `references/collection-fallback.md` - Read-only manual collection when the bundled collector is unavailable
 - `references/posting-reviews.md` - Loaded only for confirmed summary or inline posting, line mapping, payload construction, and verification
 - `references/agent-adapters.md` - Capability-conditional installation and network notes for Codex, Claude Code, Cursor, and generic agents
 - `agents/openai.yaml` - Codex Skills UI metadata only

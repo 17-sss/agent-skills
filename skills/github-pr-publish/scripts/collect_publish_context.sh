@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/redaction.sh"
 
 usage() {
   cat <<'USAGE'
@@ -14,25 +15,6 @@ USAGE
 
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 warn() { printf 'warning: %s\n' "$*" >&2; }
-
-sanitize_stream() {
-  sed -E \
-    -e 's/(Authorization:[[:space:]]*)([^[:space:]]+)/\1[REDACTED]/Ig' \
-    -e 's/(token|GH_TOKEN|GITHUB_TOKEN|PAT)=([^[:space:]]+)/\1=[REDACTED]/Ig' \
-    -e 's#https?://[^/@[:space:]]+(:[^/@[:space:]]+)?@#https://[REDACTED]@#g' \
-    -e 's/(github_pat_|gh[pousr]_)[A-Za-z0-9_]+/\1[REDACTED]/g'
-}
-
-sanitize_file() {
-  local file=$1 tmp_file
-  [[ -f "$file" ]] || return 0
-  tmp_file="${file}.sanitized.$$"
-  if sanitize_stream <"$file" >"$tmp_file"; then
-    mv "$tmp_file" "$file"
-  else
-    rm -f "$tmp_file"
-  fi
-}
 
 prepare_output_dir() {
   local prefix=$1 safe_name=$2 timestamp=$3 tmp_parent
@@ -64,14 +46,10 @@ run_capture() {
   local label=$1 out_file=$2 err_file=$3
   shift 3
   printf 'collecting %s...\n' "$label"
-  if ! "$@" >"$out_file" 2>"$err_file"; then
-    sanitize_file "$out_file"
-    sanitize_file "$err_file"
+  if ! capture_command "$out_file" "$err_file" "$@"; then
     classify_error_text "$(tr '\n' ' ' <"$err_file")"
     return 1
   fi
-  sanitize_file "$out_file"
-  sanitize_file "$err_file"
 }
 
 REPO=""
@@ -97,7 +75,9 @@ safe_repo=${safe_repo//[^A-Za-z0-9._-]/-}
 prepare_output_dir "github-pr-publish" "$safe_repo" "$timestamp"
 
 if gh auth status --active --hostname github.com >/dev/null 2>&1; then
-  account=$(gh api user --jq .login 2>/dev/null || true)
+  capture_command "$OUTPUT_DIR/account.tmp" "$OUTPUT_DIR/account.err" gh api user --jq .login || true
+  account=$(cat "$OUTPUT_DIR/account.tmp" 2>/dev/null || true)
+  rm -f "$OUTPUT_DIR/account.tmp" "$OUTPUT_DIR/account.err"
   printf 'authenticated_account=%s\n' "${account:-unknown}" >"$OUTPUT_DIR/auth.txt"
   printf 'GitHub auth: authenticated as @%s\n' "${account:-unknown}"
 else
@@ -114,26 +94,20 @@ run_capture "repository metadata" "$OUTPUT_DIR/repo-view.json" "$OUTPUT_DIR/repo
   gh repo view "${repo_args[@]}" --json nameWithOwner,visibility,defaultBranchRef,url || true
 
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  git rev-parse --show-toplevel >"$OUTPUT_DIR/local-repo-root.txt" 2>/dev/null || true
-  git status --short >"$OUTPUT_DIR/local-git-status.txt" 2>/dev/null || true
-  git branch --show-current >"$OUTPUT_DIR/current-branch.txt" 2>/dev/null || true
-  git remote -v >"$OUTPUT_DIR/remotes.txt" 2>/dev/null || true
-  git rev-parse --abbrev-ref --symbolic-full-name '@{u}' >"$OUTPUT_DIR/upstream.txt" 2>"$OUTPUT_DIR/upstream.err" || true
-  git rev-list --left-right --count '@{u}...HEAD' >"$OUTPUT_DIR/ahead-behind.txt" 2>"$OUTPUT_DIR/ahead-behind.err" || true
-  sanitize_file "$OUTPUT_DIR/remotes.txt"
-  sanitize_file "$OUTPUT_DIR/upstream.err"
-  sanitize_file "$OUTPUT_DIR/ahead-behind.err"
+  capture_command "$OUTPUT_DIR/local-repo-root.txt" "$OUTPUT_DIR/.capture.err" git rev-parse --show-toplevel || true
+  capture_command "$OUTPUT_DIR/local-git-status.txt" "$OUTPUT_DIR/.capture.err" git status --short || true
+  capture_command "$OUTPUT_DIR/current-branch.txt" "$OUTPUT_DIR/.capture.err" git branch --show-current || true
+  capture_command "$OUTPUT_DIR/remotes.txt" "$OUTPUT_DIR/.capture.err" git remote -v || true
+  capture_command "$OUTPUT_DIR/upstream.txt" "$OUTPUT_DIR/upstream.err" git rev-parse --abbrev-ref --symbolic-full-name '@{u}' || true
+  capture_command "$OUTPUT_DIR/ahead-behind.txt" "$OUTPUT_DIR/ahead-behind.err" git rev-list --left-right --count '@{u}...HEAD' || true
+  rm -f "$OUTPUT_DIR/.capture.err"
 fi
 
 if [[ -n "$REPO" ]]; then
-  gh pr list --repo "$REPO" --head "$(git branch --show-current 2>/dev/null || true)" --json number,title,url,state \
-    >"$OUTPUT_DIR/existing-prs.json" 2>"$OUTPUT_DIR/existing-prs.err" || true
-  sanitize_file "$OUTPUT_DIR/existing-prs.json"
-  sanitize_file "$OUTPUT_DIR/existing-prs.err"
+  capture_command "$OUTPUT_DIR/existing-prs.json" "$OUTPUT_DIR/existing-prs.err" \
+    gh pr list --repo "$REPO" --head "$(git branch --show-current 2>/dev/null || true)" --json number,title,url,state || true
 else
-  gh pr status >"$OUTPUT_DIR/pr-status.txt" 2>"$OUTPUT_DIR/pr-status.err" || true
-  sanitize_file "$OUTPUT_DIR/pr-status.txt"
-  sanitize_file "$OUTPUT_DIR/pr-status.err"
+  capture_command "$OUTPUT_DIR/pr-status.txt" "$OUTPUT_DIR/pr-status.err" gh pr status || true
 fi
 
 {

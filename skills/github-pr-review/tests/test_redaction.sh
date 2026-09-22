@@ -106,4 +106,60 @@ if grep -F 'pr review' "$FAKE_GH_LOG" >/dev/null; then
 fi
 printf 'ok 5 - posting stops when the PR head moves\n'
 
+cat >"$TEST_TMP/emit-credentials.sh" <<'EOF'
+printf '%s\n' '{"message":"aUtHoRiZaTiOn :  bAsIc   fake-json-secret","quoted":"Authorization: Basic \"fake-json-quoted-secret\"","ok":true}'
+printf '%s\n' 'Authorization: Bearer fake-bearer-secret' 'AUTHORIZATION: token fake-token-secret' 'Authorization: Bearer "fake-double-secret"' "Authorization: Basic 'fake-single-secret'" 'GH_TOKEN=fake-env-secret' 'https://x-access-token:fake-url-secret@github.com/OWNER/REPO' 'http://user:fake-http-secret@github.com/OWNER/REPO' 'github_pat_fakeprefixsecret' >&2
+exit 17
+EOF
+safe_out="$TEST_TMP/safe.json"
+safe_err="$TEST_TMP/safe.err"
+if bash -c 'source "$1"; capture_command "$2" "$3" bash "$4"' _ "$SKILL_DIR/scripts/redaction.sh" "$safe_out" "$safe_err" "$TEST_TMP/emit-credentials.sh"; then
+  printf 'not ok - capture must preserve command failure\n' >&2
+  exit 1
+else
+  [[ $? -eq 17 ]] || { printf 'not ok - capture changed command failure code\n' >&2; exit 1; }
+fi
+for secret in fake-json-secret fake-json-quoted-secret fake-bearer-secret fake-token-secret fake-double-secret fake-single-secret fake-env-secret fake-url-secret fake-http-secret fakeprefixsecret; do
+  assert_not_contains "$safe_out" "$secret"
+  assert_not_contains "$safe_err" "$secret"
+done
+python3 -m json.tool "$safe_out" >/dev/null
+assert_contains "$safe_err" '[REDACTED]'
+assert_contains "$safe_err" 'http://[REDACTED]@github.com/OWNER/REPO'
+printf 'ok 6 - capture redacts mixed headers and preserves JSON and exit status\n'
+
+mkdir "$TEST_TMP/fail-bin"
+printf '#!/usr/bin/env bash\nexit 31\n' >"$TEST_TMP/fail-bin/sed"
+chmod +x "$TEST_TMP/fail-bin/sed"
+if PATH="$TEST_TMP/fail-bin:$PATH" bash -c 'source "$1"; capture_command "$2" "$3" bash "$4"' _ "$SKILL_DIR/scripts/redaction.sh" "$TEST_TMP/failed.out" "$TEST_TMP/failed.err" "$TEST_TMP/emit-credentials.sh" >"$TEST_TMP/failed.log" 2>&1; then
+  printf 'not ok - failed redaction must stop capture\n' >&2
+  exit 1
+fi
+[[ ! -e "$TEST_TMP/failed.out" && ! -e "$TEST_TMP/failed.err" ]] || { printf 'not ok - failed redaction left output files\n' >&2; exit 1; }
+assert_not_contains "$TEST_TMP/failed.log" fake-bearer-secret
+printf 'ok 7 - failed redaction leaves no raw output\n'
+
+if command -v timeout >/dev/null 2>&1; then
+  cat >"$TEST_TMP/interrupt-credentials.sh" <<'EOF'
+printf '%s\n' 'Authorization: Bearer fake-interrupt-secret'
+sleep 5
+EOF
+  if TMPDIR="$TEST_TMP" timeout --kill-after=2s -s TERM 1s bash -c \
+    'source "$1"; capture_command "$2" "$3" bash "$4"' _ \
+    "$SKILL_DIR/scripts/redaction.sh" "$TEST_TMP/interrupted.out" \
+    "$TEST_TMP/interrupted.err" "$TEST_TMP/interrupt-credentials.sh" \
+    >"$TEST_TMP/interrupted.log" 2>&1; then
+    printf 'not ok - interrupted capture unexpectedly succeeded\n' >&2
+    exit 1
+  fi
+  if find "$TEST_TMP" -maxdepth 1 -name 'pr-redaction.*' | grep -q .; then
+    printf 'not ok - interrupted capture left a FIFO directory\n' >&2
+    exit 1
+  fi
+  for file in "$TEST_TMP/interrupted.out" "$TEST_TMP/interrupted.err" "$TEST_TMP/interrupted.log"; do
+    [[ -f "$file" ]] && assert_not_contains "$file" fake-interrupt-secret
+  done
+  printf 'ok 8 - interrupted capture cleans FIFOs and does not expose raw output\n'
+fi
+
 printf 'All github-pr-review redaction tests passed\n'

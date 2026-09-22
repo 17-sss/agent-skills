@@ -67,6 +67,12 @@ assert_not_contains "$FAKE_GH_LOG" 'pr create'
 assert_not_contains "$FAKE_GIT_LOG" 'push'
 pass 'preview performs no mutation and renders explicit head'
 
+out="$TEST_TMP/secret-preview.out"
+run_ok "$out" --repo OWNER/REPO --base main --head OWNER:feature-branch --title 'Add feature' --body 'Authorization: Bearer fake-preview-secret'
+assert_not_contains "$out" 'fake-preview-secret'
+assert_contains "$out" 'REDACTED'
+pass 'preview redacts credential text before shell-quoting arguments'
+
 reset_logs
 export FAKE_REMOTE_URL='https://github.com/OWNER/REPO.git'
 out="$TEST_TMP/https-preview.out"
@@ -272,5 +278,36 @@ assert_not_contains "$collect_dir/remotes.txt" 'x-access-token:'
 assert_contains "$collect_dir/remotes.txt" '[REDACTED]'
 assert_private_tree "$collect_dir"
 pass 'publish context collector redacts credentialed remote URLs with private permissions'
+
+cat >"$TEST_TMP/emit-credentials.sh" <<'EOF'
+printf '%s\n' '{"message":"aUtHoRiZaTiOn :  bAsIc   fake-json-secret","quoted":"Authorization: Basic \"fake-json-quoted-secret\"","ok":true}'
+printf '%s\n' 'Authorization: Bearer fake-bearer-secret' 'AUTHORIZATION: token fake-token-secret' 'Authorization: Bearer "fake-double-secret"' "Authorization: Basic 'fake-single-secret'" 'GITHUB_TOKEN=fake-env-secret' 'https://x-access-token:fake-url-secret@github.com/OWNER/REPO' 'http://user:fake-http-secret@github.com/OWNER/REPO' 'ghp_fakeprefixsecret' >&2
+exit 17
+EOF
+safe_out="$TEST_TMP/safe.json"
+safe_err="$TEST_TMP/safe.err"
+if bash -c 'source "$1"; capture_command "$2" "$3" bash "$4"' _ "$ROOT/skills/github-pr-publish/scripts/redaction.sh" "$safe_out" "$safe_err" "$TEST_TMP/emit-credentials.sh"; then
+  fail 'capture must preserve command failure'
+else
+  [[ $? -eq 17 ]] || fail 'capture changed command failure code'
+fi
+for secret in fake-json-secret fake-json-quoted-secret fake-bearer-secret fake-token-secret fake-double-secret fake-single-secret fake-env-secret fake-url-secret fake-http-secret fakeprefixsecret; do
+  assert_not_contains "$safe_out" "$secret"
+  assert_not_contains "$safe_err" "$secret"
+done
+python3 -m json.tool "$safe_out" >/dev/null
+assert_contains "$safe_err" '[REDACTED]'
+assert_contains "$safe_err" 'http://[REDACTED]@github.com/OWNER/REPO'
+pass 'capture redacts mixed headers and preserves JSON and exit status'
+
+mkdir "$TEST_TMP/fail-bin"
+printf '#!/usr/bin/env bash\nexit 31\n' >"$TEST_TMP/fail-bin/sed"
+chmod +x "$TEST_TMP/fail-bin/sed"
+if PATH="$TEST_TMP/fail-bin:$PATH" bash -c 'source "$1"; capture_command "$2" "$3" bash "$4"' _ "$ROOT/skills/github-pr-publish/scripts/redaction.sh" "$TEST_TMP/failed.out" "$TEST_TMP/failed.err" "$TEST_TMP/emit-credentials.sh" >"$TEST_TMP/failed.log" 2>&1; then
+  fail 'failed redaction must stop capture'
+fi
+[[ ! -e "$TEST_TMP/failed.out" && ! -e "$TEST_TMP/failed.err" ]] || fail 'failed redaction left output files'
+assert_not_contains "$TEST_TMP/failed.log" fake-bearer-secret
+pass 'failed redaction leaves no raw output'
 
 printf 'All %d github-pr-publish tests passed\n' "$pass_count"

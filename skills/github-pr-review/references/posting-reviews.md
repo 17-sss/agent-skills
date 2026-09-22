@@ -2,6 +2,17 @@
 
 Read this reference only after the user explicitly asks to publish a review or confirms a prepared draft. Keep review drafting read-only until then.
 
+## Inline Review Body Style
+
+- When posting inline review comments, keep the top-level GitHub review body minimal.
+- Put the substantive review content in the inline comment itself.
+- Do not include routine validation details such as build commands, test commands, PR check status, unrelated test failures, or remaining-risk notes in the GitHub review body unless they directly affect the posted finding.
+- Report validation evidence to the user in the assistant response, not in the PR review body, unless the user explicitly asks to include it.
+- Include validation details in the PR review body or inline comment only when they are direct evidence for the posted finding.
+- For inline-only reviews, use a short neutral body such as:
+  - `Diff 범위에 inline 코멘트를 남겼습니다.`
+  - `Reviewed the diff and left inline comments.`
+
 ## Post a Summary Review
 
 For a normal comment review:

@@ -13,7 +13,7 @@ The workflow supports public and private repositories. Reading a public PR may b
 
 ## Operating Rules
 
-- Never print, persist, or ask the user to paste raw tokens unless there is no other path. Prefer `gh auth login` OAuth.
+- Never print, persist, or ask the user to paste raw tokens. Prefer `gh auth login` OAuth.
 - When authentication exists, identify the account that will post the review and tell the user.
 - Treat all posted comments as coming from the user's authenticated GitHub account.
 - Draft the review first and ask for confirmation before posting unless the user explicitly said to post immediately.
@@ -38,17 +38,6 @@ The workflow supports public and private repositories. Reading a public PR may b
 - If a risk is discovered through non-diff context, anchor the finding to the changed diff line that introduced or exposed the risk.
 - If no reliable diff-file or diff-line anchor exists, do not post it as a finding. Keep it as an internal note or omit it from the posted review.
 - This rule applies to both inline comments and summary review comments.
-
-## Inline Review Body Style
-
-- When posting inline review comments, keep the top-level GitHub review body minimal.
-- Put the substantive review content in the inline comment itself.
-- Do not include routine validation details such as build commands, test commands, PR check status, unrelated test failures, or remaining-risk notes in the GitHub review body unless they directly affect the posted finding.
-- Report validation evidence to the user in the assistant response, not in the PR review body, unless the user explicitly asks to include it.
-- Include validation details in the PR review body or inline comment only when they are direct evidence for the posted finding.
-- For inline-only reviews, use a short neutral body such as:
-  - `Diff 범위에 inline 코멘트를 남겼습니다.`
-  - `Reviewed the diff and left inline comments.`
 
 ## Workflow
 
@@ -118,14 +107,7 @@ Use the bundled script when available:
 skills/github-pr-review/scripts/collect_pr_context.sh <pr-url-or-owner/repo#number>
 ```
 
-Or collect manually:
-
-```bash
-gh pr view <pr> --json title,body,author,labels,baseRefName,headRefName,headRefOid,additions,deletions,changedFiles,files,reviews,reviewRequests,statusCheckRollup
-gh pr diff <pr> --name-only
-gh pr diff <pr>
-gh pr checks <pr>
-```
+If the bundled collector is unavailable, read [collection-fallback.md](references/collection-fallback.md) for the manual read-only commands.
 
 If a local checkout is available, inspect related code beyond the diff before making strong claims. Search for call sites, schema consumers, feature flags, migrations, generated files, and tests. Run the repository's relevant checks when feasible, such as lint, typecheck, unit tests, or focused tests for changed areas.
 
@@ -145,7 +127,7 @@ Use a code-review stance. Prioritize:
 
 Deprioritize style preferences, naming nits, and broad refactors unless they hide real risk. Do not report speculative issues as facts; label uncertainty and include what would verify it.
 
-For every finding, the file reference must point to a file changed in the PR diff, and preferably to a line present in the diff hunk. Do not use non-diff files as the primary finding location. If a problem is visible only in supporting context, anchor it to the changed diff line that introduced or exposed the risk; if no reliable diff anchor exists, do not publish it as a finding.
+Apply the PR Scope Rule above to every drafted and posted finding.
 
 For every finding, include:
 
@@ -187,7 +169,7 @@ Summary:
 Reviewed the diff and relevant context. Checks run: <commands or "not run">. Remaining risk: <short note>.
 ```
 
-For inline reviews, the posted GitHub review body should not duplicate the final assistant report. Keep checks run, unrelated test failures, PR check status, and remaining-risk notes out of the PR review body unless they are material to the review finding. Report routine validation evidence in the user-facing final response instead.
+For inline posting, use the body style in [posting-reviews.md](references/posting-reviews.md) after authorization. Keep routine validation evidence in the user-facing response.
 
 ### 7. Publish Only After Authorization
 

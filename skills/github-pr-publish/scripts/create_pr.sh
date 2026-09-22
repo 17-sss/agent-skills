@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/redaction.sh"
 
 usage() {
   cat <<'USAGE'
@@ -39,13 +40,17 @@ die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 warn() { printf 'warning: %s\n' "$*" >&2; }
 
 print_command() {
+  local arg safe_arg
   printf 'command:'
-  printf ' %q' "$@"
+  for arg in "$@"; do
+    safe_arg=$(printf '%s\n' "$arg" | sanitize_stream)
+    printf ' %q' "$safe_arg"
+  done
   printf '\n'
 }
 
 print_sanitized_error_file() {
-  sed -E 's/(Authorization:[[:space:]]*)([^[:space:]]+)/\1[REDACTED]/Ig; s/(token|GH_TOKEN|GITHUB_TOKEN|PAT)=([^[:space:]]+)/\1=[REDACTED]/Ig' "$1" >&2
+  cat "$1" >&2
 }
 
 classify_error_file() {
@@ -389,13 +394,25 @@ fi
 if ! gh auth status --active --hostname github.com >/dev/null 2>&1; then
   die "GitHub CLI is not authenticated. Run 'gh auth login' before creating a PR."
 fi
-ACCOUNT=$(gh api user --jq .login 2>/dev/null || true)
+account_file=$(mktemp)
+account_err=$(mktemp)
+REDACTION_TEMP_FILES+=("$account_file" "$account_err")
+capture_command "$account_file" "$account_err" gh api user --jq .login || true
+ACCOUNT=$(cat "$account_file")
 [[ -n "$ACCOUNT" ]] || die "could not determine authenticated GitHub account"
 printf 'Authenticated GitHub account: @%s\n' "$ACCOUNT"
 
 if [[ $PUSH -eq 1 ]]; then
   print_command git push "$REMOTE" "HEAD:$LOCAL_BRANCH"
-  git push "$REMOTE" "HEAD:$LOCAL_BRANCH"
+  push_out=$(mktemp)
+  push_err=$(mktemp)
+  REDACTION_TEMP_FILES+=("$push_out" "$push_err")
+  if ! capture_command "$push_out" "$push_err" git push "$REMOTE" "HEAD:$LOCAL_BRANCH"; then
+    cat "$push_err" >&2
+    exit 1
+  fi
+  cat "$push_out"
+  cat "$push_err" >&2
 elif [[ $EXPLICIT_HEAD_FALLBACK -eq 1 ]]; then
   verify_explicit_head_fallback "$REMOTE" "$REPO" "$HEAD_BRANCH"
 elif ! remote_head_exists "$REMOTE" "$HEAD_BRANCH"; then
@@ -405,6 +422,7 @@ fi
 if [[ $USE_REST -eq 1 ]]; then
   remote_head_exists "$REMOTE" "$HEAD_BRANCH" || die "REST fallback requires an existing remote head"
   payload=$(mktemp)
+  REDACTION_TEMP_FILES+=("$payload")
   body_text=""
   if [[ -n "$BODY_FILE" ]]; then
     body_text=$(cat "$BODY_FILE")
@@ -423,9 +441,12 @@ PY
   api_path="repos/$REPO/pulls"
   print_command gh api -i "$api_path" --method POST --input "$payload"
   err_file=$(mktemp)
-  if ! response=$(gh api -i "$api_path" --method POST --input "$payload" 2>"$err_file"); then
+  out_file=$(mktemp)
+  REDACTION_TEMP_FILES+=("$err_file" "$out_file")
+  if ! capture_command "$out_file" "$err_file" gh api -i "$api_path" --method POST --input "$payload"; then
     classify_error_file "$err_file"; print_sanitized_error_file "$err_file"; rm -f "$err_file" "$payload"; exit 1
   fi
+  response=$(cat "$out_file")
   rm -f "$err_file" "$payload"
   printf '%s\n' "$response" | grep -Eq '(^HTTP/[0-9.]+ 201|^Status: 201)' || die "REST create did not return HTTP 201"
   url=$(printf '%s\n' "$response" | python3 -c 'import json,sys; s=sys.stdin.read(); i=s.find("{"); print(json.loads(s[i:]).get("html_url", "") if i >= 0 else "")')
@@ -434,14 +455,21 @@ else
   cmd=(gh pr create "${common_args[@]}" "${content_args[@]}")
   print_command "${cmd[@]}"
   err_file=$(mktemp)
-  if ! url=$("${cmd[@]}" 2>"$err_file"); then
+  out_file=$(mktemp)
+  REDACTION_TEMP_FILES+=("$err_file" "$out_file")
+  if ! capture_command "$out_file" "$err_file" "${cmd[@]}"; then
     classify_error_file "$err_file"; print_sanitized_error_file "$err_file"; rm -f "$err_file"; exit 1
   fi
+  url=$(cat "$out_file")
   rm -f "$err_file"
   url=$(printf '%s\n' "$url" | tail -n 1)
 fi
 
 printf 'Pull request created as @%s: %s\n' "$ACCOUNT" "$url"
 if [[ -n "$url" ]]; then
-  gh pr view "$url" --json number,url,state,isDraft,headRefName,baseRefName,author || true
+  out_file=$(mktemp)
+  err_file=$(mktemp)
+  REDACTION_TEMP_FILES+=("$out_file" "$err_file")
+  capture_command "$out_file" "$err_file" gh pr view "$url" --json number,url,state,isDraft,headRefName,baseRefName,author || true
+  cat "$out_file"
 fi

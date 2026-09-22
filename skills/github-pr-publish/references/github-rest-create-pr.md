@@ -17,3 +17,22 @@ Skill policy:
 - REST fallback is allowed only after repository verification and remote-head proof.
 - Do not infer repository visibility from clone URLs.
 - Classify SSO, authentication, permission, private not-found masking, and validation failures separately when possible.
+
+## Invoking the fallback
+
+### 7. REST fallback
+
+Use REST only when the remote head already exists and the CLI create path is blocked:
+
+```bash
+skills/github-pr-publish/scripts/create_pr.sh \
+  --repo OWNER/REPO \
+  --base main \
+  --head OWNER:feature-branch \
+  --title "Add feature" \
+  --body-file /tmp/pr-body.md \
+  --use-rest \
+  --yes
+```
+
+REST creation requires `head`, `base`, and `title` unless converting an issue. Success must return HTTP `201` and a PR URL.

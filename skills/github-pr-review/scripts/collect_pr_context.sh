@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/redaction.sh"
 
 usage() {
   cat <<'USAGE'
@@ -25,25 +26,6 @@ die() {
 
 warn() {
   printf 'warning: %s\n' "$*" >&2
-}
-
-sanitize_stream() {
-  sed -E \
-    -e 's/(Authorization:[[:space:]]*)([^[:space:]]+)/\1[REDACTED]/Ig' \
-    -e 's/(token|GH_TOKEN|GITHUB_TOKEN|PAT)=([^[:space:]]+)/\1=[REDACTED]/Ig' \
-    -e 's#https?://[^/@[:space:]]+(:[^/@[:space:]]+)?@#https://[REDACTED]@#g' \
-    -e 's/(github_pat_|gh[pousr]_)[A-Za-z0-9_]+/\1[REDACTED]/g'
-}
-
-sanitize_file() {
-  local file=$1 tmp_file
-  [[ -f "$file" ]] || return 0
-  tmp_file="${file}.sanitized.$$"
-  if sanitize_stream <"$file" >"$tmp_file"; then
-    mv "$tmp_file" "$file"
-  else
-    rm -f "$tmp_file"
-  fi
 }
 
 prepare_output_dir() {
@@ -117,17 +99,11 @@ run_capture() {
   shift 3
 
   printf 'collecting %s...\n' "$label"
-  if ! "$@" > "$out_file" 2> "$err_file"; then
-    sanitize_file "$out_file"
-    sanitize_file "$err_file"
+  if ! capture_command "$out_file" "$err_file" "$@"; then
     classify_error "$err_file"
-    printf 'failed command:'
-    printf ' %q' "$@"
-    printf '\n'
+    printf 'failed command: %s (arguments withheld)\n' "$label"
     return 1
   fi
-  sanitize_file "$out_file"
-  sanitize_file "$err_file"
 }
 
 PR_REF=""
@@ -182,7 +158,9 @@ prepare_output_dir "github-pr-review" "$safe_ref" "$timestamp"
 
 auth_file="$OUTPUT_DIR/auth.txt"
 if gh auth status --active --hostname github.com >/dev/null 2>&1; then
-  account=$(gh api user --jq .login 2>/dev/null || true)
+  capture_command "$OUTPUT_DIR/account.tmp" "$OUTPUT_DIR/account.err" gh api user --jq .login || true
+  account=$(cat "$OUTPUT_DIR/account.tmp" 2>/dev/null || true)
+  rm -f "$OUTPUT_DIR/account.tmp" "$OUTPUT_DIR/account.err"
   if [[ -n "$account" ]]; then
     printf 'authenticated_account=%s\n' "$account" > "$auth_file"
     printf 'GitHub auth: authenticated as @%s\n' "$account"
@@ -209,21 +187,19 @@ run_capture "changed files" "$OUTPUT_DIR/pr-files.txt" "$OUTPUT_DIR/pr-files.err
 run_capture "diff patch" "$OUTPUT_DIR/pr-diff.patch" "$OUTPUT_DIR/pr-diff.err" \
   gh pr diff "${pr_args[@]}"
 
-if ! gh pr checks "${pr_args[@]}" > "$OUTPUT_DIR/pr-checks.txt" 2> "$OUTPUT_DIR/pr-checks.err"; then
-  sanitize_file "$OUTPUT_DIR/pr-checks.txt"
-  sanitize_file "$OUTPUT_DIR/pr-checks.err"
+if ! capture_command "$OUTPUT_DIR/pr-checks.txt" "$OUTPUT_DIR/pr-checks.err" gh pr checks "${pr_args[@]}"; then
   warn "PR checks were unavailable or failed; continuing with saved stderr."
-else
-  sanitize_file "$OUTPUT_DIR/pr-checks.txt"
-  sanitize_file "$OUTPUT_DIR/pr-checks.err"
 fi
 
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  git rev-parse --show-toplevel > "$OUTPUT_DIR/local-repo-root.txt" 2>/dev/null || true
-  git status --short > "$OUTPUT_DIR/local-git-status.txt" 2>/dev/null || true
+  capture_command "$OUTPUT_DIR/local-repo-root.txt" "$OUTPUT_DIR/.capture.err" git rev-parse --show-toplevel || true
+  capture_command "$OUTPUT_DIR/local-git-status.txt" "$OUTPUT_DIR/.capture.err" git status --short || true
+  rm -f "$OUTPUT_DIR/.capture.err"
 fi
 
-resolved_url=$(gh pr view "${pr_args[@]}" --json url --jq .url 2>/dev/null || true)
+capture_command "$OUTPUT_DIR/url.tmp" "$OUTPUT_DIR/url.err" gh pr view "${pr_args[@]}" --json url --jq .url || true
+resolved_url=$(cat "$OUTPUT_DIR/url.tmp" 2>/dev/null || true)
+rm -f "$OUTPUT_DIR/url.tmp" "$OUTPUT_DIR/url.err"
 {
   printf 'output_dir=%s\n' "$OUTPUT_DIR"
   printf 'repo=%s\n' "${REPO:-current-repository}"

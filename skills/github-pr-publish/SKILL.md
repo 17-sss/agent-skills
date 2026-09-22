@@ -54,16 +54,7 @@ skills/github-pr-publish/scripts/collect_publish_context.sh --repo OWNER/REPO
 
 It captures sanitized account status, repo metadata, remotes, branch state, default/base candidates, upstream/ahead-behind details, and existing PR hints under `/tmp/github-pr-publish-*`.
 
-Supported GitHub remote forms include:
-
-- `https://github.com/OWNER/REPO.git`
-- `git@github.com:OWNER/REPO.git`
-- `git@github.com-alias:OWNER/REPO.git` when `ssh -G github.com-alias` reports `hostname github.com`
-- `ssh://git@github.com-alias/OWNER/REPO.git` with the same alias check
-
-The trailing `.git` suffix is optional for these forms.
-
-If an SSH alias cannot be verified as `github.com`, do not push through it. If `--head OWNER:branch` is explicit and no push is requested, the helper may still use the prompt-free create path after proving the local `HEAD` matches both the remote branch SHA and the GitHub branch SHA. The helper then passes `--head branch` to `gh pr create` because the head is in the verified target repository.
+For remote forms and an unverified SSH alias without push, read [github-cli-pr-create.md](references/github-cli-pr-create.md#remote-forms-and-unverified-ssh-aliases). The helper checks owner, path, alias, and local/GitHub head identity before creation.
 
 ### 3. Draft PR content before creation
 
@@ -118,21 +109,7 @@ skills/github-pr-publish/scripts/create_pr.sh \
 
 The helper verifies the remote head, creates the PR with explicit `--head`, then verifies the created PR with `gh pr view`.
 
-When the configured remote uses an SSH alias that the helper cannot safely treat as a GitHub remote, use this no-push fallback only for explicit heads:
-
-```bash
-remote_sha=$(git ls-remote origin "refs/heads/feature-branch" | awk 'NR==1{print $1}')
-local_sha=$(git rev-parse HEAD)
-test "$remote_sha" = "$local_sha"
-gh pr create \
-  --repo OWNER/REPO \
-  --base main \
-  --head feature-branch \
-  --title "Add feature" \
-  --body-file /tmp/pr-body.md
-```
-
-The bundled helper automates this fallback in execute mode by also checking the GitHub branch SHA before invoking `gh pr create`. If any SHA differs, stop and push or re-check the branch manually instead of creating the PR.
+For an unverified SSH alias without push, follow the [explicit-head fallback](references/github-cli-pr-create.md#explicit-head-no-push-fallback). Do not create the PR if local, remote, and GitHub head SHAs disagree.
 
 ### 6. Push then create
 
@@ -154,20 +131,7 @@ SSH alias remotes are valid for this path only after alias normalization proves 
 
 ### 7. REST fallback
 
-Use REST only when the remote head already exists and the CLI create path is blocked:
-
-```bash
-skills/github-pr-publish/scripts/create_pr.sh \
-  --repo OWNER/REPO \
-  --base main \
-  --head OWNER:feature-branch \
-  --title "Add feature" \
-  --body-file /tmp/pr-body.md \
-  --use-rest \
-  --yes
-```
-
-REST creation requires `head`, `base`, and `title` unless converting an issue. Success must return HTTP `201` and a PR URL.
+Use REST only when a remote head is proven and the CLI create path is blocked. Read [github-rest-create-pr.md](references/github-rest-create-pr.md#invoking-the-fallback) for the invocation and required fields. Success requires HTTP `201` and a PR URL.
 
 ### 8. Optional browser handoff
 

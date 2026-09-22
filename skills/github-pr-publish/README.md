@@ -21,6 +21,7 @@ Agent-neutral workflow for safely publishing GitHub pull requests with `gh`, loc
 - Checks the active authenticated `gh` identity so expired inactive accounts do not block a valid session
 - Supports private repos through authenticated `gh` and clear SSO, auth, permission, private not-found, and validation diagnostics
 - Includes fake `gh`/`git` tests that prove no mutation by default and no token leakage
+- Captures command output through package-local redaction before writing private context or error files; a redaction failure stops execution
 
 ## Common Commands
 
@@ -90,6 +91,7 @@ skills/github-pr-publish/scripts/create_pr.sh \
 - `SKILL.md` - Main workflow, auth policy, safe create contract, and fallback rules
 - `scripts/collect_publish_context.sh` - Read-only sanitized context collector
 - `scripts/create_pr.sh` - Preview-first command builder and explicit executor
+- `scripts/redaction.sh` - Package-local fail-closed output capture shared by the two scripts
 - `tests/` - Fake `gh`/`git` harness and command-construction tests
 - `references/` - Maintenance notes for CLI/API behavior and agent adapters
 - `agents/openai.yaml` - Codex Skills UI metadata only

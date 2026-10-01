@@ -61,6 +61,8 @@ Korean phrasing guidance:
 - Prefer short and natural commit wording over translated or report-like explanations
 - Prefer `~정리`, `~수정`, `~추가`, `~분리`, `~조정` style endings when they match the repo's history
 - Move detailed explanation into the body instead of stretching the title
+- Keep the full title within 55 characters. Omit an inferred scope first if it makes the title too long; move trailing detail into the body when needed. If a body is forbidden, ask for a shorter summary rather than dropping detail.
+- Infer at most one short scope shared by the staged paths. Do not join path scopes with commas; omit the scope when paths do not identify one component.
 
 English phrasing guidance:
 

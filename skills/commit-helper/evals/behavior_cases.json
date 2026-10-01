@@ -40,6 +40,14 @@
     "goal": "Allow safe title-only drafting when history does not require commit bodies."
   },
   {
+    "name": "multiple_paths_do_not_create_comma_scope",
+    "goal": "Omit inferred scope for unrelated staged paths and use one shared scope for paths in a single component."
+  },
+  {
+    "name": "title_limit_moves_detail_to_body",
+    "goal": "Keep the full title within 55 characters, preserve overflow detail in the body, and reject overlong --no-body drafts."
+  },
+  {
     "name": "global_commit_template_ignored",
     "goal": "Ignore global commit.template files outside the repository when deciding repo-local explicit rules."
   },

@@ -380,6 +380,45 @@ def case_title_only_preferred_repo() -> None:
   assert_equal(drafted['body'], None, 'title-only preferred repos should allow no body')
 
 
+def case_multiple_paths_do_not_create_comma_scope() -> None:
+  repo = init_repo('commit-helper-multiple-paths')
+  make_history_commit(repo, 'feat(api): add request parser')
+  write(repo / 'apps/api/routes.py', 'ROUTE = True\n')
+  write(repo / 'apps/web/page.tsx', 'export const page = true;\n')
+  git(repo, 'add', 'apps/api/routes.py', 'apps/web/page.tsx')
+  inspected = inspect(repo)
+  assert_equal(inspected['preferred_scope'], None, 'unrelated changed paths should omit inferred scope')
+  drafted = json.loads(draft(repo, '--summary', 'add shared request flow', '--no-body').stdout)
+  assert_equal(drafted['used_scope'], None, 'draft should not invent a multi-path scope')
+  assert_true(',' not in drafted['title'].split(':', 1)[0], 'title prefix must not list paths')
+
+  git(repo, 'reset', '-q')
+  write(repo / 'apps/api/schema.py', 'SCHEMA = True\n')
+  git(repo, 'add', 'apps/api/routes.py', 'apps/api/schema.py')
+  same_component = inspect(repo)
+  assert_equal(same_component['preferred_scope'], 'api', 'shared component may use one short scope')
+
+
+def case_title_limit_moves_detail_to_body() -> None:
+  repo = init_repo('commit-helper-title-limit')
+  make_history_commit(repo, 'feat(api): add request parser')
+  write(repo / 'apps/api/routes.py', 'ROUTE = True\n')
+  git(repo, 'add', 'apps/api/routes.py')
+  summary = 'improve request handling for customer imports and document retry behavior across all supported formats'
+  drafted = json.loads(draft(repo, '--summary', summary, '--type', 'feat').stdout)
+  assert_true(len(drafted['title']) <= 55, 'title must fit the 55-character limit')
+  assert_equal(drafted['title'], 'feat: improve request handling for customer imports', 'title should omit an inferred scope before moving detail')
+  assert_equal(drafted['used_scope'], None, 'overlong title should drop its inferred scope')
+  assert_true('document retry behavior across all supported formats' in drafted['body'], 'detail should survive in the body')
+  assert_true('\\n' not in drafted['body'], 'body should contain real newlines only')
+  rejected = draft(repo, '--summary', summary, '--type', 'feat', '--no-body')
+  assert_true(rejected.returncode != 0, '--no-body should reject an overlong title without dropping detail')
+  at_limit = json.loads(draft(repo, '--summary', 'a' * 49, '--type', 'feat', '--no-body').stdout)
+  assert_equal(len(at_limit['title']), 55, 'a 55-character title should be accepted')
+  over_limit = draft(repo, '--summary', 'a' * 50, '--type', 'feat', '--no-body')
+  assert_true(over_limit.returncode != 0, 'a 56-character title should be rejected with --no-body')
+
+
 def case_global_commit_template_ignored() -> None:
   repo = init_repo('commit-helper-global-template')
   make_history_commit(repo, 'Fix modal close timing')
@@ -633,6 +672,8 @@ CASES = [
     ('summary_direct_access_guard_prefers_bug_gitmoji', case_summary_direct_access_guard_prefers_bug_gitmoji),
     ('file_move_or_legacy_move', case_file_move_or_legacy_move),
     ('title_only_preferred_repo', case_title_only_preferred_repo),
+    ('multiple_paths_do_not_create_comma_scope', case_multiple_paths_do_not_create_comma_scope),
+    ('title_limit_moves_detail_to_body', case_title_limit_moves_detail_to_body),
     ('global_commit_template_ignored', case_global_commit_template_ignored),
     ('multiline_body_without_literal_backslash_n', case_multiline_body_without_literal_backslash_n),
     ('korean_emoji_repo_phrasing', case_korean_emoji_repo_phrasing),

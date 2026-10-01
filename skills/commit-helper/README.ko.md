@@ -30,6 +30,8 @@
 - gitmoji는 repo-local config, repo 문서, emoji-dominant history가 있을 때만 강하게 활성화합니다. `.vscode/settings.json`은 `gitmoji.*` 키가 있을 때만 repo-local gitmoji config로 봅니다
 - 사용자가 넘긴 summary 의미를 staged semantic inference에 반영한 뒤 conventional type 또는 gitmoji를 고릅니다
 - 이미 Conventional Commit 형식인 summary는 type/scope를 다시 붙이지 않고 멱등하게 처리합니다
+- staged 경로에서 공통으로 드러나는 짧은 scope 하나만 추론하고, 관련 없는 경로가 섞이면 생략합니다
+- 제목을 55자 이내로 유지하고, 길어지면 뒤쪽 세부사항을 본문으로 옮깁니다
 - routine route/page 경로나 `index.tsx`는 diff나 summary가 실제 구조 변경을 보여주지 않는 한 약한 hint로만 취급합니다
 - semantic inference는 전역 규칙으로 유지하고, 표현 형식만 repo별 스타일에 맞게 바꿉니다
 - commit `format`과 commit `phrasing`을 분리해 다룹니다

@@ -1323,9 +1323,22 @@ def infer_path_scopes(staged_files: list[str], scope_counts: dict[str, int]) -> 
 def should_use_scope(path_scope_hints: list[str], scope_counts: dict[str, int]) -> bool:
   if scope_counts:
     return True
-  if len(path_scope_hints) > 1:
-    return True
   return any(':' in hint or '/' in hint for hint in path_scope_hints)
+
+
+def infer_preferred_scope(staged_files: list[str], scope_counts: dict[str, int]) -> str | None:
+  if not staged_files:
+    return None
+  candidate_sets = [set(generate_scope_candidates(path)) for path in staged_files]
+  if not all(candidate_sets):
+    return None
+  shared = set.intersection(*candidate_sets)
+  if not shared:
+    return None
+  first_path_candidates = generate_scope_candidates(staged_files[0])
+  ranked = sorted(shared, key=lambda candidate: (-scope_counts.get(candidate, 0), first_path_candidates.index(candidate)))
+  preferred = ranked[0]
+  return preferred if should_use_scope([preferred], scope_counts) else None
 
 
 def load_dependency_sections(content: str) -> dict[str, set[str]] | None:
@@ -1867,7 +1880,7 @@ def inspect_repo(repo: Path, limit: int = 30) -> dict[str, object | None]:
   staged_name_status = get_staged_name_status(repo)
   staged_diff = get_staged_diff(repo)
   path_scope_hints = infer_path_scopes(staged_files, scope_counts)
-  preferred_scope = ', '.join(path_scope_hints) if should_use_scope(path_scope_hints, scope_counts) else None
+  preferred_scope = infer_preferred_scope(staged_files, scope_counts)
   body_policy = infer_body_policy(recent_messages, explicit_rules.get('commit_template_path'))
   preferred_title_pattern = infer_preferred_title_pattern(
       str(selected_style['selected_style_family']),

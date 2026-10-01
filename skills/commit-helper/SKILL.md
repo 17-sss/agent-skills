@@ -34,8 +34,9 @@ When this skill is invoked, commit-message construction is governed by **commit-
 - Use Conventional Commits only as the fallback when stronger local evidence is absent.
 - Activate gitmoji only from repo-local config/docs or clearly emoji-dominant history, and obey any local allowlist.
 - Keep bugfix classification conservative; layout, spacing, wrapper cleanup, and similar presentation changes are not bugfixes by default.
-- Prefer title-only commits unless local rules/history require a body. Pass repeated `--body-line` values for a body; never place a literal `\n` in it.
-- Use path-derived scopes as weak hints. Explicit user wording and staged-diff intent are stronger.
+- Prefer title-only commits unless local rules/history require a body or title detail needs moving into it. Pass repeated `--body-line` values for a body; never place a literal `\n` in it.
+- Keep titles within 55 characters. Move trailing detail to the body; with `--no-body`, shorten the summary rather than discard detail.
+- Use path-derived scopes as weak hints. Infer one short scope only when staged paths share a component; omit it for unrelated paths. Explicit user wording and staged-diff intent are stronger.
 
 For detailed semantic categories, phrasing guidance, and style-family policy, read [references/commit-patterns.md](references/commit-patterns.md) only when the ordinary script output is insufficient.
 

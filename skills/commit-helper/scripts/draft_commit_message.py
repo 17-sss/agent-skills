@@ -27,6 +27,7 @@ EXTERNAL_HARNESS_TRAILER_PATTERNS = (
     'Tested:',
     'Not-tested:',
 )
+MAX_TITLE_LENGTH = 55
 
 CONVENTIONAL_TYPE_BY_SEMANTIC = {
     'feature': 'feat',
@@ -565,6 +566,27 @@ def build_commit_argv(repo: Path, title: str, body: str | None) -> list[str]:
   return argv
 
 
+def split_long_summary(summary: str, available_length: int) -> tuple[str, str]:
+  if available_length < 1:
+    raise ValueError(f'The commit prefix leaves no room for a subject within {MAX_TITLE_LENGTH} characters.')
+  boundaries = [
+      match.start()
+      for match in re.finditer(r'[,;:]\s+|\s+and\s+|\s+및\s+|\s+그리고\s+', summary, re.IGNORECASE)
+      if 0 < match.start() <= available_length
+  ]
+  split_at = max(boundaries, default=-1)
+  if split_at < 1:
+    split_at = summary.rfind(' ', 0, available_length + 1)
+  if split_at < 1:
+    raise ValueError(f'The subject has no safe word boundary within {MAX_TITLE_LENGTH} characters; shorten --summary.')
+  short = summary[:split_at].rstrip(' ,;:')
+  detail = summary[split_at:].lstrip(' ,;:')
+  detail = re.sub(r'^(?:and|및|그리고)\s+', '', detail, flags=re.IGNORECASE)
+  if not short or not detail:
+    raise ValueError('Cannot shorten the title without losing detail; shorten --summary.')
+  return short, detail
+
+
 def main() -> int:
   parser = argparse.ArgumentParser(description='Draft a repo-aligned commit message from staged changes.')
   parser.add_argument('repo', help='Path to the target git repository')
@@ -639,15 +661,6 @@ def main() -> int:
   body_policy = inspection.get('body_policy')
   if args.no_body:
     normalized_body_lines = []
-  elif body_policy == 'body-required' and not normalized_body_lines:
-    raise SystemExit('This repository appears to require commit bodies. Add one or more --body-line values.')
-  elif body_policy == 'title-only-preferred' and normalized_body_lines:
-    add_warning(
-        warnings,
-        'this repo usually prefers title-only commits, but a body was supplied.',
-    )
-
-  body = build_body(normalized_body_lines)
   gitmoji_candidate, used_fallback_gitmoji = choose_gitmoji(
       inspection,
       args.gitmoji,
@@ -671,6 +684,37 @@ def main() -> int:
       conventional_breaking,
       warnings,
   )
+  if len(title) > MAX_TITLE_LENGTH and not (args.scope or parsed_scope) and scope:
+    scope = None
+    title, final_style_family = build_title(
+        effective_style_family, inspection,
+        polished_summary if effective_style_family != 'plain' else normalize_plain_summary(polished_summary),
+        None, gitmoji_candidate, conventional_type, conventional_breaking, warnings,
+    )
+    add_warning(warnings, 'omitted the inferred scope to keep the title short.')
+  if len(title) > MAX_TITLE_LENGTH:
+    if args.no_body:
+      raise SystemExit(f'Title exceeds {MAX_TITLE_LENGTH} characters with --no-body; shorten --summary or allow a body.')
+    rendered_summary = polished_summary if effective_style_family != 'plain' else normalize_plain_summary(polished_summary)
+    prefix_length = len(title) - len(rendered_summary)
+    try:
+      short_summary, detail = split_long_summary(rendered_summary, MAX_TITLE_LENGTH - prefix_length)
+    except ValueError as exc:
+      raise SystemExit(str(exc)) from exc
+    title, final_style_family = build_title(
+        effective_style_family, inspection, short_summary,
+        scope if isinstance(scope, str) else None,
+        gitmoji_candidate, conventional_type, conventional_breaking, warnings,
+    )
+    normalized_body_lines.insert(0, detail)
+    add_warning(warnings, f'moved title detail into the body to keep the title within {MAX_TITLE_LENGTH} characters.')
+  if body_policy == 'body-required' and not normalized_body_lines:
+    raise SystemExit('This repository appears to require commit bodies. Add one or more --body-line values.')
+  if body_policy == 'title-only-preferred' and normalized_body_lines and not any(
+      'moved title detail into the body' in warning for warning in warnings
+  ):
+    add_warning(warnings, 'this repo usually prefers title-only commits, but a body was supplied.')
+  body = build_body(normalized_body_lines)
   commit_argv = build_commit_argv(repo, title, body)
 
   payload: dict[str, object | None] = {

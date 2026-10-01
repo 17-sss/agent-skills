@@ -30,6 +30,8 @@ When this skill is invoked, commit messages come only from repo-local rules, rec
 - Activates gitmoji strongly only when repo-local config, repo documentation, or emoji-dominant history justifies it; `.vscode/settings.json` counts as repo-local gitmoji config only when it contains `gitmoji.*` keys
 - Lets explicit user summary wording refine staged semantic inference before selecting a conventional type or gitmoji
 - Treats an already formatted Conventional Commit summary as idempotent instead of adding a second type/scope prefix
+- Infers at most one shared, short scope from staged paths and omits it for unrelated paths
+- Limits titles to 55 characters, moving trailing detail into the body when needed
 - Keeps routine route/page paths and `index.tsx` files as weak hints unless the diff or summary shows actual structure work
 - Keeps semantic inference global and style expression repo-specific
 - Separates commit `format` from commit `phrasing`
